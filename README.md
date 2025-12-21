@@ -7,7 +7,9 @@
 
 Aplicativo mobile premium para acompanhamento em tempo real do processo de blindagem automotiva da Elite Blindagens.
 
-**Deploy automático configurado com Vercel + GitHub** 
+## Deploy Automático
+
+Deploy automático configurado com Vercel + GitHub
 
 ## Design System
 
@@ -30,6 +32,7 @@ Aplicativo mobile premium para acompanhamento em tempo real do processo de blind
 ## 🚀 Funcionalidades
 
 ### Dashboard Principal
+
 - ✅ Hero section com carrossel de fotos do veículo
 - ✅ Progress Ring animado com porcentagem
 - ✅ Card de status com etapa atual
@@ -37,6 +40,7 @@ Aplicativo mobile premium para acompanhamento em tempo real do processo de blind
 - ✅ Notificações recentes
 
 ### Timeline Detalhada
+
 - ✅ Layout vertical com linha central gold
 - ✅ Cards expansíveis por etapa
 - ✅ Badges de status coloridos
@@ -44,6 +48,7 @@ Aplicativo mobile premium para acompanhamento em tempo real do processo de blind
 - ✅ Informações do técnico responsável
 
 ### Galeria de Mídia
+
 - ✅ Layout masonry responsivo
 - ✅ Filtros por etapa
 - ✅ Busca por texto
@@ -51,18 +56,21 @@ Aplicativo mobile premium para acompanhamento em tempo real do processo de blind
 - ✅ Opções de download e compartilhamento
 
 ### Chat/Suporte
+
 - ✅ Interface de chat em tempo real
 - ✅ Quick replies pré-definidas
 - ✅ Indicador de digitação
 - ✅ Histórico de mensagens
 
 ### Perfil do Usuário
+
 - ✅ Informações pessoais
 - ✅ Dados do veículo
 - ✅ Toggle Dark/Light mode
 - ✅ Menu de configurações
 
 ### QR Code EliteTrace™
+
 - ✅ QR Code personalizado com tema gold
 - ✅ Opções de compartilhar/baixar/copiar
 - ✅ Instruções de uso
@@ -95,7 +103,7 @@ npm run dev
 
 ## 📁 Estrutura do Projeto
 
-```
+```text
 src/
 ├── components/
 │   ├── dashboard/       # Componentes do dashboard
