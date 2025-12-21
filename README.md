@@ -7,7 +7,9 @@
 
 Aplicativo mobile premium para acompanhamento em tempo real do processo de blindagem automotiva da Elite Blindagens.
 
-## 🎨 Design System
+**Deploy automático configurado com Vercel + GitHub** 
+
+## Design System
 
 ### Paleta de Cores Luxury-Gold
 
