@@ -41,7 +41,6 @@ export function Timeline() {
 
   const completedSteps = project.timeline.filter(s => s.status === 'completed').length
   const totalSteps = project.timeline.length
-  const progressPercent = Math.round((completedSteps / totalSteps) * 100)
 
   // Calculate days remaining
   const estimatedDate = new Date(project.estimatedDelivery)
