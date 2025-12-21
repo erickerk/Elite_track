@@ -2,8 +2,8 @@ import { useState, useMemo } from 'react'
 import { 
   Users, Car, BarChart3, Search, Shield, Key, Trash2,
   CheckCircle, Clock, TrendingUp, Settings, UserCheck,
-  Eye, EyeOff, UserPlus, LogOut, Activity, Database, Mail,
-  DollarSign, Calendar
+  Eye, EyeOff, UserPlus, LogOut, Activity, Database,
+  DollarSign, Calendar, FileText, Download, X, ChevronRight
 } from 'lucide-react'
 import { Modal } from '../components/ui/Modal'
 import { useAuth } from '../contexts/AuthContext'
@@ -47,7 +47,7 @@ export function AdminDashboard() {
   const { user, logout } = useAuth()
   const { addNotification } = useNotifications()
   const { projects } = useProjects()
-  const { quotes, updateQuoteStatus, getPendingQuotes } = useQuotes()
+  const { quotes, getPendingQuotes } = useQuotes()
   
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard')
   const [executors, setExecutors] = useState<ExecutorUser[]>(initialExecutors)
@@ -56,6 +56,8 @@ export function AdminDashboard() {
   const [showResetPasswordModal, setShowResetPasswordModal] = useState(false)
   const [selectedExecutor, setSelectedExecutor] = useState<ExecutorUser | null>(null)
   const [showPassword, setShowPassword] = useState(false)
+  
+  const [selectedClient, setSelectedClient] = useState<ClientInfo | null>(null)
   
   const [newExecutorData, setNewExecutorData] = useState({
     name: '', email: '', phone: '', password: '',
@@ -498,93 +500,259 @@ export function AdminDashboard() {
           {/* Clients Tab */}
           {activeTab === 'clients' && (
             <div className="space-y-6">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div className="relative flex-1 max-w-md">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Buscar clientes..."
-                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-500"
-                    title="Buscar clientes"
-                  />
-                </div>
-                <div className="flex items-center space-x-4 text-sm">
-                  <div className="flex items-center space-x-2 bg-green-500/20 px-3 py-2 rounded-lg">
-                    <CheckCircle className="w-4 h-4 text-green-400" />
-                    <span className="text-green-400">{stats.clientsWithAccess} acessaram</span>
+              {!selectedClient ? (
+                <>
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div className="relative flex-1 max-w-md">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Buscar clientes..."
+                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-500"
+                        title="Buscar clientes"
+                      />
+                    </div>
+                    <div className="flex items-center space-x-4 text-sm">
+                      <div className="flex items-center space-x-2 bg-green-500/20 px-3 py-2 rounded-lg">
+                        <CheckCircle className="w-4 h-4 text-green-400" />
+                        <span className="text-green-400">{stats.clientsWithAccess} acessaram</span>
+                      </div>
+                      <div className="flex items-center space-x-2 bg-gray-500/20 px-3 py-2 rounded-lg">
+                        <Clock className="w-4 h-4 text-gray-400" />
+                        <span className="text-gray-400">{stats.totalClients - stats.clientsWithAccess} pendentes</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2 bg-gray-500/20 px-3 py-2 rounded-lg">
-                    <Clock className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-400">{stats.totalClients - stats.clientsWithAccess} pendentes</span>
-                  </div>
-                </div>
-              </div>
 
-              <div className="space-y-3">
-                {filteredClients.map((client) => (
-                  <div key={client.id} className="bg-white/5 rounded-2xl p-4 border border-white/10">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
-                          <span className="text-white font-bold text-lg">{client.name.charAt(0)}</span>
-                        </div>
-                        <div>
-                          <div className="flex items-center space-x-2">
-                            <h4 className="font-semibold">{client.name}</h4>
-                            <span className={cn(
-                              "px-2 py-0.5 rounded-full text-xs font-medium",
-                              client.hasAccessed ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"
-                            )}>
-                              {client.hasAccessed ? 'Acessou' : 'Não acessou'}
-                            </span>
-                            {client.vehiclesCount > 1 && (
-                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-primary/20 text-primary">
-                                {client.vehiclesCount} veículos
-                              </span>
-                            )}
+                  <div className="space-y-3">
+                    {filteredClients.map((client) => (
+                      <div 
+                        key={client.id} 
+                        className="bg-white/5 rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
+                        onClick={() => setSelectedClient(client)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                              <span className="text-white font-bold text-lg">{client.name.charAt(0)}</span>
+                            </div>
+                            <div>
+                              <div className="flex items-center space-x-2">
+                                <h4 className="font-semibold">{client.name}</h4>
+                                <span className={cn(
+                                  "px-2 py-0.5 rounded-full text-xs font-medium",
+                                  client.hasAccessed ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"
+                                )}>
+                                  {client.hasAccessed ? 'Acessou' : 'Não acessou'}
+                                </span>
+                                {client.vehiclesCount > 1 && (
+                                  <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-primary/20 text-primary">
+                                    {client.vehiclesCount} veículos
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-sm text-gray-400">{client.email}</p>
+                              <p className="text-xs text-gray-500">{client.phone || 'Sem telefone'}</p>
+                            </div>
                           </div>
-                          <p className="text-sm text-gray-400">{client.email}</p>
-                          <p className="text-xs text-gray-500">{client.phone || 'Sem telefone'}</p>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-sm text-gray-400">Ver documentos</span>
+                            <ChevronRight className="w-5 h-5 text-gray-400" />
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        {!client.hasAccessed && (
-                          <button
-                            onClick={() => {
-                              const project = client.projects[0]
-                              const message = `Olá ${client.name}! Acesse o EliteTrack para acompanhar seu veículo. QR Code: ${project.qrCode}`
-                              window.open(`mailto:${client.email}?subject=EliteTrack - Acesso ao Sistema&body=${encodeURIComponent(message)}`, '_blank')
-                              addNotification({ type: 'success', title: 'E-mail Enviado', message: `Link de acesso enviado para ${client.email}` })
-                            }}
-                            className="flex items-center space-x-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm transition-colors"
-                            title="Reenviar acesso"
-                          >
-                            <Mail className="w-4 h-4" />
-                            <span>Reenviar</span>
-                          </button>
-                        )}
+                    ))}
+                  </div>
+                </>
+              ) : (
+                /* Detalhes do Cliente com Documentação */
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <button
+                      onClick={() => setSelectedClient(null)}
+                      className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                      <span>Voltar para lista</span>
+                    </button>
+                  </div>
+
+                  {/* Cabeçalho do Cliente */}
+                  <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                        <span className="text-white font-bold text-2xl">{selectedClient.name.charAt(0)}</span>
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold">{selectedClient.name}</h2>
+                        <p className="text-gray-400">{selectedClient.email}</p>
+                        <p className="text-sm text-gray-500">{selectedClient.phone}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Documentação do Cliente */}
+                  <div className="bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
+                    <div className="p-4 border-b border-white/10">
+                      <h3 className="font-semibold flex items-center space-x-2">
+                        <FileText className="w-5 h-5 text-primary" />
+                        <span>Documentação do Cliente</span>
+                      </h3>
+                    </div>
+                    <div className="p-4 space-y-4">
+                      {/* CNH */}
+                      <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                            <FileText className="w-5 h-5 text-blue-400" />
+                          </div>
+                          <div>
+                            <p className="font-medium">CNH - Carteira de Habilitação</p>
+                            <p className="text-xs text-gray-500">Documento pessoal do proprietário</p>
+                          </div>
+                        </div>
                         <button
                           onClick={() => {
-                            const details = client.projects.map(p => `• ${p.vehicle} (${p.status})`).join('\n')
-                            alert(`Veículos de ${client.name}:\n\n${details}`)
+                            const link = document.createElement('a')
+                            link.href = '/documents/cnh-exemplo.pdf'
+                            link.download = `CNH_${selectedClient.name.replace(/\s/g, '_')}.pdf`
+                            link.click()
+                            addNotification({ type: 'success', title: 'Download', message: 'CNH baixado com sucesso!' })
                           }}
-                          className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
-                          title="Ver detalhes"
+                          className="flex items-center space-x-2 px-4 py-2 bg-primary text-black rounded-lg font-medium text-sm"
                         >
-                          <Eye className="w-4 h-4" />
+                          <Download className="w-4 h-4" />
+                          <span>Baixar</span>
+                        </button>
+                      </div>
+
+                      {/* CRLV */}
+                      <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                            <Car className="w-5 h-5 text-green-400" />
+                          </div>
+                          <div>
+                            <p className="font-medium">CRLV - Documento do Veículo</p>
+                            <p className="text-xs text-gray-500">Certificado de registro e licenciamento</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            const link = document.createElement('a')
+                            link.href = '/documents/crlv-exemplo.pdf'
+                            link.download = `CRLV_${selectedClient.name.replace(/\s/g, '_')}.pdf`
+                            link.click()
+                            addNotification({ type: 'success', title: 'Download', message: 'CRLV baixado com sucesso!' })
+                          }}
+                          className="flex items-center space-x-2 px-4 py-2 bg-primary text-black rounded-lg font-medium text-sm"
+                        >
+                          <Download className="w-4 h-4" />
+                          <span>Baixar</span>
+                        </button>
+                      </div>
+
+                      {/* Contrato */}
+                      <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                            <FileText className="w-5 h-5 text-yellow-400" />
+                          </div>
+                          <div>
+                            <p className="font-medium">Contrato de Serviço</p>
+                            <p className="text-xs text-gray-500">Contrato de blindagem assinado</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            const link = document.createElement('a')
+                            link.href = '/documents/contrato-exemplo.pdf'
+                            link.download = `Contrato_${selectedClient.name.replace(/\s/g, '_')}.pdf`
+                            link.click()
+                            addNotification({ type: 'success', title: 'Download', message: 'Contrato baixado com sucesso!' })
+                          }}
+                          className="flex items-center space-x-2 px-4 py-2 bg-primary text-black rounded-lg font-medium text-sm"
+                        >
+                          <Download className="w-4 h-4" />
+                          <span>Baixar</span>
+                        </button>
+                      </div>
+
+                      {/* Laudo EliteShield */}
+                      <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
+                            <Shield className="w-5 h-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">Laudo EliteShield™</p>
+                            <p className="text-xs text-gray-500">Laudo técnico da blindagem</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            const link = document.createElement('a')
+                            link.href = '/documents/laudo-exemplo.pdf'
+                            link.download = `Laudo_EliteShield_${selectedClient.name.replace(/\s/g, '_')}.pdf`
+                            link.click()
+                            addNotification({ type: 'success', title: 'Download', message: 'Laudo baixado com sucesso!' })
+                          }}
+                          className="flex items-center space-x-2 px-4 py-2 bg-primary text-black rounded-lg font-medium text-sm"
+                        >
+                          <Download className="w-4 h-4" />
+                          <span>Baixar</span>
+                        </button>
+                      </div>
+
+                      {/* Baixar Todos */}
+                      <div className="pt-4 border-t border-white/10">
+                        <button
+                          onClick={() => {
+                            addNotification({ type: 'info', title: 'Download', message: 'Preparando pacote de documentos...' })
+                            setTimeout(() => {
+                              addNotification({ type: 'success', title: 'Download', message: 'Todos os documentos foram baixados!' })
+                            }, 1500)
+                          }}
+                          className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-primary to-yellow-500 text-black rounded-xl font-semibold"
+                        >
+                          <Download className="w-5 h-5" />
+                          <span>Baixar Todos os Documentos</span>
                         </button>
                       </div>
                     </div>
-                    {client.lastAccess && (
-                      <p className="text-xs text-gray-500 mt-2">
-                        Último acesso: {new Date(client.lastAccess).toLocaleDateString('pt-BR')}
-                      </p>
-                    )}
                   </div>
-                ))}
-              </div>
+
+                  {/* Veículos do Cliente */}
+                  <div className="bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
+                    <div className="p-4 border-b border-white/10">
+                      <h3 className="font-semibold flex items-center space-x-2">
+                        <Car className="w-5 h-5 text-primary" />
+                        <span>Veículos ({selectedClient.vehiclesCount})</span>
+                      </h3>
+                    </div>
+                    <div className="divide-y divide-white/10">
+                      {selectedClient.projects.map((project) => (
+                        <div key={project.id} className="p-4 flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">{project.vehicle}</p>
+                            <p className="text-xs text-gray-500">{project.id}</p>
+                          </div>
+                          <span className={cn(
+                            "px-3 py-1 rounded-full text-xs font-medium",
+                            project.status === 'Concluído' ? "bg-green-500/20 text-green-400" :
+                            project.status === 'Em Andamento' ? "bg-yellow-500/20 text-yellow-400" :
+                            "bg-gray-500/20 text-gray-400"
+                          )}>
+                            {project.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -639,82 +807,104 @@ export function AdminDashboard() {
             </div>
           )}
 
-          {/* Quotes Tab - Orçamentos */}
+          {/* Quotes Tab - Orçamentos (Visão Gerencial) */}
           {activeTab === 'quotes' && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold">Orçamentos</h2>
-                  <p className="text-gray-400">Gerencie todas as solicitações de orçamento</p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm">
-                    {pendingQuotes.length} pendentes
-                  </span>
-                  <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm">
-                    {quotes.filter(q => q.status === 'approved').length} aprovados
-                  </span>
+                  <h2 className="text-2xl font-bold">Painel de Orçamentos</h2>
+                  <p className="text-gray-400">Acompanhe todos os orçamentos enviados aos clientes</p>
                 </div>
               </div>
 
-              <div className="space-y-3">
-                {quotes.map((quote) => (
-                  <div key={quote.id} className="bg-white/5 rounded-2xl p-4 border border-white/10">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
-                          <DollarSign className="w-6 h-6 text-primary" />
+              {/* Resumo Gerencial */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-yellow-500/10 rounded-xl p-4 border border-yellow-500/20">
+                  <div className="text-3xl font-bold text-yellow-400">{quotes.filter(q => q.status === 'pending').length}</div>
+                  <div className="text-sm text-gray-400">Aguardando Análise</div>
+                </div>
+                <div className="bg-blue-500/10 rounded-xl p-4 border border-blue-500/20">
+                  <div className="text-3xl font-bold text-blue-400">{quotes.filter(q => q.status === 'sent').length}</div>
+                  <div className="text-sm text-gray-400">Enviados ao Cliente</div>
+                </div>
+                <div className="bg-green-500/10 rounded-xl p-4 border border-green-500/20">
+                  <div className="text-3xl font-bold text-green-400">{quotes.filter(q => q.status === 'approved').length}</div>
+                  <div className="text-sm text-gray-400">Aprovados</div>
+                </div>
+                <div className="bg-red-500/10 rounded-xl p-4 border border-red-500/20">
+                  <div className="text-3xl font-bold text-red-400">{quotes.filter(q => q.status === 'rejected').length}</div>
+                  <div className="text-sm text-gray-400">Rejeitados</div>
+                </div>
+              </div>
+
+              {/* Lista de Orçamentos */}
+              <div className="bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
+                <div className="p-4 border-b border-white/10 flex justify-between items-center">
+                  <h3 className="font-semibold">Lista de Orçamentos ({quotes.length})</h3>
+                  <span className="text-sm text-gray-400">* Aprovação é feita pelo cliente</span>
+                </div>
+                <div className="divide-y divide-white/10">
+                  {quotes.map((quote) => (
+                    <div key={quote.id} className="p-4 hover:bg-white/5 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className={cn(
+                            "w-12 h-12 rounded-xl flex items-center justify-center",
+                            quote.status === 'pending' ? "bg-yellow-500/20" :
+                            quote.status === 'sent' ? "bg-blue-500/20" :
+                            quote.status === 'approved' ? "bg-green-500/20" : "bg-red-500/20"
+                          )}>
+                            <DollarSign className={cn(
+                              "w-6 h-6",
+                              quote.status === 'pending' ? "text-yellow-400" :
+                              quote.status === 'sent' ? "text-blue-400" :
+                              quote.status === 'approved' ? "text-green-400" : "text-red-400"
+                            )} />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold">{quote.clientName}</h4>
+                            <p className="text-sm text-gray-400">{quote.clientEmail}</p>
+                            <p className="text-xs text-gray-500">{quote.vehicleBrand} {quote.vehicleModel} • Nível {quote.blindingLevel}</p>
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="font-semibold">{quote.clientName}</h4>
-                          <p className="text-sm text-gray-400">{quote.vehicleType} • {quote.blindingLevel}</p>
-                          <p className="text-xs text-gray-500">Solicitado em {new Date(quote.createdAt).toLocaleDateString('pt-BR')}</p>
+                        <div className="text-right">
+                          <span className={cn(
+                            "px-3 py-1 rounded-full text-sm font-medium inline-block mb-2",
+                            quote.status === 'pending' ? "bg-yellow-500/20 text-yellow-400" :
+                            quote.status === 'sent' ? "bg-blue-500/20 text-blue-400" :
+                            quote.status === 'approved' ? "bg-green-500/20 text-green-400" :
+                            "bg-red-500/20 text-red-400"
+                          )}>
+                            {quote.status === 'pending' ? 'Aguardando Análise' :
+                             quote.status === 'sent' ? 'Aguardando Cliente' :
+                             quote.status === 'approved' ? 'Aprovado pelo Cliente' : 'Rejeitado'}
+                          </span>
+                          {quote.estimatedPrice && (
+                            <div className="text-xl font-bold text-primary">{quote.estimatedPrice}</div>
+                          )}
+                          <div className="text-xs text-gray-500">
+                            Solicitado em {new Date(quote.createdAt).toLocaleDateString('pt-BR')}
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-3">
-                        <span className={cn(
-                          "px-3 py-1 rounded-full text-sm font-medium",
-                          quote.status === 'pending' ? "bg-yellow-500/20 text-yellow-400" :
-                          quote.status === 'sent' ? "bg-blue-500/20 text-blue-400" :
-                          quote.status === 'approved' ? "bg-green-500/20 text-green-400" :
-                          "bg-red-500/20 text-red-400"
-                        )}>
-                          {quote.status === 'pending' ? 'Pendente' :
-                           quote.status === 'sent' ? 'Enviado' :
-                           quote.status === 'approved' ? 'Aprovado' : 'Rejeitado'}
-                        </span>
-                        {quote.status === 'pending' && (
+                      {quote.status === 'sent' && (
+                        <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between">
+                          <span className="text-sm text-yellow-400">⏳ Aguardando aprovação do cliente</span>
                           <button
                             onClick={() => {
-                              updateQuoteStatus(quote.id, 'sent', { estimatedPrice: 'R$ 85.000,00', estimatedDays: 15 })
-                              addNotification({ type: 'success', title: 'Orçamento Enviado', message: `Orçamento enviado para ${quote.clientName}` })
+                              const phone = '11999999999'
+                              const msg = `Olá ${quote.clientName}! Verificamos que seu orçamento de blindagem ainda está pendente. Valor: ${quote.estimatedPrice}. Posso ajudar com alguma dúvida?`
+                              window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(msg)}`, '_blank')
                             }}
-                            className="px-4 py-2 bg-primary text-black rounded-lg font-medium text-sm"
+                            className="px-3 py-1 bg-green-600/20 text-green-400 rounded-lg text-sm hover:bg-green-600/30 transition-colors"
                           >
-                            Enviar Valor
+                            Cobrar via WhatsApp
                           </button>
-                        )}
-                        {quote.status === 'sent' && (
-                          <button
-                            onClick={() => {
-                              updateQuoteStatus(quote.id, 'approved', {})
-                              addNotification({ type: 'success', title: 'Orçamento Aprovado', message: `Orçamento de ${quote.clientName} foi aprovado` })
-                            }}
-                            className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium text-sm"
-                          >
-                            Aprovar
-                          </button>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
-                    {quote.estimatedPrice && (
-                      <div className="mt-3 pt-3 border-t border-white/10 flex justify-between items-center">
-                        <span className="text-gray-400">Valor do orçamento:</span>
-                        <span className="text-xl font-bold text-primary">{quote.estimatedPrice}</span>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           )}
