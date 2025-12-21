@@ -1,0 +1,930 @@
+import { useState, useMemo } from 'react'
+import { 
+  Users, Car, BarChart3, Search, Shield, Key, Trash2,
+  CheckCircle, Clock, TrendingUp, Settings, UserCheck,
+  Eye, EyeOff, UserPlus, LogOut, Activity, Database, Mail,
+  DollarSign, Calendar
+} from 'lucide-react'
+import { Modal } from '../components/ui/Modal'
+import { useAuth } from '../contexts/AuthContext'
+import { useNotifications } from '../contexts/NotificationContext'
+import { useProjects } from '../contexts/ProjectContext'
+import { useQuotes } from '../contexts/QuoteContext'
+import { cn } from '../lib/utils'
+
+interface ExecutorUser {
+  id: string
+  name: string
+  email: string
+  phone: string
+  role: 'executor'
+  status: 'active' | 'inactive'
+  createdAt: string
+  lastLogin?: string
+  projectsCount: number
+}
+
+const initialExecutors: ExecutorUser[] = [
+  { id: 'EXE-001', name: 'Carlos Silva', email: 'carlos@eliteblindagens.com.br', phone: '(11) 99999-1111', role: 'executor', status: 'active', createdAt: '2024-01-15', lastLogin: '2024-12-14', projectsCount: 12 },
+  { id: 'EXE-002', name: 'Roberto Almeida', email: 'roberto@eliteblindagens.com.br', phone: '(11) 99999-2222', role: 'executor', status: 'active', createdAt: '2024-03-20', lastLogin: '2024-12-13', projectsCount: 8 },
+  { id: 'EXE-003', name: 'Fernando Santos', email: 'fernando@eliteblindagens.com.br', phone: '(11) 99999-3333', role: 'executor', status: 'inactive', createdAt: '2024-06-10', projectsCount: 5 },
+]
+
+type AdminTab = 'dashboard' | 'executors' | 'clients' | 'projects' | 'quotes' | 'schedule' | 'settings'
+
+interface ClientInfo {
+  id: string
+  name: string
+  email: string
+  phone: string
+  vehiclesCount: number
+  lastAccess?: string
+  hasAccessed: boolean
+  projects: { id: string; vehicle: string; status: string; qrCode: string }[]
+}
+
+export function AdminDashboard() {
+  const { user, logout } = useAuth()
+  const { addNotification } = useNotifications()
+  const { projects } = useProjects()
+  const { quotes, updateQuoteStatus, getPendingQuotes } = useQuotes()
+  
+  const [activeTab, setActiveTab] = useState<AdminTab>('dashboard')
+  const [executors, setExecutors] = useState<ExecutorUser[]>(initialExecutors)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [showNewExecutorModal, setShowNewExecutorModal] = useState(false)
+  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false)
+  const [selectedExecutor, setSelectedExecutor] = useState<ExecutorUser | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
+  
+  const [newExecutorData, setNewExecutorData] = useState({
+    name: '', email: '', phone: '', password: '',
+  })
+  const [newPassword, setNewPassword] = useState('')
+
+  // Extrair clientes únicos dos projetos
+  const clients = useMemo<ClientInfo[]>(() => {
+    const clientMap = new Map<string, ClientInfo>()
+    
+    projects.forEach(p => {
+      const existing = clientMap.get(p.user.email)
+      if (existing) {
+        existing.vehiclesCount++
+        existing.projects.push({
+          id: p.id,
+          vehicle: `${p.vehicle.brand} ${p.vehicle.model}`,
+          status: p.status,
+          qrCode: p.qrCode,
+        })
+      } else {
+        clientMap.set(p.user.email, {
+          id: p.user.id,
+          name: p.user.name,
+          email: p.user.email,
+          phone: p.user.phone || '',
+          vehiclesCount: 1,
+          hasAccessed: Math.random() > 0.3, // Simulação - em produção viria do backend
+          lastAccess: Math.random() > 0.5 ? new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString() : undefined,
+          projects: [{
+            id: p.id,
+            vehicle: `${p.vehicle.brand} ${p.vehicle.model}`,
+            status: p.status,
+            qrCode: p.qrCode,
+          }],
+        })
+      }
+    })
+    
+    return Array.from(clientMap.values())
+  }, [projects])
+
+  // Estatísticas
+  const stats = {
+    totalProjects: projects.length,
+    inProgress: projects.filter(p => p.status === 'in_progress').length,
+    completed: projects.filter(p => p.status === 'completed').length,
+    pending: projects.filter(p => p.status === 'pending').length,
+    totalExecutors: executors.length,
+    activeExecutors: executors.filter(e => e.status === 'active').length,
+    totalClients: clients.length,
+    clientsWithAccess: clients.filter(c => c.hasAccessed).length,
+  }
+
+  const filteredExecutors = executors.filter(e =>
+    e.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    e.email.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  const handleCreateExecutor = () => {
+    if (!newExecutorData.name || !newExecutorData.email || !newExecutorData.password) {
+      addNotification({ type: 'warning', title: 'Campos Obrigatórios', message: 'Preencha todos os campos obrigatórios.' })
+      return
+    }
+    
+    const newExecutor: ExecutorUser = {
+      id: `EXE-${Date.now()}`,
+      name: newExecutorData.name,
+      email: newExecutorData.email,
+      phone: newExecutorData.phone,
+      role: 'executor',
+      status: 'active',
+      createdAt: new Date().toISOString().split('T')[0],
+      projectsCount: 0,
+    }
+    
+    setExecutors(prev => [...prev, newExecutor])
+    setShowNewExecutorModal(false)
+    setNewExecutorData({ name: '', email: '', phone: '', password: '' })
+    addNotification({ type: 'success', title: 'Executor Criado', message: `${newExecutor.name} foi adicionado com sucesso.` })
+  }
+
+  const handleToggleExecutorStatus = (executor: ExecutorUser) => {
+    setExecutors(prev => prev.map(e => 
+      e.id === executor.id ? { ...e, status: e.status === 'active' ? 'inactive' : 'active' } : e
+    ))
+    addNotification({ 
+      type: 'success', 
+      title: 'Status Atualizado', 
+      message: `${executor.name} foi ${executor.status === 'active' ? 'desativado' : 'ativado'}.` 
+    })
+  }
+
+  const handleResetPassword = () => {
+    if (!newPassword || newPassword.length < 6) {
+      addNotification({ type: 'warning', title: 'Senha Inválida', message: 'A senha deve ter pelo menos 6 caracteres.' })
+      return
+    }
+    addNotification({ type: 'success', title: 'Senha Alterada', message: `Senha de ${selectedExecutor?.name} foi alterada com sucesso.` })
+    setShowResetPasswordModal(false)
+    setNewPassword('')
+    setSelectedExecutor(null)
+  }
+
+  const handleDeleteExecutor = (executor: ExecutorUser) => {
+    if (window.confirm(`Tem certeza que deseja excluir ${executor.name}?`)) {
+      setExecutors(prev => prev.filter(e => e.id !== executor.id))
+      addNotification({ type: 'success', title: 'Executor Excluído', message: `${executor.name} foi removido do sistema.` })
+    }
+  }
+
+  const handleLogout = () => {
+    logout()
+  }
+
+  const pendingQuotes = getPendingQuotes()
+  
+  const mockSchedule = [
+    { id: '1', clientName: 'Ricardo Mendes', vehicle: 'Mercedes GLE 450', date: '2025-01-15', time: '09:00', type: 'revisao', status: 'confirmed' },
+    { id: '2', clientName: 'Fernanda Costa', vehicle: 'BMW X5', date: '2025-01-16', time: '14:00', type: 'entrega', status: 'pending' },
+    { id: '3', clientName: 'João Paulo Santos', vehicle: 'Audi Q7', date: '2025-01-18', time: '10:00', type: 'revisao', status: 'confirmed' },
+  ]
+
+  const navItems = [
+    { id: 'dashboard' as AdminTab, label: 'Dashboard', icon: BarChart3 },
+    { id: 'executors' as AdminTab, label: 'Executores', icon: Users },
+    { id: 'clients' as AdminTab, label: 'Clientes', icon: UserCheck },
+    { id: 'projects' as AdminTab, label: 'Projetos', icon: Car },
+    { id: 'quotes' as AdminTab, label: 'Orçamentos', icon: DollarSign, badge: pendingQuotes.length },
+    { id: 'schedule' as AdminTab, label: 'Agenda', icon: Calendar },
+    { id: 'settings' as AdminTab, label: 'Configurações', icon: Settings },
+  ]
+
+  const filteredClients = clients.filter(c =>
+    c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.email.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  return (
+    <div className="min-h-screen bg-black text-white font-['Inter'] flex">
+      {/* Sidebar */}
+      <aside className="hidden lg:flex flex-col w-64 bg-carbon-900 border-r border-white/10">
+        <div className="p-6 border-b border-white/10">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary/60 rounded-xl flex items-center justify-center">
+              <Shield className="w-5 h-5 text-black" />
+            </div>
+            <div>
+              <h1 className="font-['Pacifico'] text-xl text-primary">EliteTrack™</h1>
+              <span className="text-xs text-gray-500">Painel Admin</span>
+            </div>
+          </div>
+        </div>
+
+        <nav className="flex-1 p-4 space-y-1">
+          {navItems.map((item) => {
+            const Icon = item.icon
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={cn(
+                  "w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all",
+                  activeTab === item.id 
+                    ? "bg-primary text-black" 
+                    : "text-gray-400 hover:bg-white/5 hover:text-white"
+                )}
+              >
+                <Icon className="w-5 h-5" />
+                <span className="font-medium">{item.label}</span>
+                {'badge' in item && (item as { badge?: number }).badge !== undefined && (item as { badge?: number }).badge! > 0 && (
+                  <span className="ml-auto px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">{(item as { badge?: number }).badge}</span>
+                )}
+              </button>
+            )
+          })}
+        </nav>
+
+        <div className="p-4 border-t border-white/10">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold">{user?.name?.charAt(0)}</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium truncate">{user?.name}</p>
+              <p className="text-xs text-gray-500">Administrador</p>
+            </div>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center space-x-2 text-gray-400 hover:text-red-400 py-2 rounded-xl hover:bg-white/5 transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            <span className="text-sm">Sair</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-h-screen">
+        <header className="bg-carbon-900/80 backdrop-blur-xl border-b border-white/10 sticky top-0 z-40">
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="lg:hidden flex items-center space-x-3">
+                <Shield className="w-6 h-6 text-primary" />
+                <span className="font-['Pacifico'] text-lg text-primary">EliteTrack™</span>
+              </div>
+              <div className="hidden lg:block">
+                <h2 className="text-xl font-bold">
+                  {activeTab === 'dashboard' && 'Dashboard'}
+                  {activeTab === 'executors' && 'Gestão de Executores'}
+                  {activeTab === 'clients' && 'Gestão de Clientes'}
+                  {activeTab === 'projects' && 'Projetos'}
+                  {activeTab === 'quotes' && 'Gestão de Orçamentos'}
+                  {activeTab === 'schedule' && 'Agenda de Revisões'}
+                  {activeTab === 'settings' && 'Configurações'}
+                </h2>
+              </div>
+              <div className="text-sm text-gray-400">
+                {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main className="flex-1 p-6 overflow-auto">
+          {/* Dashboard Tab */}
+          {activeTab === 'dashboard' && (
+            <div className="space-y-6">
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
+                      <Car className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">{stats.totalProjects}</p>
+                      <p className="text-sm text-gray-400">Total Projetos</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center">
+                      <Clock className="w-6 h-6 text-yellow-500" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">{stats.inProgress}</p>
+                      <p className="text-sm text-gray-400">Em Andamento</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
+                      <CheckCircle className="w-6 h-6 text-green-500" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">{stats.completed}</p>
+                      <p className="text-sm text-gray-400">Concluídos</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                      <Users className="w-6 h-6 text-blue-500" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">{stats.activeExecutors}</p>
+                      <p className="text-sm text-gray-400">Executores Ativos</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                  <h3 className="text-lg font-semibold mb-4 flex items-center space-x-2">
+                    <Activity className="w-5 h-5 text-primary" />
+                    <span>Ações Rápidas</span>
+                  </h3>
+                  <div className="space-y-3">
+                    <button 
+                      onClick={() => { setActiveTab('executors'); setShowNewExecutorModal(true); }}
+                      className="w-full flex items-center space-x-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
+                    >
+                      <UserPlus className="w-5 h-5 text-primary" />
+                      <span>Criar Novo Executor</span>
+                    </button>
+                    <button 
+                      onClick={() => setActiveTab('executors')}
+                      className="w-full flex items-center space-x-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
+                    >
+                      <Key className="w-5 h-5 text-yellow-500" />
+                      <span>Gerenciar Senhas</span>
+                    </button>
+                    <button 
+                      onClick={() => setActiveTab('projects')}
+                      className="w-full flex items-center space-x-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
+                    >
+                      <Database className="w-5 h-5 text-blue-500" />
+                      <span>Ver Todos os Projetos</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                  <h3 className="text-lg font-semibold mb-4 flex items-center space-x-2">
+                    <TrendingUp className="w-5 h-5 text-green-500" />
+                    <span>Resumo do Sistema</span>
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-3 bg-white/5 rounded-xl">
+                      <span className="text-gray-400">Total de Clientes</span>
+                      <span className="font-bold">{stats.totalClients}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-white/5 rounded-xl">
+                      <span className="text-gray-400">Executores Cadastrados</span>
+                      <span className="font-bold">{stats.totalExecutors}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-white/5 rounded-xl">
+                      <span className="text-gray-400">Projetos Pendentes</span>
+                      <span className="font-bold text-yellow-500">{stats.pending}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recent Projects */}
+              <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                <h3 className="text-lg font-semibold mb-4">Projetos Recentes</h3>
+                <div className="space-y-3">
+                  {projects.slice(0, 5).map((project) => (
+                    <div key={project.id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-10 rounded-lg overflow-hidden bg-carbon-700">
+                          <img src={project.vehicle.images[0]} alt={project.vehicle.model} className="w-full h-full object-cover" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{project.vehicle.brand} {project.vehicle.model}</p>
+                          <p className="text-sm text-gray-400">{project.user.name}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className={cn(
+                          "px-2 py-1 rounded-full text-xs font-medium",
+                          project.status === 'completed' ? "bg-green-500/20 text-green-400" :
+                          project.status === 'in_progress' ? "bg-yellow-500/20 text-yellow-400" :
+                          "bg-gray-500/20 text-gray-400"
+                        )}>
+                          {project.progress}%
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Executors Tab */}
+          {activeTab === 'executors' && (
+            <div className="space-y-6">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Buscar executores..."
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-500"
+                    title="Buscar executores"
+                  />
+                </div>
+                <button
+                  onClick={() => setShowNewExecutorModal(true)}
+                  className="flex items-center space-x-2 bg-primary text-black px-4 py-3 rounded-xl font-semibold"
+                >
+                  <UserPlus className="w-5 h-5" />
+                  <span>Novo Executor</span>
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {filteredExecutors.map((executor) => (
+                  <div key={executor.id} className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary/60 rounded-full flex items-center justify-center">
+                          <span className="text-black font-bold text-lg">{executor.name.charAt(0)}</span>
+                        </div>
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <h4 className="font-semibold">{executor.name}</h4>
+                            <span className={cn(
+                              "px-2 py-0.5 rounded-full text-xs font-medium",
+                              executor.status === 'active' ? "bg-green-500/20 text-green-400" : "bg-gray-500/20 text-gray-400"
+                            )}>
+                              {executor.status === 'active' ? 'Ativo' : 'Inativo'}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-400">{executor.email}</p>
+                          <p className="text-xs text-gray-500">{executor.phone} • {executor.projectsCount} projetos</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => { setSelectedExecutor(executor); setShowResetPasswordModal(true); }}
+                          className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
+                          title="Alterar senha"
+                        >
+                          <Key className="w-4 h-4 text-yellow-500" />
+                        </button>
+                        <button
+                          onClick={() => handleToggleExecutorStatus(executor)}
+                          className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
+                          title={executor.status === 'active' ? 'Desativar' : 'Ativar'}
+                        >
+                          {executor.status === 'active' ? <EyeOff className="w-4 h-4 text-gray-400" /> : <Eye className="w-4 h-4 text-green-400" />}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteExecutor(executor)}
+                          className="p-2 bg-white/10 rounded-lg hover:bg-red-500/20 transition-colors"
+                          title="Excluir"
+                        >
+                          <Trash2 className="w-4 h-4 text-red-400" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Clients Tab */}
+          {activeTab === 'clients' && (
+            <div className="space-y-6">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Buscar clientes..."
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-500"
+                    title="Buscar clientes"
+                  />
+                </div>
+                <div className="flex items-center space-x-4 text-sm">
+                  <div className="flex items-center space-x-2 bg-green-500/20 px-3 py-2 rounded-lg">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    <span className="text-green-400">{stats.clientsWithAccess} acessaram</span>
+                  </div>
+                  <div className="flex items-center space-x-2 bg-gray-500/20 px-3 py-2 rounded-lg">
+                    <Clock className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-400">{stats.totalClients - stats.clientsWithAccess} pendentes</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {filteredClients.map((client) => (
+                  <div key={client.id} className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                          <span className="text-white font-bold text-lg">{client.name.charAt(0)}</span>
+                        </div>
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <h4 className="font-semibold">{client.name}</h4>
+                            <span className={cn(
+                              "px-2 py-0.5 rounded-full text-xs font-medium",
+                              client.hasAccessed ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"
+                            )}>
+                              {client.hasAccessed ? 'Acessou' : 'Não acessou'}
+                            </span>
+                            {client.vehiclesCount > 1 && (
+                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-primary/20 text-primary">
+                                {client.vehiclesCount} veículos
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-400">{client.email}</p>
+                          <p className="text-xs text-gray-500">{client.phone || 'Sem telefone'}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {!client.hasAccessed && (
+                          <button
+                            onClick={() => {
+                              const project = client.projects[0]
+                              const message = `Olá ${client.name}! Acesse o EliteTrack para acompanhar seu veículo. QR Code: ${project.qrCode}`
+                              window.open(`mailto:${client.email}?subject=EliteTrack - Acesso ao Sistema&body=${encodeURIComponent(message)}`, '_blank')
+                              addNotification({ type: 'success', title: 'E-mail Enviado', message: `Link de acesso enviado para ${client.email}` })
+                            }}
+                            className="flex items-center space-x-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm transition-colors"
+                            title="Reenviar acesso"
+                          >
+                            <Mail className="w-4 h-4" />
+                            <span>Reenviar</span>
+                          </button>
+                        )}
+                        <button
+                          onClick={() => {
+                            const details = client.projects.map(p => `• ${p.vehicle} (${p.status})`).join('\n')
+                            alert(`Veículos de ${client.name}:\n\n${details}`)
+                          }}
+                          className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
+                          title="Ver detalhes"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    {client.lastAccess && (
+                      <p className="text-xs text-gray-500 mt-2">
+                        Último acesso: {new Date(client.lastAccess).toLocaleDateString('pt-BR')}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Projects Tab */}
+          {activeTab === 'projects' && (
+            <div className="space-y-6">
+              <div className="relative max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Buscar projetos..."
+                  className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-500"
+                  title="Buscar projetos"
+                />
+              </div>
+
+              <div className="grid gap-4">
+                {projects.filter(p => 
+                  p.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  p.vehicle.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  p.vehicle.plate.toLowerCase().includes(searchTerm.toLowerCase())
+                ).map((project) => (
+                  <div key={project.id} className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-16 h-12 rounded-xl overflow-hidden bg-carbon-700">
+                          <img src={project.vehicle.images[0]} alt={project.vehicle.model} className="w-full h-full object-cover" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold">{project.vehicle.brand} {project.vehicle.model}</h4>
+                          <p className="text-sm text-gray-400">{project.user.name} • {project.vehicle.plate}</p>
+                          <p className="text-xs text-gray-500">{project.id}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-primary">{project.progress}%</div>
+                        <span className={cn(
+                          "px-2 py-1 rounded-full text-xs font-medium",
+                          project.status === 'completed' ? "bg-green-500/20 text-green-400" :
+                          project.status === 'in_progress' ? "bg-yellow-500/20 text-yellow-400" :
+                          "bg-gray-500/20 text-gray-400"
+                        )}>
+                          {project.status === 'completed' ? 'Concluído' : project.status === 'in_progress' ? 'Em Andamento' : 'Pendente'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Quotes Tab - Orçamentos */}
+          {activeTab === 'quotes' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold">Orçamentos</h2>
+                  <p className="text-gray-400">Gerencie todas as solicitações de orçamento</p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm">
+                    {pendingQuotes.length} pendentes
+                  </span>
+                  <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm">
+                    {quotes.filter(q => q.status === 'approved').length} aprovados
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {quotes.map((quote) => (
+                  <div key={quote.id} className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
+                          <DollarSign className="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold">{quote.clientName}</h4>
+                          <p className="text-sm text-gray-400">{quote.vehicleType} • {quote.blindingLevel}</p>
+                          <p className="text-xs text-gray-500">Solicitado em {new Date(quote.createdAt).toLocaleDateString('pt-BR')}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span className={cn(
+                          "px-3 py-1 rounded-full text-sm font-medium",
+                          quote.status === 'pending' ? "bg-yellow-500/20 text-yellow-400" :
+                          quote.status === 'sent' ? "bg-blue-500/20 text-blue-400" :
+                          quote.status === 'approved' ? "bg-green-500/20 text-green-400" :
+                          "bg-red-500/20 text-red-400"
+                        )}>
+                          {quote.status === 'pending' ? 'Pendente' :
+                           quote.status === 'sent' ? 'Enviado' :
+                           quote.status === 'approved' ? 'Aprovado' : 'Rejeitado'}
+                        </span>
+                        {quote.status === 'pending' && (
+                          <button
+                            onClick={() => {
+                              updateQuoteStatus(quote.id, 'sent', { estimatedPrice: 'R$ 85.000,00', estimatedDays: 15 })
+                              addNotification({ type: 'success', title: 'Orçamento Enviado', message: `Orçamento enviado para ${quote.clientName}` })
+                            }}
+                            className="px-4 py-2 bg-primary text-black rounded-lg font-medium text-sm"
+                          >
+                            Enviar Valor
+                          </button>
+                        )}
+                        {quote.status === 'sent' && (
+                          <button
+                            onClick={() => {
+                              updateQuoteStatus(quote.id, 'approved', {})
+                              addNotification({ type: 'success', title: 'Orçamento Aprovado', message: `Orçamento de ${quote.clientName} foi aprovado` })
+                            }}
+                            className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium text-sm"
+                          >
+                            Aprovar
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    {quote.estimatedPrice && (
+                      <div className="mt-3 pt-3 border-t border-white/10 flex justify-between items-center">
+                        <span className="text-gray-400">Valor do orçamento:</span>
+                        <span className="text-xl font-bold text-primary">{quote.estimatedPrice}</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Schedule Tab - Agenda */}
+          {activeTab === 'schedule' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold">Agenda de Revisões</h2>
+                  <p className="text-gray-400">Visualize todos os agendamentos</p>
+                </div>
+                <span className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm">
+                  {mockSchedule.length} agendamentos
+                </span>
+              </div>
+
+              <div className="grid gap-4">
+                {mockSchedule.map((item) => (
+                  <div key={item.id} className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className={cn(
+                          "w-12 h-12 rounded-xl flex items-center justify-center",
+                          item.type === 'revisao' ? "bg-blue-500/20" : "bg-green-500/20"
+                        )}>
+                          <Calendar className={cn(
+                            "w-6 h-6",
+                            item.type === 'revisao' ? "text-blue-400" : "text-green-400"
+                          )} />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold">{item.clientName}</h4>
+                          <p className="text-sm text-gray-400">{item.vehicle}</p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(item.date).toLocaleDateString('pt-BR')} às {item.time}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span className={cn(
+                          "px-3 py-1 rounded-full text-sm font-medium",
+                          item.type === 'revisao' ? "bg-blue-500/20 text-blue-400" : "bg-green-500/20 text-green-400"
+                        )}>
+                          {item.type === 'revisao' ? 'Revisão' : 'Entrega'}
+                        </span>
+                        <span className={cn(
+                          "px-3 py-1 rounded-full text-sm font-medium",
+                          item.status === 'confirmed' ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"
+                        )}>
+                          {item.status === 'confirmed' ? 'Confirmado' : 'Pendente'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Settings Tab */}
+          {activeTab === 'settings' && (
+            <div className="space-y-6 max-w-2xl">
+              <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                <h3 className="text-lg font-semibold mb-4">Configurações do Sistema</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl">
+                    <div>
+                      <p className="font-medium">Notificações por E-mail</p>
+                      <p className="text-sm text-gray-400">Receber alertas de novos projetos</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" defaultChecked className="sr-only peer" title="Notificações por e-mail" />
+                      <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl">
+                    <div>
+                      <p className="font-medium">Backup Automático</p>
+                      <p className="text-sm text-gray-400">Backup diário dos dados</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" defaultChecked className="sr-only peer" title="Backup automático" />
+                      <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                <h3 className="text-lg font-semibold mb-4">Informações do Sistema</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between py-2 border-b border-white/10">
+                    <span className="text-gray-400">Versão</span>
+                    <span>1.0.0</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-white/10">
+                    <span className="text-gray-400">Última atualização</span>
+                    <span>14/12/2024</span>
+                  </div>
+                  <div className="flex justify-between py-2">
+                    <span className="text-gray-400">Ambiente</span>
+                    <span className="text-green-400">Produção</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* Modal Novo Executor */}
+      <Modal isOpen={showNewExecutorModal} onClose={() => setShowNewExecutorModal(false)} size="md">
+        <div className="p-6">
+          <h2 className="text-xl font-bold mb-6">Criar Novo Executor</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Nome Completo *</label>
+              <input
+                type="text"
+                value={newExecutorData.name}
+                onChange={(e) => setNewExecutorData({ ...newExecutorData, name: e.target.value })}
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                placeholder="Nome do executor"
+                title="Nome do executor"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">E-mail *</label>
+              <input
+                type="email"
+                value={newExecutorData.email}
+                onChange={(e) => setNewExecutorData({ ...newExecutorData, email: e.target.value })}
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                placeholder="email@exemplo.com"
+                title="E-mail do executor"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Telefone</label>
+              <input
+                type="tel"
+                value={newExecutorData.phone}
+                onChange={(e) => setNewExecutorData({ ...newExecutorData, phone: e.target.value })}
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                placeholder="(11) 99999-9999"
+                title="Telefone do executor"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Senha Inicial *</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={newExecutorData.password}
+                  onChange={(e) => setNewExecutorData({ ...newExecutorData, password: e.target.value })}
+                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white pr-12"
+                  placeholder="Mínimo 6 caracteres"
+                  title="Senha inicial"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  title="Mostrar/ocultar senha"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-end space-x-3 mt-6">
+            <button onClick={() => setShowNewExecutorModal(false)} className="px-6 py-3 bg-white/10 rounded-xl">Cancelar</button>
+            <button onClick={handleCreateExecutor} className="px-6 py-3 bg-primary text-black rounded-xl font-semibold">Criar Executor</button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal Reset Password */}
+      <Modal isOpen={showResetPasswordModal} onClose={() => { setShowResetPasswordModal(false); setSelectedExecutor(null); }} size="sm">
+        <div className="p-6">
+          <h2 className="text-xl font-bold mb-2">Alterar Senha</h2>
+          <p className="text-gray-400 mb-6">{selectedExecutor?.name}</p>
+          <div>
+            <label className="block text-sm text-gray-400 mb-2">Nova Senha *</label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white pr-12"
+                placeholder="Mínimo 6 caracteres"
+                title="Nova senha"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                title="Mostrar/ocultar senha"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+          </div>
+          <div className="flex justify-end space-x-3 mt-6">
+            <button onClick={() => { setShowResetPasswordModal(false); setSelectedExecutor(null); }} className="px-6 py-3 bg-white/10 rounded-xl">Cancelar</button>
+            <button onClick={handleResetPassword} className="px-6 py-3 bg-primary text-black rounded-xl font-semibold">Salvar Senha</button>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  )
+}

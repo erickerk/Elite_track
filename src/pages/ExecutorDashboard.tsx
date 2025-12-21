@@ -1,0 +1,2315 @@
+import React, { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { 
+  CheckCircle, Clock, AlertCircle, Car, QrCode, Bell,
+  FileText, CreditCard, MessageCircle, Settings, Search, 
+  Users, Home, Image, LogOut, ChevronRight, Plus, X, Save, Edit3, Calendar,
+  DollarSign, Paperclip, Send, Eye
+} from 'lucide-react'
+import { Modal } from '../components/ui/Modal'
+import { NotificationPanel } from '../components/ui/NotificationPanel'
+import { QRScanner, ExecutorChat, ExecutorTimeline, ExecutorPhotos } from '../components/executor'
+import { useAuth } from '../contexts/AuthContext'
+import { useNotifications } from '../contexts/NotificationContext'
+import { useChat } from '../contexts/ChatContext'
+import { useProjects } from '../contexts/ProjectContext'
+import { useQuotes } from '../contexts/QuoteContext'
+import { cn } from '../lib/utils'
+import type { Project } from '../types'
+
+// Componente ProgressBar sem inline style
+function ProgressBar({ progress }: { progress: number }) {
+  const widthClasses: Record<number, string> = {
+    0: 'w-0', 5: 'w-[5%]', 9: 'w-[9%]', 10: 'w-[10%]', 18: 'w-[18%]', 20: 'w-1/5',
+    25: 'w-1/4', 30: 'w-[30%]', 33: 'w-1/3', 36: 'w-[36%]', 40: 'w-2/5',
+    50: 'w-1/2', 60: 'w-3/5', 66: 'w-2/3', 70: 'w-[70%]', 75: 'w-3/4',
+    80: 'w-4/5', 90: 'w-[90%]', 100: 'w-full'
+  }
+  
+  // Encontrar a classe mais próxima
+  const closestKey = Object.keys(widthClasses)
+    .map(Number)
+    .reduce((prev, curr) => Math.abs(curr - progress) < Math.abs(prev - progress) ? curr : prev)
+  
+  return (
+    <div 
+      className="w-full bg-white/10 rounded-full h-2 overflow-hidden"
+      title={`${progress}% concluído`}
+    >
+      <div className={cn("bg-primary h-2 rounded-full transition-all", widthClasses[closestKey])} />
+    </div>
+  )
+}
+
+type TabType = 'dashboard' | 'timeline' | 'photos' | 'laudo' | 'card' | 'chat' | 'schedule' | 'clients' | 'tickets' | 'quotes'
+
+const statusConfig = {
+  pending: { label: 'Pendente', color: 'bg-gray-500', textColor: 'text-gray-400' },
+  in_progress: { label: 'Em Andamento', color: 'bg-primary', textColor: 'text-primary' },
+  completed: { label: 'Concluído', color: 'bg-green-500', textColor: 'text-green-400' },
+  delivered: { label: 'Entregue', color: 'bg-blue-500', textColor: 'text-blue-400' },
+}
+
+// Mock de agendamentos de revisão
+const mockScheduledRevisions = [
+  { id: '1', clientName: 'Ricardo Mendes', vehicle: 'Audi Q7', date: '2025-01-15', time: '09:00', type: 'revisao', status: 'confirmed', phone: '11999999999' },
+  { id: '2', clientName: 'Fernanda Costa', vehicle: 'BMW X5', date: '2025-01-16', time: '14:00', type: 'revisao', status: 'pending', phone: '11988888888' },
+  { id: '3', clientName: 'João Paulo Santos', vehicle: 'Mercedes GLE', date: '2025-01-18', time: '10:00', type: 'entrega', status: 'confirmed', phone: '11977777777' },
+  { id: '4', clientName: 'Maria Silva', vehicle: 'Range Rover', date: '2025-01-20', time: '11:00', type: 'revisao', status: 'pending', phone: '11966666666' },
+]
+
+// Mock de clientes que devem retornar para revisão anual
+const mockRevisionReminders = [
+  { id: 'R1', clientName: 'Carlos Alberto', vehicle: 'Toyota Hilux', blindingDate: '2024-01-25', nextRevisionDate: '2025-01-25', daysUntil: 4, phone: '11955555555', email: 'carlos@email.com' },
+  { id: 'R2', clientName: 'Ana Paula', vehicle: 'Jeep Compass', blindingDate: '2024-02-10', nextRevisionDate: '2025-02-10', daysUntil: 20, phone: '11944444444', email: 'ana@email.com' },
+  { id: 'R3', clientName: 'Roberto Lima', vehicle: 'Volvo XC90', blindingDate: '2024-01-20', nextRevisionDate: '2025-01-20', daysUntil: -1, phone: '11933333333', email: 'roberto@email.com' },
+  { id: 'R4', clientName: 'Patricia Santos', vehicle: 'Porsche Cayenne', blindingDate: '2024-02-28', nextRevisionDate: '2025-02-28', daysUntil: 38, phone: '11922222222', email: 'patricia@email.com' },
+  { id: 'R5', clientName: 'Fernando Oliveira', vehicle: 'Land Rover Defender', blindingDate: '2024-01-18', nextRevisionDate: '2025-01-18', daysUntil: -3, phone: '11911111111', email: 'fernando@email.com' },
+]
+
+// Mock de tickets de suporte
+const mockTickets = [
+  { id: 'TKT-001', clientName: 'Ricardo Mendes', clientEmail: 'ricardo@email.com', subject: 'Dúvida sobre garantia', message: 'Gostaria de saber mais sobre a garantia da blindagem.', status: 'open', priority: 'medium', createdAt: '2025-01-14T10:30:00', vehicle: 'Audi Q7' },
+  { id: 'TKT-002', clientName: 'Fernanda Costa', clientEmail: 'fernanda@email.com', subject: 'Problema com vidro', message: 'O vidro traseiro está com barulho estranho.', status: 'in_progress', priority: 'high', createdAt: '2025-01-13T14:20:00', vehicle: 'BMW X5' },
+  { id: 'TKT-003', clientName: 'João Paulo Santos', clientEmail: 'joao@email.com', subject: 'Agendamento de revisão', message: 'Preciso agendar a revisão anual do meu veículo.', status: 'open', priority: 'low', createdAt: '2025-01-12T09:15:00', vehicle: 'Mercedes GLE' },
+  { id: 'TKT-004', clientName: 'Maria Silva', clientEmail: 'maria@email.com', subject: 'Orçamento para troca de vidro', message: 'Preciso de orçamento para trocar o vidro da porta dianteira.', status: 'resolved', priority: 'medium', createdAt: '2025-01-10T16:45:00', vehicle: 'Range Rover' },
+  { id: 'TKT-005', clientName: 'Carlos Alberto', clientEmail: 'carlos@email.com', subject: 'Certificado de blindagem', message: 'Preciso de uma segunda via do certificado.', status: 'open', priority: 'low', createdAt: '2025-01-09T11:00:00', vehicle: 'Toyota Hilux' },
+]
+
+const ticketStatusConfig = {
+  open: { label: 'Aberto', color: 'bg-yellow-500', textColor: 'text-yellow-400' },
+  in_progress: { label: 'Em Atendimento', color: 'bg-blue-500', textColor: 'text-blue-400' },
+  resolved: { label: 'Resolvido', color: 'bg-green-500', textColor: 'text-green-400' },
+  closed: { label: 'Fechado', color: 'bg-gray-500', textColor: 'text-gray-400' },
+}
+
+const ticketPriorityConfig = {
+  low: { label: 'Baixa', color: 'bg-gray-500' },
+  medium: { label: 'Média', color: 'bg-yellow-500' },
+  high: { label: 'Alta', color: 'bg-red-500' },
+}
+
+const navItems = [
+  { id: 'dashboard' as TabType, label: 'Projetos', icon: Home },
+  { id: 'clients' as TabType, label: 'Clientes', icon: Users },
+  { id: 'quotes' as TabType, label: 'Orçamentos', icon: DollarSign },
+  { id: 'tickets' as TabType, label: 'Tickets', icon: MessageCircle },
+  { id: 'schedule' as TabType, label: 'Agenda', icon: Calendar },
+  { id: 'timeline' as TabType, label: 'Timeline', icon: Clock },
+  { id: 'photos' as TabType, label: 'Fotos', icon: Image },
+  { id: 'laudo' as TabType, label: 'Laudo', icon: FileText },
+  { id: 'card' as TabType, label: 'Cartão', icon: CreditCard },
+  { id: 'chat' as TabType, label: 'Chat', icon: MessageCircle },
+]
+
+export function ExecutorDashboard() {
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
+  const { unreadCount, addNotification } = useNotifications()
+  const { totalUnreadCount: chatUnreadCount } = useChat()
+  const { projects: globalProjects, addProject: addGlobalProject } = useProjects()
+  const { quotes, updateQuoteStatus, getPendingQuotes } = useQuotes()
+
+  const [activeTab, setActiveTab] = useState<TabType>('dashboard')
+  const [showQuoteModal, setShowQuoteModal] = useState(false)
+  const [selectedQuote, setSelectedQuote] = useState<typeof quotes[0] | null>(null)
+  const [quoteExactPrice, setQuoteExactPrice] = useState('')
+  const [quoteEstimatedDays, setQuoteEstimatedDays] = useState('')
+  const [quoteNotes, setQuoteNotes] = useState('')
+  const [ticketAttachmentName, setTicketAttachmentName] = useState('')
+  const ticketAttachmentRef = useRef<HTMLInputElement>(null)
+  const [selectedClientVehicle, setSelectedClientVehicle] = useState<string | null>(null)
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [showQRScanner, setShowQRScanner] = useState(false)
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterStatus, setFilterStatus] = useState<string>('all')
+  const [projects, setProjects] = useState<Project[]>(globalProjects)
+  const [showLaudoModal, setShowLaudoModal] = useState(false)
+  const [showNewCarModal, setShowNewCarModal] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [showTicketModal, setShowTicketModal] = useState(false)
+  const [selectedTicket, setSelectedTicket] = useState<typeof mockTickets[0] | null>(null)
+  const [ticketResponse, setTicketResponse] = useState('')
+  const [ticketNewStatus, setTicketNewStatus] = useState<string>('open')
+  const [tickets, setTickets] = useState(mockTickets)
+  const [createdProjectData, setCreatedProjectData] = useState<{ id: string; qrCode: string; clientName: string; clientEmail: string; clientPhone: string; vehicle: string } | null>(null)
+  const [laudoData, setLaudoData] = useState({
+    level: 'IIIA',
+    certification: 'ABNT NBR 15000',
+    certificationNumber: '',
+    glassType: 'Laminado Multi-camadas',
+    glassThickness: '21mm',
+    warranty: '5 anos',
+    technicalResponsible: user?.name || '',
+  })
+  const [newCarData, setNewCarData] = useState({
+    clientName: '',
+    clientEmail: '',
+    clientPhone: '',
+    brand: '',
+    model: '',
+    year: '',
+    plate: '',
+    color: '',
+    chassis: '',
+  })
+  const [vehiclePhoto, setVehiclePhoto] = useState<string | null>(null)
+  const vehiclePhotoInputRef = useRef<HTMLInputElement>(null)
+
+  const handleVehiclePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setVehiclePhoto(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const allProjects = projects
+  const filteredProjects = allProjects.filter(p => {
+    const searchLower = searchTerm.toLowerCase()
+    const matchesSearch = 
+      p.vehicle.model.toLowerCase().includes(searchLower) ||
+      p.vehicle.brand.toLowerCase().includes(searchLower) ||
+      p.user.name.toLowerCase().includes(searchLower) ||
+      p.vehicle.plate.toLowerCase().includes(searchLower) ||
+      p.id.toLowerCase().includes(searchLower)
+    const matchesFilter = filterStatus === 'all' || p.status === filterStatus
+    return matchesSearch && matchesFilter
+  })
+
+  const stats = {
+    total: allProjects.length,
+    inProgress: allProjects.filter(p => p.status === 'in_progress').length,
+    pending: allProjects.filter(p => p.status === 'pending').length,
+    completed: allProjects.filter(p => p.status === 'completed').length,
+  }
+
+  useEffect(() => {
+    if (!selectedProject && filteredProjects.length > 0) {
+      setSelectedProject(filteredProjects[0])
+    }
+  }, [filteredProjects, selectedProject])
+
+  const handleQRScan = (code: string) => {
+    const project = allProjects.find(p => 
+      p.id === code || 
+      p.qrCode === code ||
+      p.id.toLowerCase().includes(code.toLowerCase()) ||
+      p.vehicle.plate.toLowerCase() === code.toLowerCase()
+    )
+    if (project) {
+      setSelectedProject(project)
+      setShowQRScanner(false)
+      addNotification({
+        type: 'success',
+        title: 'Projeto Encontrado',
+        message: `${project.vehicle.brand} ${project.vehicle.model} - ${project.user.name}`,
+        projectId: project.id,
+      })
+    } else {
+      addNotification({
+        type: 'error',
+        title: 'Projeto Não Encontrado',
+        message: 'Verifique o código e tente novamente.',
+      })
+    }
+  }
+
+  const handleUpdateStep = (stepId: string, updates: Record<string, unknown>) => {
+    if (!selectedProject) return
+
+    // Atualizar a timeline do projeto
+    const updatedTimeline = selectedProject.timeline.map(step => {
+      if (step.id === stepId) {
+        return { ...step, ...updates }
+      }
+      return step
+    })
+
+    // Calcular novo progresso
+    const completedSteps = updatedTimeline.filter(s => s.status === 'completed').length
+    const newProgress = Math.round((completedSteps / updatedTimeline.length) * 100)
+
+    // Atualizar o projeto
+    const updatedProject: Project = {
+      ...selectedProject,
+      timeline: updatedTimeline,
+      progress: newProgress,
+      status: newProgress === 100 ? 'completed' : newProgress > 0 ? 'in_progress' : 'pending'
+    }
+
+    // Atualizar lista de projetos
+    setProjects(prev => prev.map(p => p.id === updatedProject.id ? updatedProject : p))
+    setSelectedProject(updatedProject)
+
+    addNotification({
+      type: 'success',
+      title: 'Etapa Atualizada',
+      message: `A etapa foi atualizada com sucesso. Progresso: ${newProgress}%`,
+      projectId: selectedProject?.id,
+      stepId,
+    })
+  }
+
+  const handleAddPhoto = (stepId: string, photoType: string) => {
+    addNotification({
+      type: 'success',
+      title: 'Foto Adicionada',
+      message: `Foto do tipo "${photoType}" adicionada à etapa.`,
+      projectId: selectedProject?.id,
+      stepId,
+    })
+    console.log('Add photo:', stepId, photoType)
+  }
+
+  const handleUploadPhoto = (stepId: string, photoType: string, description: string) => {
+    addNotification({
+      type: 'success',
+      title: 'Foto Enviada',
+      message: description || `Foto "${photoType}" enviada com sucesso.`,
+      projectId: selectedProject?.id,
+      stepId,
+    })
+    console.log('Upload photo:', stepId, photoType, description)
+  }
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
+
+  const handleSaveLaudo = () => {
+    addNotification({
+      type: 'success',
+      title: 'Laudo Salvo',
+      message: 'As informações do laudo foram atualizadas com sucesso.',
+      projectId: selectedProject?.id,
+    })
+    setShowLaudoModal(false)
+  }
+
+  const handleCreateNewCar = () => {
+    if (!newCarData.clientName || !newCarData.brand || !newCarData.model || !newCarData.plate) {
+      addNotification({
+        type: 'warning',
+        title: 'Campos Obrigatórios',
+        message: 'Preencha todos os campos obrigatórios.',
+      })
+      return
+    }
+
+    const newProject: Project = {
+      id: `PRJ-${Date.now()}`,
+      qrCode: `QR-${Date.now()}`,
+      vehicle: {
+        id: `VH-${Date.now()}`,
+        brand: newCarData.brand,
+        model: newCarData.model,
+        year: parseInt(newCarData.year) || new Date().getFullYear(),
+        plate: newCarData.plate.toUpperCase(),
+        color: newCarData.color || 'Não informado',
+        images: vehiclePhoto ? [vehiclePhoto] : ['https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400'],
+        blindingLevel: 'IIIA',
+      },
+      user: {
+        id: `USR-${Date.now()}`,
+        name: newCarData.clientName,
+        email: newCarData.clientEmail || 'nao-informado@email.com',
+        phone: newCarData.clientPhone || '',
+        role: 'client',
+      },
+      status: 'pending',
+      progress: 0,
+      timeline: [],
+      startDate: new Date().toISOString(),
+      estimatedDelivery: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    }
+
+    setProjects(prev => [newProject, ...prev])
+    addGlobalProject(newProject) // Sincronizar com contexto global
+    setSelectedProject(newProject)
+    setShowNewCarModal(false)
+    
+    // Salvar dados para compartilhamento
+    setCreatedProjectData({
+      id: newProject.id,
+      qrCode: newProject.qrCode,
+      clientName: newCarData.clientName,
+      clientEmail: newCarData.clientEmail,
+      clientPhone: newCarData.clientPhone,
+      vehicle: `${newCarData.brand} ${newCarData.model}`,
+    })
+    setShowShareModal(true)
+    
+    setNewCarData({
+      clientName: '', clientEmail: '', clientPhone: '',
+      brand: '', model: '', year: '', plate: '', color: '', chassis: '',
+    })
+    setVehiclePhoto(null)
+    
+    addNotification({
+      type: 'success',
+      title: 'Novo Projeto Criado',
+      message: `Projeto para ${newCarData.brand} ${newCarData.model} criado com sucesso.`,
+    })
+  }
+
+  const shareViaWhatsApp = () => {
+    if (!createdProjectData) return
+    const message = `🚗 *EliteTrack - Acompanhamento de Blindagem*\n\nOlá ${createdProjectData.clientName}!\n\nSeu veículo ${createdProjectData.vehicle} foi cadastrado em nosso sistema.\n\n📋 *Código do Projeto:* ${createdProjectData.id}\n🔑 *QR Code:* ${createdProjectData.qrCode}\n\nAcesse o sistema para acompanhar o progresso:\n${window.location.origin}/login\n\nUse seu e-mail para fazer login.`
+    const phone = createdProjectData.clientPhone.replace(/\D/g, '')
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank')
+  }
+
+  const shareViaEmail = () => {
+    if (!createdProjectData) return
+    const subject = `EliteTrack - Acompanhamento do seu veículo ${createdProjectData.vehicle}`
+    const body = `Olá ${createdProjectData.clientName}!\n\nSeu veículo ${createdProjectData.vehicle} foi cadastrado em nosso sistema de acompanhamento de blindagem.\n\nCódigo do Projeto: ${createdProjectData.id}\nQR Code: ${createdProjectData.qrCode}\n\nAcesse o sistema para acompanhar o progresso:\n${window.location.origin}/login\n\nUse seu e-mail (${createdProjectData.clientEmail}) para fazer login.\n\nAtenciosamente,\nEquipe Elite Blindagens`
+    window.open(`mailto:${createdProjectData.clientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank')
+  }
+
+  const projectSuggestions = allProjects.slice(0, 4).map(p => ({
+    id: p.id,
+    plate: p.vehicle.plate,
+    model: `${p.vehicle.brand} ${p.vehicle.model}`
+  }))
+
+  return (
+    <div className="min-h-screen bg-black text-white font-['Inter'] flex">
+      {/* Sidebar */}
+      <aside className="hidden lg:flex flex-col w-64 bg-carbon-900 border-r border-white/10">
+        {/* Logo */}
+        <div className="p-6 border-b border-white/10">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary/60 rounded-xl flex items-center justify-center">
+              <span className="text-black font-bold text-lg">E</span>
+            </div>
+            <div>
+              <h1 className="font-['Pacifico'] text-xl text-primary">EliteTrack™</h1>
+              <span className="text-xs text-gray-500">Painel do Executor</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 p-4 space-y-1">
+          {navItems.map((item) => {
+            const Icon = item.icon
+            const isActive = activeTab === item.id
+            const showBadge = item.id === 'chat' && chatUnreadCount > 0
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={cn(
+                  "w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all",
+                  isActive 
+                    ? "bg-primary text-black" 
+                    : "text-gray-400 hover:bg-white/5 hover:text-white"
+                )}
+              >
+                <Icon className="w-5 h-5" />
+                <span className="font-medium">{item.label}</span>
+                {showBadge && (
+                  <span className="ml-auto bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                    {chatUnreadCount}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </nav>
+
+        {/* User Section */}
+        <div className="p-4 border-t border-white/10">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary/60 rounded-full flex items-center justify-center">
+              {user?.avatar ? (
+                <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
+              ) : (
+                <span className="text-black font-bold">{user?.name?.charAt(0)}</span>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium truncate">{user?.name}</p>
+              <p className="text-xs text-gray-500">Executor</p>
+            </div>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center space-x-2 text-gray-400 hover:text-red-400 py-2 rounded-xl hover:bg-white/5 transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            <span className="text-sm">Sair</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-h-screen">
+        {/* Header */}
+        <header className="bg-carbon-900/80 backdrop-blur-xl border-b border-white/10 sticky top-0 z-40">
+          <div className="px-4 md:px-6 py-4">
+            <div className="flex items-center justify-between">
+              {/* Mobile Logo */}
+              <div className="flex items-center space-x-3 lg:hidden">
+                <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/60 rounded-lg flex items-center justify-center">
+                  <span className="text-black font-bold">E</span>
+                </div>
+                <span className="font-['Pacifico'] text-lg text-primary">EliteTrack™</span>
+              </div>
+
+              {/* Page Title */}
+              <div className="hidden lg:block">
+                <h2 className="text-xl font-bold">
+                  {activeTab === 'dashboard' && 'Painel de Projetos'}
+                  {activeTab === 'timeline' && 'Timeline do Projeto'}
+                  {activeTab === 'photos' && 'Gerenciar Fotos'}
+                  {activeTab === 'laudo' && 'Laudo Técnico'}
+                  {activeTab === 'card' && 'Cartão Elite'}
+                  {activeTab === 'chat' && 'Atendimento ao Cliente'}
+                </h2>
+                {selectedProject && activeTab !== 'dashboard' && activeTab !== 'chat' && (
+                  <p className="text-sm text-gray-400">
+                    {selectedProject.vehicle.brand} {selectedProject.vehicle.model} • {selectedProject.user.name}
+                  </p>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center space-x-3">
+                {/* QR Scanner */}
+                <button
+                  onClick={() => setShowQRScanner(true)}
+                  className="flex items-center space-x-2 bg-primary text-black px-4 py-2.5 rounded-xl font-semibold hover:bg-primary/90 transition-colors"
+                  title="Escanear QR Code"
+                  aria-label="Escanear QR Code"
+                >
+                  <QrCode className="w-5 h-5" />
+                  <span className="hidden md:inline">Escanear</span>
+                </button>
+
+                {/* Notifications */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowNotifications(!showNotifications)}
+                    className="relative w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center hover:bg-white/20 transition-colors"
+                    title="Notificações"
+                    aria-label="Notificações"
+                  >
+                    <Bell className="w-5 h-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+                  {showNotifications && (
+                    <NotificationPanel 
+                      isOpen={showNotifications} 
+                      onClose={() => setShowNotifications(false)} 
+                    />
+                  )}
+                </div>
+
+                {/* Chat Badge (Mobile) */}
+                <button
+                  onClick={() => setActiveTab('chat')}
+                  className="lg:hidden relative w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center hover:bg-white/20 transition-colors"
+                  title="Chat"
+                  aria-label="Chat com clientes"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  {chatUnreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold">
+                      {chatUnreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* Settings */}
+                <button
+                  onClick={() => navigate('/profile')}
+                  className="hidden md:flex w-10 h-10 bg-white/10 rounded-xl items-center justify-center hover:bg-white/20 transition-colors"
+                  title="Configurações"
+                  aria-label="Configurações"
+                >
+                  <Settings className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Mobile Navigation */}
+        <nav className="lg:hidden flex items-center space-x-1 px-4 py-2 overflow-x-auto border-b border-white/10 bg-carbon-900/50">
+          {navItems.map((item) => {
+            const Icon = item.icon
+            const isActive = activeTab === item.id
+            const showBadge = item.id === 'chat' && chatUnreadCount > 0
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={cn(
+                  "flex items-center space-x-2 px-4 py-2 rounded-xl whitespace-nowrap transition-all",
+                  isActive 
+                    ? "bg-primary text-black" 
+                    : "text-gray-400 hover:bg-white/5"
+                )}
+              >
+                <Icon className="w-4 h-4" />
+                <span className="text-sm font-medium">{item.label}</span>
+                {showBadge && (
+                  <span className="bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">
+                    {chatUnreadCount}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </nav>
+
+        {/* Main Content Area */}
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+          {/* Dashboard Tab */}
+          {activeTab === 'dashboard' && (
+            <div className="space-y-6">
+              {/* Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                  <div className="flex items-center justify-between mb-2">
+                    <Users className="w-6 h-6 text-primary" />
+                    <span className="text-2xl font-bold">{stats.total}</span>
+                  </div>
+                  <p className="text-sm text-gray-400">Total Projetos</p>
+                </div>
+                <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                  <div className="flex items-center justify-between mb-2">
+                    <Clock className="w-6 h-6 text-yellow-400" />
+                    <span className="text-2xl font-bold">{stats.inProgress}</span>
+                  </div>
+                  <p className="text-sm text-gray-400">Em Andamento</p>
+                </div>
+                <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                  <div className="flex items-center justify-between mb-2">
+                    <AlertCircle className="w-6 h-6 text-gray-400" />
+                    <span className="text-2xl font-bold">{stats.pending}</span>
+                  </div>
+                  <p className="text-sm text-gray-400">Pendentes</p>
+                </div>
+                <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                  <div className="flex items-center justify-between mb-2">
+                    <CheckCircle className="w-6 h-6 text-green-400" />
+                    <span className="text-2xl font-bold">{stats.completed}</span>
+                  </div>
+                  <p className="text-sm text-gray-400">Concluídos</p>
+                </div>
+              </div>
+
+              {/* Search & Filter */}
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Buscar por placa, modelo, cliente ou código..."
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder-gray-500"
+                    aria-label="Buscar projetos"
+                  />
+                </div>
+                <div className="flex space-x-2 overflow-x-auto pb-2 md:pb-0">
+                  {[
+                    { value: 'all', label: 'Todos' },
+                    { value: 'in_progress', label: 'Em Andamento' },
+                    { value: 'pending', label: 'Pendentes' },
+                    { value: 'completed', label: 'Concluídos' },
+                  ].map((filter) => (
+                    <button
+                      key={filter.value}
+                      onClick={() => setFilterStatus(filter.value)}
+                      className={cn(
+                        "px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors",
+                        filterStatus === filter.value
+                          ? "bg-primary text-black"
+                          : "bg-white/5 text-gray-400 hover:bg-white/10"
+                      )}
+                    >
+                      {filter.label}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setShowNewCarModal(true)}
+                  className="flex items-center space-x-2 bg-primary text-black px-4 py-2 rounded-xl font-semibold hover:bg-primary/90 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Novo Projeto</span>
+                </button>
+              </div>
+
+              {/* Projects Grid */}
+              <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {filteredProjects.map((project) => {
+                  const config = statusConfig[project.status]
+                  const isSelected = selectedProject?.id === project.id
+
+                  return (
+                    <div
+                      key={project.id}
+                      onClick={() => setSelectedProject(project)}
+                      className={cn(
+                        "bg-white/5 rounded-2xl p-4 border cursor-pointer transition-all hover:border-primary/50",
+                        isSelected ? "border-primary ring-1 ring-primary/30" : "border-white/10"
+                      )}
+                    >
+                      <div className="flex items-start space-x-4">
+                        <div className="w-20 h-16 rounded-xl overflow-hidden bg-carbon-900 flex-shrink-0">
+                          <img
+                            src={project.vehicle.images[0]}
+                            alt={project.vehicle.model}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h3 className="font-semibold truncate">
+                                {project.vehicle.brand} {project.vehicle.model}
+                              </h3>
+                              <p className="text-sm text-gray-400">{project.user.name}</p>
+                            </div>
+                            <span className={cn("w-3 h-3 rounded-full flex-shrink-0", config.color)} />
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1">{project.vehicle.plate} • {project.id}</p>
+                        </div>
+                      </div>
+
+                      {/* Progress */}
+                      <div className="mt-4">
+                        <div className="flex items-center justify-between text-sm mb-2">
+                          <span className={config.textColor}>{config.label}</span>
+                          <span className="text-primary font-semibold">{project.progress}%</span>
+                        </div>
+                        <ProgressBar progress={project.progress} />
+                      </div>
+
+                      {/* Quick Actions */}
+                      <div className="mt-4 flex items-center justify-between">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setSelectedProject(project); setActiveTab('timeline'); }}
+                            className="p-2 bg-white/5 rounded-lg hover:bg-primary/20 transition-colors"
+                            title="Timeline"
+                            aria-label="Ver timeline"
+                          >
+                            <Clock className="w-4 h-4 text-primary" />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setSelectedProject(project); setActiveTab('photos'); }}
+                            className="p-2 bg-white/5 rounded-lg hover:bg-blue-500/20 transition-colors"
+                            title="Fotos"
+                            aria-label="Ver fotos"
+                          >
+                            <Image className="w-4 h-4 text-blue-400" />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setSelectedProject(project); setActiveTab('laudo'); }}
+                            className="p-2 bg-white/5 rounded-lg hover:bg-green-500/20 transition-colors"
+                            title="Laudo"
+                            aria-label="Ver laudo"
+                          >
+                            <FileText className="w-4 h-4 text-green-400" />
+                          </button>
+                        </div>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setSelectedProject(project); setActiveTab('timeline'); }}
+                          className="flex items-center space-x-1 text-primary text-sm hover:underline"
+                        >
+                          <span>Gerenciar</span>
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+
+                {filteredProjects.length === 0 && (
+                  <div className="col-span-full text-center py-12">
+                    <Car className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-400 mb-2">Nenhum projeto encontrado</h3>
+                    <p className="text-gray-500">Tente ajustar os filtros ou escanear um QR Code</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Timeline Tab */}
+          {activeTab === 'timeline' && selectedProject && (
+            <ExecutorTimeline 
+              project={selectedProject}
+              onUpdateStep={handleUpdateStep}
+              onAddPhoto={handleAddPhoto}
+            />
+          )}
+
+          {/* Photos Tab */}
+          {activeTab === 'photos' && selectedProject && (
+            <ExecutorPhotos 
+              project={selectedProject}
+              onUploadPhoto={handleUploadPhoto}
+            />
+          )}
+
+          {/* Laudo Tab */}
+          {activeTab === 'laudo' && selectedProject && (
+            <div className="max-w-4xl mx-auto space-y-6">
+              <div className="bg-white/5 rounded-3xl p-6 border border-white/10">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold">Laudo EliteShield™</h3>
+                  <button
+                    onClick={() => setShowLaudoModal(true)}
+                    className="flex items-center space-x-2 bg-primary text-black px-4 py-2 rounded-xl font-semibold"
+                  >
+                    <Edit3 className="w-5 h-5" />
+                    <span>Editar Laudo</span>
+                  </button>
+                </div>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-primary">Especificações Técnicas</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between py-2 border-b border-white/10">
+                        <span className="text-gray-400">Nível de Proteção</span>
+                        <span className="font-medium">IIIA</span>
+                      </div>
+                      <div className="flex justify-between py-2 border-b border-white/10">
+                        <span className="text-gray-400">Certificação</span>
+                        <span className="font-medium">ABNT NBR 15000</span>
+                      </div>
+                      <div className="flex justify-between py-2 border-b border-white/10">
+                        <span className="text-gray-400">Tipo de Vidro</span>
+                        <span className="font-medium">Laminado Multi-camadas</span>
+                      </div>
+                      <div className="flex justify-between py-2 border-b border-white/10">
+                        <span className="text-gray-400">Espessura</span>
+                        <span className="font-medium">21mm</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-primary">Informações do Projeto</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between py-2 border-b border-white/10">
+                        <span className="text-gray-400">Veículo</span>
+                        <span className="font-medium">{selectedProject.vehicle.brand} {selectedProject.vehicle.model}</span>
+                      </div>
+                      <div className="flex justify-between py-2 border-b border-white/10">
+                        <span className="text-gray-400">Placa</span>
+                        <span className="font-medium">{selectedProject.vehicle.plate}</span>
+                      </div>
+                      <div className="flex justify-between py-2 border-b border-white/10">
+                        <span className="text-gray-400">Cliente</span>
+                        <span className="font-medium">{selectedProject.user.name}</span>
+                      </div>
+                      <div className="flex justify-between py-2 border-b border-white/10">
+                        <span className="text-gray-400">Garantia</span>
+                        <span className="font-medium">5 anos</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Card Tab */}
+          {activeTab === 'card' && selectedProject && (
+            <div className="max-w-lg mx-auto space-y-6">
+              <div className="bg-gradient-to-br from-carbon-800 to-carbon-900 rounded-3xl p-6 border border-primary/30 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="font-['Pacifico'] text-2xl text-primary">Elite</div>
+                    <CreditCard className="w-8 h-8 text-primary" />
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-xs text-gray-400">Número do Cartão</p>
+                      <p className="text-lg font-mono font-bold">ELITE-{selectedProject.id.slice(-8).toUpperCase()}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400">Cliente</p>
+                      <p className="font-semibold">{selectedProject.user.name}</p>
+                    </div>
+                    <div className="flex justify-between">
+                      <div>
+                        <p className="text-xs text-gray-400">Veículo</p>
+                        <p className="text-sm">{selectedProject.vehicle.brand} {selectedProject.vehicle.model}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-gray-400">Placa</p>
+                        <p className="text-sm font-mono">{selectedProject.vehicle.plate}</p>
+                      </div>
+                    </div>
+                    <div className="flex justify-between pt-2 border-t border-white/10">
+                      <div>
+                        <p className="text-xs text-gray-400">Nível de Blindagem</p>
+                        <p className="text-sm font-semibold text-primary">{selectedProject.vehicle.blindingLevel}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-gray-400">Status</p>
+                        <p className={cn(
+                          "text-sm font-semibold",
+                          statusConfig[selectedProject.status as keyof typeof statusConfig]?.textColor
+                        )}>
+                          {statusConfig[selectedProject.status as keyof typeof statusConfig]?.label}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Ações do Cartão Elite */}
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => {
+                    setShowShareModal(true)
+                    addNotification({ type: 'info', title: 'Cartão Elite', message: 'Abrindo visualização do cartão...' })
+                  }}
+                  className="bg-primary text-black py-3 rounded-xl font-semibold flex items-center justify-center space-x-2"
+                >
+                  <Eye className="w-5 h-5" />
+                  <span>Visualizar Cartão</span>
+                </button>
+                <button
+                  onClick={() => {
+                    if (selectedProject) {
+                      const phone = selectedProject.user.phone?.replace(/\D/g, '')
+                      const msg = `Olá ${selectedProject.user.name}! Segue o link do seu Cartão Elite Digital: https://elitetrack.com.br/card/${selectedProject.id}`
+                      window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(msg)}`, '_blank')
+                      addNotification({ type: 'success', title: 'WhatsApp', message: 'Abrindo WhatsApp para compartilhar o cartão...' })
+                    }
+                  }}
+                  className="bg-green-500/20 text-green-400 py-3 rounded-xl font-semibold flex items-center justify-center space-x-2 hover:bg-green-500/30 transition-colors"
+                >
+                  <Send className="w-5 h-5" />
+                  <span>Enviar via WhatsApp</span>
+                </button>
+              </div>
+
+              <button
+                onClick={() => setActiveTab('timeline')}
+                className="w-full bg-white/10 text-white py-3 rounded-xl font-semibold flex items-center justify-center space-x-2 hover:bg-white/20 transition-colors"
+              >
+                <Clock className="w-5 h-5" />
+                <span>Ver Timeline do Projeto</span>
+              </button>
+
+              <button
+                onClick={() => setShowLaudoModal(true)}
+                className="w-full bg-white/10 text-white py-3 rounded-xl font-semibold flex items-center justify-center space-x-2 hover:bg-white/20 transition-colors"
+              >
+                <FileText className="w-5 h-5" />
+                <span>Editar Laudo Técnico</span>
+              </button>
+            </div>
+          )}
+
+          {/* Chat Tab */}
+          {activeTab === 'chat' && (
+            <ExecutorChat onBack={() => setActiveTab('dashboard')} />
+          )}
+
+          {/* Schedule Tab - Agenda de Revisões */}
+          {activeTab === 'schedule' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold">Agenda de Revisões</h2>
+                  <p className="text-gray-400">Visualize todos os agendamentos de revisões e entregas</p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-400">{mockScheduledRevisions.length} agendamentos</span>
+                </div>
+              </div>
+
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="glass-effect p-4 rounded-2xl">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                      <Calendar className="w-6 h-6 text-blue-400" />
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold">{mockScheduledRevisions.length}</div>
+                      <div className="text-sm text-gray-400">Total</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="glass-effect p-4 rounded-2xl">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
+                      <CheckCircle className="w-6 h-6 text-green-400" />
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold">{mockScheduledRevisions.filter(r => r.status === 'confirmed').length}</div>
+                      <div className="text-sm text-gray-400">Confirmados</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="glass-effect p-4 rounded-2xl">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center">
+                      <Clock className="w-6 h-6 text-yellow-400" />
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold">{mockScheduledRevisions.filter(r => r.status === 'pending').length}</div>
+                      <div className="text-sm text-gray-400">Pendentes</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="glass-effect p-4 rounded-2xl">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
+                      <Car className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold">{mockScheduledRevisions.filter(r => r.type === 'entrega').length}</div>
+                      <div className="text-sm text-gray-400">Entregas</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Alertas de Revisão Anual */}
+              <div className="glass-effect rounded-2xl overflow-hidden mb-6">
+                <div className="p-4 border-b border-white/10 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Bell className="w-5 h-5 text-yellow-400" />
+                    <h3 className="font-semibold">Revisões Anuais Pendentes</h3>
+                  </div>
+                  <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm">
+                    {mockRevisionReminders.filter(r => r.daysUntil <= 30).length} pendentes
+                  </span>
+                </div>
+                <div className="divide-y divide-white/10">
+                  {mockRevisionReminders
+                    .sort((a, b) => a.daysUntil - b.daysUntil)
+                    .map((reminder) => (
+                    <div key={reminder.id} className="p-4 hover:bg-white/5 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className={cn(
+                            "w-12 h-12 rounded-xl flex items-center justify-center",
+                            reminder.daysUntil < 0 ? "bg-red-500/20" :
+                            reminder.daysUntil <= 7 ? "bg-yellow-500/20" : "bg-blue-500/20"
+                          )}>
+                            <Bell className={cn(
+                              "w-6 h-6",
+                              reminder.daysUntil < 0 ? "text-red-400" :
+                              reminder.daysUntil <= 7 ? "text-yellow-400" : "text-blue-400"
+                            )} />
+                          </div>
+                          <div>
+                            <div className="font-semibold">{reminder.clientName}</div>
+                            <div className="text-sm text-gray-400">{reminder.vehicle}</div>
+                            <div className="text-xs text-gray-500">Blindagem: {new Date(reminder.blindingDate).toLocaleDateString('pt-BR')}</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className={cn(
+                            "font-medium",
+                            reminder.daysUntil < 0 ? "text-red-400" :
+                            reminder.daysUntil <= 7 ? "text-yellow-400" : "text-blue-400"
+                          )}>
+                            {reminder.daysUntil < 0 
+                              ? `${Math.abs(reminder.daysUntil)} dias atrasado`
+                              : reminder.daysUntil === 0 
+                              ? 'Hoje!'
+                              : `${reminder.daysUntil} dias`}
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            Próxima: {new Date(reminder.nextRevisionDate).toLocaleDateString('pt-BR')}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 ml-4">
+                          <button
+                            onClick={() => window.open(`https://wa.me/55${reminder.phone}?text=${encodeURIComponent(`Olá ${reminder.clientName}! 🚗\n\nLembramos que a revisão anual da blindagem do seu ${reminder.vehicle} está ${reminder.daysUntil < 0 ? 'atrasada' : 'próxima'}.\n\nData prevista: ${new Date(reminder.nextRevisionDate).toLocaleDateString('pt-BR')}\n\nEntre em contato conosco para agendar.\n\nElite Blindagens`)}`, '_blank')}
+                            className="p-2 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition-colors"
+                            title="Enviar lembrete via WhatsApp"
+                          >
+                            <i className="ri-whatsapp-line"></i>
+                          </button>
+                          <button
+                            onClick={() => addNotification({ type: 'success', title: 'Lembrete Enviado', message: `Lembrete de revisão enviado para ${reminder.clientName}` })}
+                            className="px-3 py-1 bg-primary/20 text-primary rounded-lg text-sm hover:bg-primary/30 transition-colors"
+                          >
+                            Agendar
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Schedule List */}
+              <div className="glass-effect rounded-2xl overflow-hidden">
+                <div className="p-4 border-b border-white/10">
+                  <h3 className="font-semibold">Próximos Agendamentos</h3>
+                </div>
+                <div className="divide-y divide-white/10">
+                  {mockScheduledRevisions.map((revision) => (
+                    <div key={revision.id} className="p-4 hover:bg-white/5 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className={cn(
+                            "w-12 h-12 rounded-xl flex items-center justify-center",
+                            revision.type === 'revisao' ? "bg-blue-500/20" : "bg-primary/20"
+                          )}>
+                            {revision.type === 'revisao' ? (
+                              <Settings className="w-6 h-6 text-blue-400" />
+                            ) : (
+                              <Car className="w-6 h-6 text-primary" />
+                            )}
+                          </div>
+                          <div>
+                            <div className="font-semibold">{revision.clientName}</div>
+                            <div className="text-sm text-gray-400">{revision.vehicle}</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-medium">
+                            {new Date(revision.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                          </div>
+                          <div className="text-sm text-gray-400">{revision.time}</div>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <span className={cn(
+                            "px-3 py-1 rounded-full text-xs font-medium",
+                            revision.status === 'confirmed' 
+                              ? "bg-green-500/20 text-green-400" 
+                              : "bg-yellow-500/20 text-yellow-400"
+                          )}>
+                            {revision.status === 'confirmed' ? 'Confirmado' : 'Pendente'}
+                          </span>
+                          <span className={cn(
+                            "px-3 py-1 rounded-full text-xs font-medium",
+                            revision.type === 'revisao' 
+                              ? "bg-blue-500/20 text-blue-400" 
+                              : "bg-primary/20 text-primary"
+                          )}>
+                            {revision.type === 'revisao' ? 'Revisão' : 'Entrega'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Clients Tab - Consulta de Clientes e Documentos */}
+          {activeTab === 'clients' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold">Clientes e Documentos</h2>
+                  <p className="text-gray-400">Consulte informações e documentos dos clientes</p>
+                </div>
+              </div>
+
+              {/* Search */}
+              <div className="glass-effect rounded-2xl p-4">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Buscar cliente por nome, e-mail ou placa..."
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder-gray-500 focus:border-primary/50 focus:outline-none"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    title="Buscar cliente"
+                  />
+                </div>
+              </div>
+
+              {/* Client List */}
+              <div className="glass-effect rounded-2xl overflow-hidden">
+                <div className="p-4 border-b border-white/10">
+                  <h3 className="font-semibold">Lista de Clientes ({projects.length})</h3>
+                </div>
+                <div className="divide-y divide-white/10">
+                  {projects
+                    .filter(p => 
+                      p.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      p.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      p.vehicle.plate.toLowerCase().includes(searchTerm.toLowerCase())
+                    )
+                    .map((project) => (
+                    <div 
+                      key={project.id} 
+                      className="p-4 hover:bg-white/5 transition-colors cursor-pointer"
+                      onClick={() => {
+                        setSelectedProject(project)
+                        addNotification({
+                          type: 'info',
+                          title: 'Cliente Selecionado',
+                          message: `Visualizando dados de ${project.user.name}`
+                        })
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
+                            <Users className="w-6 h-6 text-primary" />
+                          </div>
+                          <div>
+                            <div className="font-semibold">{project.user.name}</div>
+                            <div className="text-sm text-gray-400">{project.user.email}</div>
+                            <div className="text-xs text-gray-500">{project.user.phone}</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-medium">{project.vehicle.brand} {project.vehicle.model}</div>
+                          <div className="text-xs text-gray-400">{project.vehicle.plate}</div>
+                          <div className={cn(
+                            "text-xs mt-1 px-2 py-0.5 rounded-full inline-block",
+                            statusConfig[project.status as keyof typeof statusConfig]?.color || 'bg-gray-500',
+                            "text-white"
+                          )}>
+                            {statusConfig[project.status as keyof typeof statusConfig]?.label || project.status}
+                          </div>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-gray-400" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Selected Client Details */}
+              {selectedProject && (
+                <div className="glass-effect rounded-2xl p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-bold">Detalhes do Cliente</h3>
+                    <button 
+                      onClick={() => { setSelectedProject(null); setSelectedClientVehicle(null); }}
+                      className="p-2 hover:bg-white/10 rounded-lg"
+                      title="Fechar detalhes"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Seleção de Veículos - Se o cliente tiver múltiplos projetos */}
+                  {(() => {
+                    const clientProjects = projects.filter(p => p.user.email === selectedProject.user.email)
+                    if (clientProjects.length > 1) {
+                      return (
+                        <div className="mb-6 p-4 bg-primary/10 border border-primary/30 rounded-xl">
+                          <h4 className="font-semibold text-primary mb-3 flex items-center gap-2">
+                            <Car className="w-4 h-4" />
+                            Veículos do Cliente ({clientProjects.length})
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                            {clientProjects.map((p) => (
+                              <button
+                                key={p.id}
+                                onClick={() => {
+                                  setSelectedProject(p)
+                                  setSelectedClientVehicle(p.id)
+                                }}
+                                className={cn(
+                                  "px-4 py-2 rounded-xl text-sm font-medium transition-colors flex items-center gap-2",
+                                  (selectedClientVehicle === p.id || selectedProject.id === p.id)
+                                    ? "bg-primary text-black"
+                                    : "bg-white/10 text-gray-400 hover:bg-white/20"
+                                )}
+                              >
+                                <Car className="w-4 h-4" />
+                                {p.vehicle.brand} {p.vehicle.model}
+                                <span className="text-xs opacity-70">({p.vehicle.plate})</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    }
+                    return null
+                  })()}
+
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {/* Client Info */}
+                    <div className="space-y-4">
+                      <h4 className="font-semibold text-primary flex items-center gap-2">
+                        <Users className="w-4 h-4" />
+                        Informações Pessoais
+                      </h4>
+                      <div className="bg-white/5 rounded-xl p-4 space-y-2">
+                        <p><span className="text-gray-400">Nome:</span> {selectedProject.user.name}</p>
+                        <p><span className="text-gray-400">E-mail:</span> {selectedProject.user.email}</p>
+                        <p><span className="text-gray-400">Telefone:</span> {selectedProject.user.phone}</p>
+                      </div>
+                    </div>
+
+                    {/* Vehicle Info */}
+                    <div className="space-y-4">
+                      <h4 className="font-semibold text-primary flex items-center gap-2">
+                        <Car className="w-4 h-4" />
+                        Dados do Veículo
+                      </h4>
+                      <div className="bg-white/5 rounded-xl p-4 space-y-2">
+                        <p><span className="text-gray-400">Marca:</span> {selectedProject.vehicle.brand}</p>
+                        <p><span className="text-gray-400">Modelo:</span> {selectedProject.vehicle.model}</p>
+                        <p><span className="text-gray-400">Ano:</span> {selectedProject.vehicle.year}</p>
+                        <p><span className="text-gray-400">Placa:</span> {selectedProject.vehicle.plate}</p>
+                        <p><span className="text-gray-400">Nível:</span> {selectedProject.vehicle.blindingLevel}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Documents Section - Melhorada para público operacional */}
+                  <div className="mt-6">
+                    <h4 className="font-semibold text-primary flex items-center gap-2 mb-4">
+                      <FileText className="w-4 h-4" />
+                      Documentos do Cliente
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
+                              <i className="ri-id-card-line text-primary text-xl"></i>
+                            </div>
+                            <div>
+                              <h5 className="font-semibold">CNH</h5>
+                              <p className="text-xs text-gray-400">Carteira de Habilitação</p>
+                            </div>
+                          </div>
+                          <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">Enviado</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => addNotification({ type: 'info', title: 'CNH', message: 'Abrindo documento CNH do cliente...' })}
+                            className="flex-1 bg-primary/20 hover:bg-primary/30 text-primary py-2 rounded-lg text-sm font-medium transition-colors"
+                          >
+                            <i className="ri-eye-line mr-1"></i> Visualizar
+                          </button>
+                          <button 
+                            onClick={() => {
+                              const link = document.createElement('a')
+                              link.href = '/documents/cnh-exemplo.pdf'
+                              link.download = `CNH_${selectedProject?.user.name.replace(/\s/g, '_')}.pdf`
+                              link.click()
+                              addNotification({ type: 'success', title: 'Download', message: 'CNH baixado com sucesso!' })
+                            }}
+                            className="px-3 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg text-sm transition-colors"
+                            title="Baixar CNH"
+                            aria-label="Baixar CNH"
+                          >
+                            <i className="ri-download-line"></i>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                              <i className="ri-car-line text-blue-400 text-xl"></i>
+                            </div>
+                            <div>
+                              <h5 className="font-semibold">CRLV</h5>
+                              <p className="text-xs text-gray-400">Documento do Veículo</p>
+                            </div>
+                          </div>
+                          <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">Enviado</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => addNotification({ type: 'info', title: 'CRLV', message: 'Abrindo documento CRLV do veículo...' })}
+                            className="flex-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 py-2 rounded-lg text-sm font-medium transition-colors"
+                          >
+                            <i className="ri-eye-line mr-1"></i> Visualizar
+                          </button>
+                          <button 
+                            onClick={() => {
+                              const link = document.createElement('a')
+                              link.href = '/documents/crlv-exemplo.pdf'
+                              link.download = `CRLV_${selectedProject?.vehicle.plate}.pdf`
+                              link.click()
+                              addNotification({ type: 'success', title: 'Download', message: 'CRLV baixado com sucesso!' })
+                            }}
+                            className="px-3 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg text-sm transition-colors"
+                            title="Baixar CRLV"
+                            aria-label="Baixar CRLV"
+                          >
+                            <i className="ri-download-line"></i>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
+                              <i className="ri-home-line text-green-400 text-xl"></i>
+                            </div>
+                            <div>
+                              <h5 className="font-semibold">Comprovante Residência</h5>
+                              <p className="text-xs text-gray-400">Endereço do Cliente</p>
+                            </div>
+                          </div>
+                          <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-xs">Pendente</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => addNotification({ type: 'warning', title: 'Pendente', message: 'Documento de comprovante de residência ainda não enviado pelo cliente' })}
+                            className="flex-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 py-2 rounded-lg text-sm font-medium transition-colors"
+                          >
+                            <i className="ri-alert-line mr-1"></i> Solicitar
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
+                              <i className="ri-file-text-line text-purple-400 text-xl"></i>
+                            </div>
+                            <div>
+                              <h5 className="font-semibold">Contrato de Serviço</h5>
+                              <p className="text-xs text-gray-400">Contrato Assinado</p>
+                            </div>
+                          </div>
+                          <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">Assinado</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => addNotification({ type: 'info', title: 'Contrato', message: 'Abrindo contrato de serviço...' })}
+                            className="flex-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 py-2 rounded-lg text-sm font-medium transition-colors"
+                          >
+                            <i className="ri-eye-line mr-1"></i> Visualizar
+                          </button>
+                          <button 
+                            onClick={() => {
+                              const link = document.createElement('a')
+                              link.href = '/documents/contrato-exemplo.pdf'
+                              link.download = `Contrato_${selectedProject?.user.name.replace(/\s/g, '_')}.pdf`
+                              link.click()
+                              addNotification({ type: 'success', title: 'Download', message: 'Contrato baixado com sucesso!' })
+                            }}
+                            className="px-3 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg text-sm transition-colors"
+                            title="Baixar Contrato"
+                            aria-label="Baixar Contrato"
+                          >
+                            <i className="ri-download-line"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Ações Rápidas de Contato */}
+                    <div className="mt-4 p-4 bg-primary/10 border border-primary/30 rounded-xl">
+                      <h5 className="font-semibold text-primary mb-3 flex items-center gap-2">
+                        <i className="ri-phone-line"></i>
+                        Contato Rápido
+                      </h5>
+                      <div className="flex flex-wrap gap-2">
+                        <button 
+                          onClick={() => window.open(`https://wa.me/55${selectedProject.user.phone?.replace(/\D/g, '')}`, '_blank')}
+                          className="flex items-center gap-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        >
+                          <i className="ri-whatsapp-line"></i>
+                          WhatsApp
+                        </button>
+                        <button 
+                          onClick={() => window.open(`tel:${selectedProject.user.phone}`, '_blank')}
+                          className="flex items-center gap-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        >
+                          <i className="ri-phone-line"></i>
+                          Ligar
+                        </button>
+                        <button 
+                          onClick={() => window.open(`mailto:${selectedProject.user.email}`, '_blank')}
+                          className="flex items-center gap-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        >
+                          <i className="ri-mail-line"></i>
+                          E-mail
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div className="mt-6 flex gap-3">
+                    <button 
+                      onClick={() => setActiveTab('timeline')}
+                      className="flex-1 bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Clock className="w-4 h-4" />
+                      Ver Timeline
+                    </button>
+                    <button 
+                      onClick={() => setActiveTab('photos')}
+                      className="flex-1 bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Image className="w-4 h-4" />
+                      Ver Fotos
+                    </button>
+                    <button 
+                      onClick={() => setActiveTab('laudo')}
+                      className="flex-1 bg-primary text-black px-4 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+                    >
+                      <FileText className="w-4 h-4" />
+                      Ver Laudo
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Tickets Tab - Gestão de Tickets de Suporte */}
+          {activeTab === 'tickets' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold">Tickets de Suporte</h2>
+                  <p className="text-gray-400">Gerencie os chamados abertos pelos clientes</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm">
+                    {mockTickets.filter(t => t.status === 'open').length} abertos
+                  </span>
+                  <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">
+                    {mockTickets.filter(t => t.status === 'in_progress').length} em atendimento
+                  </span>
+                </div>
+              </div>
+
+              {/* Filtros */}
+              <div className="glass-effect rounded-2xl p-4 flex flex-wrap gap-2">
+                <button className="px-4 py-2 bg-primary text-black rounded-xl text-sm font-medium">Todos</button>
+                <button className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm">Abertos</button>
+                <button className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm">Em Atendimento</button>
+                <button className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm">Resolvidos</button>
+              </div>
+
+              {/* Lista de Tickets */}
+              <div className="space-y-3">
+                {tickets.map((ticket) => (
+                  <div 
+                    key={ticket.id} 
+                    className="glass-effect rounded-2xl p-4 hover:bg-white/5 transition-colors cursor-pointer"
+                    onClick={() => { setSelectedTicket(ticket); setTicketNewStatus(ticket.status); setShowTicketModal(true); }}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "w-2 h-2 rounded-full",
+                          ticketPriorityConfig[ticket.priority as keyof typeof ticketPriorityConfig]?.color
+                        )} />
+                        <span className="font-mono text-sm text-gray-400">{ticket.id}</span>
+                        <span className={cn(
+                          "px-2 py-0.5 rounded-full text-xs",
+                          ticketStatusConfig[ticket.status as keyof typeof ticketStatusConfig]?.color,
+                          "text-white"
+                        )}>
+                          {ticketStatusConfig[ticket.status as keyof typeof ticketStatusConfig]?.label}
+                        </span>
+                      </div>
+                      <span className="text-xs text-gray-500">
+                        {new Date(ticket.createdAt).toLocaleDateString('pt-BR')} às {new Date(ticket.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    
+                    <h3 className="font-semibold mb-1">{ticket.subject}</h3>
+                    <p className="text-sm text-gray-400 mb-3 line-clamp-2">{ticket.message}</p>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4 text-sm">
+                        <span className="flex items-center gap-1">
+                          <Users className="w-4 h-4 text-primary" />
+                          {ticket.clientName}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Car className="w-4 h-4 text-gray-400" />
+                          {ticket.vehicle}
+                        </span>
+                      </div>
+                      <div className="flex gap-2">
+                        <button 
+                          className="px-3 py-1 bg-primary/20 text-primary rounded-lg text-sm hover:bg-primary/30 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSelectedTicket(ticket)
+                            setTicketNewStatus(ticket.status)
+                            setShowTicketModal(true)
+                          }}
+                        >
+                          Editar
+                        </button>
+                        <button 
+                          className="px-3 py-1 bg-green-500/20 text-green-400 rounded-lg text-sm hover:bg-green-500/30 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setTickets(prev => prev.map(t => t.id === ticket.id ? {...t, status: 'resolved'} : t))
+                            addNotification({ type: 'success', title: 'Ticket Resolvido', message: `Ticket ${ticket.id} marcado como resolvido. Cliente será notificado.` })
+                          }}
+                        >
+                          Resolver
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Quotes Tab - Gestão de Orçamentos */}
+          {activeTab === 'quotes' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold">Orçamentos</h2>
+                  <p className="text-sm text-gray-400">Gerencie solicitações de orçamento dos clientes</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm">
+                    {getPendingQuotes().length} pendentes
+                  </span>
+                </div>
+              </div>
+
+              {/* Lista de Orçamentos */}
+              <div className="space-y-4">
+                {quotes.length === 0 ? (
+                  <div className="text-center py-12 bg-white/5 rounded-2xl">
+                    <DollarSign className="w-16 h-16 mx-auto text-gray-600 mb-4" />
+                    <p className="text-gray-400">Nenhum orçamento solicitado</p>
+                  </div>
+                ) : (
+                  quotes.map((quote) => (
+                    <div 
+                      key={quote.id}
+                      className="bg-white/5 border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-colors cursor-pointer"
+                      onClick={() => {
+                        setSelectedQuote(quote)
+                        setQuoteExactPrice(quote.estimatedPrice || '')
+                        setQuoteEstimatedDays(quote.estimatedDays?.toString() || '')
+                        setQuoteNotes(quote.executorNotes || '')
+                        setShowQuoteModal(true)
+                      }}
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className={cn(
+                            "w-12 h-12 rounded-xl flex items-center justify-center",
+                            quote.status === 'pending' ? 'bg-yellow-500/20' :
+                            quote.status === 'sent' ? 'bg-blue-500/20' :
+                            quote.status === 'approved' ? 'bg-green-500/20' :
+                            quote.status === 'rejected' ? 'bg-red-500/20' : 'bg-gray-500/20'
+                          )}>
+                            <DollarSign className={cn(
+                              "w-6 h-6",
+                              quote.status === 'pending' ? 'text-yellow-400' :
+                              quote.status === 'sent' ? 'text-blue-400' :
+                              quote.status === 'approved' ? 'text-green-400' :
+                              quote.status === 'rejected' ? 'text-red-400' : 'text-gray-400'
+                            )} />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold">{quote.clientName}</h3>
+                            <p className="text-sm text-gray-400">{quote.vehicleBrand} {quote.vehicleModel} • {quote.vehicleYear}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className={cn(
+                            "px-2 py-1 rounded-full text-xs",
+                            quote.status === 'pending' ? 'bg-yellow-500 text-white' :
+                            quote.status === 'analyzed' ? 'bg-orange-500 text-white' :
+                            quote.status === 'sent' ? 'bg-blue-500 text-white' :
+                            quote.status === 'approved' ? 'bg-green-500 text-white' :
+                            'bg-red-500 text-white'
+                          )}>
+                            {quote.status === 'pending' ? 'Pendente' :
+                             quote.status === 'analyzed' ? 'Analisado' :
+                             quote.status === 'sent' ? 'Enviado' :
+                             quote.status === 'approved' ? 'Aprovado' : 'Rejeitado'}
+                          </span>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {new Date(quote.createdAt).toLocaleDateString('pt-BR')}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4 text-sm text-gray-400">
+                          <span>Nível: {quote.blindingLevel}</span>
+                          {quote.estimatedPrice && (
+                            <span className="text-primary font-semibold">{quote.estimatedPrice}</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {quote.status === 'pending' && (
+                            <button 
+                              className="px-3 py-1 bg-primary/20 text-primary rounded-lg text-sm hover:bg-primary/30 transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setSelectedQuote(quote)
+                                setShowQuoteModal(true)
+                              }}
+                            >
+                              Definir Valor
+                            </button>
+                          )}
+                          {quote.status === 'sent' && (
+                            <span className="text-xs text-blue-400">Aguardando aprovação do cliente</span>
+                          )}
+                          {quote.status === 'approved' && (
+                            <button 
+                              className="px-3 py-1 bg-green-500/20 text-green-400 rounded-lg text-sm hover:bg-green-500/30 transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                addNotification({ type: 'success', title: 'Iniciar Projeto', message: 'Redirecionando para criar projeto...' })
+                                setActiveTab('dashboard')
+                                setShowNewCarModal(true)
+                              }}
+                            >
+                              Iniciar Projeto
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* No Project Selected */}
+          {activeTab !== 'dashboard' && activeTab !== 'chat' && activeTab !== 'schedule' && activeTab !== 'clients' && activeTab !== 'tickets' && activeTab !== 'quotes' && !selectedProject && (
+            <div className="flex flex-col items-center justify-center py-20">
+              <Car className="w-20 h-20 text-gray-600 mb-6" />
+              <h3 className="text-xl font-semibold text-gray-400 mb-2">Nenhum projeto selecionado</h3>
+              <p className="text-gray-500 mb-6 text-center max-w-md">
+                Selecione um projeto na aba "Projetos" ou escaneie um QR Code para começar
+              </p>
+              <div className="flex space-x-4">
+                <button
+                  onClick={() => setActiveTab('dashboard')}
+                  className="bg-white/10 text-white px-6 py-3 rounded-xl font-semibold"
+                >
+                  Ver Projetos
+                </button>
+                <button
+                  onClick={() => setShowQRScanner(true)}
+                  className="bg-primary text-black px-6 py-3 rounded-xl font-semibold flex items-center space-x-2"
+                >
+                  <QrCode className="w-5 h-5" />
+                  <span>Escanear QR</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* QR Scanner Modal */}
+      <QRScanner 
+        isOpen={showQRScanner}
+        onClose={() => setShowQRScanner(false)}
+        onScan={handleQRScan}
+        projectSuggestions={projectSuggestions}
+      />
+
+      {/* Modal Editar Laudo */}
+      <Modal isOpen={showLaudoModal} onClose={() => setShowLaudoModal(false)} size="lg">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold">Editar Laudo EliteShield™</h2>
+            <button onClick={() => setShowLaudoModal(false)} className="p-2 hover:bg-white/10 rounded-lg" title="Fechar" aria-label="Fechar modal">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="grid md:grid-cols-2 gap-4 mb-6">
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Nível de Proteção</label>
+              <select 
+                value={laudoData.level} 
+                onChange={(e) => setLaudoData({...laudoData, level: e.target.value})}
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                title="Nível de proteção"
+              >
+                <option value="II">II</option>
+                <option value="IIIA">IIIA</option>
+                <option value="III">III</option>
+                <option value="IV">IV</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Certificação</label>
+              <input 
+                type="text" 
+                value={laudoData.certification}
+                onChange={(e) => setLaudoData({...laudoData, certification: e.target.value})}
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                title="Certificação"
+                placeholder="ABNT NBR 15000"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Nº Certificado</label>
+              <input 
+                type="text" 
+                value={laudoData.certificationNumber}
+                onChange={(e) => setLaudoData({...laudoData, certificationNumber: e.target.value})}
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                title="Número do certificado"
+                placeholder="CERT-2024-XXXX"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Tipo de Vidro</label>
+              <input 
+                type="text" 
+                value={laudoData.glassType}
+                onChange={(e) => setLaudoData({...laudoData, glassType: e.target.value})}
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                title="Tipo de vidro"
+                placeholder="Laminado Multi-camadas"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Espessura</label>
+              <input 
+                type="text" 
+                value={laudoData.glassThickness}
+                onChange={(e) => setLaudoData({...laudoData, glassThickness: e.target.value})}
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                title="Espessura do vidro"
+                placeholder="21mm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Garantia</label>
+              <input 
+                type="text" 
+                value={laudoData.warranty}
+                onChange={(e) => setLaudoData({...laudoData, warranty: e.target.value})}
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                title="Período de garantia"
+                placeholder="5 anos"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm text-gray-400 mb-2">Responsável Técnico</label>
+              <input 
+                type="text" 
+                value={laudoData.technicalResponsible}
+                onChange={(e) => setLaudoData({...laudoData, technicalResponsible: e.target.value})}
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                title="Responsável técnico"
+                placeholder="Nome do técnico responsável"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end space-x-3">
+            <button onClick={() => setShowLaudoModal(false)} className="px-6 py-3 bg-white/10 rounded-xl">Cancelar</button>
+            <button onClick={handleSaveLaudo} className="px-6 py-3 bg-primary text-black rounded-xl font-semibold flex items-center space-x-2">
+              <Save className="w-4 h-4" />
+              <span>Salvar Laudo</span>
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal Novo Carro/Projeto */}
+      <Modal isOpen={showNewCarModal} onClose={() => setShowNewCarModal(false)} size="lg">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold">Cadastrar Novo Veículo</h2>
+            <button onClick={() => setShowNewCarModal(false)} className="p-2 hover:bg-white/10 rounded-lg" title="Fechar" aria-label="Fechar modal">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          
+          <div className="space-y-6">
+            <div>
+              <h3 className="font-semibold text-primary mb-4">Dados do Cliente</h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm text-gray-400 mb-2">Nome Completo *</label>
+                  <input 
+                    type="text" 
+                    value={newCarData.clientName}
+                    onChange={(e) => setNewCarData({...newCarData, clientName: e.target.value})}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                    title="Nome do cliente"
+                    placeholder="Nome completo do cliente"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">E-mail</label>
+                  <input 
+                    type="email" 
+                    value={newCarData.clientEmail}
+                    onChange={(e) => setNewCarData({...newCarData, clientEmail: e.target.value})}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                    title="E-mail do cliente"
+                    placeholder="email@exemplo.com"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Telefone</label>
+                  <input 
+                    type="tel" 
+                    value={newCarData.clientPhone}
+                    onChange={(e) => setNewCarData({...newCarData, clientPhone: e.target.value})}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                    title="Telefone do cliente"
+                    placeholder="(11) 99999-9999"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-primary mb-4">Dados do Veículo</h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Marca *</label>
+                  <input 
+                    type="text" 
+                    value={newCarData.brand}
+                    onChange={(e) => setNewCarData({...newCarData, brand: e.target.value})}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                    title="Marca do veículo"
+                    placeholder="Ex: Mercedes-Benz"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Modelo *</label>
+                  <input 
+                    type="text" 
+                    value={newCarData.model}
+                    onChange={(e) => setNewCarData({...newCarData, model: e.target.value})}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                    title="Modelo do veículo"
+                    placeholder="Ex: GLE 450"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Ano</label>
+                  <input 
+                    type="text" 
+                    value={newCarData.year}
+                    onChange={(e) => setNewCarData({...newCarData, year: e.target.value})}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                    title="Ano do veículo"
+                    placeholder="2024"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Placa *</label>
+                  <input 
+                    type="text" 
+                    value={newCarData.plate}
+                    onChange={(e) => setNewCarData({...newCarData, plate: e.target.value.toUpperCase()})}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white uppercase"
+                    title="Placa do veículo"
+                    placeholder="ABC-1D23"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Cor</label>
+                  <input 
+                    type="text" 
+                    value={newCarData.color}
+                    onChange={(e) => setNewCarData({...newCarData, color: e.target.value})}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                    title="Cor do veículo"
+                    placeholder="Preto"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Chassi</label>
+                  <input 
+                    type="text" 
+                    value={newCarData.chassis}
+                    onChange={(e) => setNewCarData({...newCarData, chassis: e.target.value.toUpperCase()})}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white uppercase"
+                    title="Número do chassi"
+                    placeholder="9BWXXXXXXXXXXXXXXX"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm text-gray-400 mb-2">Foto do Veículo</label>
+                  <input 
+                    ref={vehiclePhotoInputRef}
+                    type="file" 
+                    accept="image/*"
+                    onChange={handleVehiclePhotoSelect}
+                    className="hidden"
+                    title="Selecionar foto do veículo"
+                  />
+                  <div 
+                    onClick={() => vehiclePhotoInputRef.current?.click()}
+                    className="border-2 border-dashed border-white/20 rounded-xl p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                  >
+                    {vehiclePhoto ? (
+                      <div className="relative">
+                        <img src={vehiclePhoto} alt="Foto do veículo" className="w-full h-32 object-cover rounded-lg" />
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setVehiclePhoto(null); }}
+                          className="absolute top-2 right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center"
+                          title="Remover foto"
+                        >
+                          <X className="w-4 h-4 text-white" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="py-4">
+                        <Image className="w-10 h-10 mx-auto text-gray-500 mb-2" />
+                        <p className="text-sm text-gray-400">Clique para adicionar foto</p>
+                        <p className="text-xs text-gray-500">JPG, PNG até 5MB</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* QR Code Info */}
+            <div className="bg-primary/10 border border-primary/30 rounded-xl p-4">
+              <div className="flex items-start space-x-3">
+                <QrCode className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-semibold text-primary">Vinculação via QR Code</h4>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Após criar o projeto, um QR Code único será gerado. O cliente deve escanear este código 
+                    para acessar o acompanhamento do veículo. O e-mail informado será usado para criar a conta do cliente.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-3 mt-6">
+            <button onClick={() => setShowNewCarModal(false)} className="px-6 py-3 bg-white/10 rounded-xl">Cancelar</button>
+            <button onClick={handleCreateNewCar} className="px-6 py-3 bg-primary text-black rounded-xl font-semibold flex items-center space-x-2">
+              <Plus className="w-4 h-4" />
+              <span>Criar Projeto</span>
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal Compartilhar QR Code */}
+      <Modal isOpen={showShareModal} onClose={() => setShowShareModal(false)} size="md">
+        <div className="p-6">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-green-500" />
+            </div>
+            <h2 className="text-xl font-bold">Projeto Criado com Sucesso!</h2>
+            <p className="text-gray-400 mt-2">Compartilhe o acesso com o cliente</p>
+          </div>
+
+          {createdProjectData && (
+            <div className="bg-white/5 rounded-xl p-4 mb-6">
+              <div className="text-center mb-4">
+                <div className="bg-white p-4 rounded-xl inline-block mb-3">
+                  <QrCode className="w-24 h-24 text-black" />
+                </div>
+                <p className="font-mono text-sm text-primary">{createdProjectData.qrCode}</p>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Cliente:</span>
+                  <span>{createdProjectData.clientName}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Veículo:</span>
+                  <span>{createdProjectData.vehicle}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Código:</span>
+                  <span className="font-mono">{createdProjectData.id}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-3">
+            <button
+              onClick={shareViaWhatsApp}
+              className="w-full flex items-center justify-center space-x-3 bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold transition-colors"
+            >
+              <i className="ri-whatsapp-fill text-xl"></i>
+              <span>Enviar via WhatsApp</span>
+            </button>
+            <button
+              onClick={shareViaEmail}
+              className="w-full flex items-center justify-center space-x-3 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition-colors"
+            >
+              <i className="ri-mail-fill text-xl"></i>
+              <span>Enviar via E-mail</span>
+            </button>
+            <button
+              onClick={() => setShowShareModal(false)}
+              className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors"
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal Editar Ticket */}
+      {showTicketModal && selectedTicket && (
+        <Modal isOpen={showTicketModal} onClose={() => { setShowTicketModal(false); setSelectedTicket(null); setTicketResponse(''); }} size="lg">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-bold">Ticket {selectedTicket.id}</h2>
+                <p className="text-sm text-gray-400">{selectedTicket.clientName} • {selectedTicket.vehicle}</p>
+              </div>
+              <button onClick={() => { setShowTicketModal(false); setSelectedTicket(null); }} className="p-2 hover:bg-white/10 rounded-lg" title="Fechar">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <div className="bg-white/5 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-primary">{selectedTicket.subject}</span>
+                  <span className={cn("px-2 py-0.5 rounded-full text-xs", ticketPriorityConfig[selectedTicket.priority as keyof typeof ticketPriorityConfig]?.color, "text-white")}>
+                    {ticketPriorityConfig[selectedTicket.priority as keyof typeof ticketPriorityConfig]?.label}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-300">{selectedTicket.message}</p>
+                <p className="text-xs text-gray-500 mt-2">Aberto em {new Date(selectedTicket.createdAt).toLocaleString('pt-BR')}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Alterar Status</label>
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(ticketStatusConfig).map(([key, config]) => (
+                    <button
+                      key={key}
+                      onClick={() => setTicketNewStatus(key)}
+                      className={cn(
+                        "px-4 py-2 rounded-xl text-sm font-medium transition-colors",
+                        ticketNewStatus === key
+                          ? cn(config.color, "text-white")
+                          : "bg-white/10 text-gray-400 hover:bg-white/20"
+                      )}
+                    >
+                      {config.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Resposta / Observação</label>
+                <textarea
+                  value={ticketResponse}
+                  onChange={(e) => setTicketResponse(e.target.value)}
+                  placeholder="Digite sua resposta ou observação..."
+                  rows={4}
+                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-500 resize-none"
+                />
+              </div>
+
+              {/* Anexo de arquivo */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Anexar Arquivo (opcional)</label>
+                <input
+                  type="file"
+                  ref={ticketAttachmentRef}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      setTicketAttachmentName(file.name)
+                    }
+                  }}
+                  className="hidden"
+                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                  title="Selecionar arquivo para anexar"
+                  aria-label="Selecionar arquivo para anexar"
+                />
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => ticketAttachmentRef.current?.click()}
+                    className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl transition-colors"
+                  >
+                    <Paperclip className="w-4 h-4" />
+                    <span>Anexar Arquivo</span>
+                  </button>
+                  {ticketAttachmentName && (
+                    <div className="flex items-center gap-2 px-3 py-1 bg-primary/20 rounded-lg">
+                      <FileText className="w-4 h-4 text-primary" />
+                      <span className="text-sm text-primary">{ticketAttachmentName}</span>
+                      <button
+                        onClick={() => { setTicketAttachmentName(''); }}
+                        className="text-red-400 hover:text-red-300"
+                        title="Remover anexo"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex space-x-3">
+              <button 
+                onClick={() => { setShowTicketModal(false); setSelectedTicket(null); setTicketResponse(''); }}
+                className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={() => {
+                  setTickets(prev => prev.map(t => t.id === selectedTicket.id ? {...t, status: ticketNewStatus} : t))
+                  addNotification({ 
+                    type: 'success', 
+                    title: 'Ticket Atualizado', 
+                    message: `Status do ticket ${selectedTicket.id} alterado para "${ticketStatusConfig[ticketNewStatus as keyof typeof ticketStatusConfig]?.label}". Cliente será notificado.` 
+                  })
+                  setShowTicketModal(false)
+                  setSelectedTicket(null)
+                  setTicketResponse('')
+                }}
+                className="flex-1 px-6 py-3 bg-primary hover:bg-primary/90 text-black font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+              >
+                <Save className="w-4 h-4" />
+                Salvar Alterações
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Modal Orçamento - Definir Valor Exato */}
+      {showQuoteModal && selectedQuote && (
+        <Modal isOpen={showQuoteModal} onClose={() => { setShowQuoteModal(false); setSelectedQuote(null); }} size="lg">
+          <div className="p-6 space-y-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-xl font-bold">Definir Orçamento</h2>
+                <p className="text-sm text-gray-400">{selectedQuote.clientName} • {selectedQuote.vehicleBrand} {selectedQuote.vehicleModel}</p>
+              </div>
+              <button 
+                onClick={() => { setShowQuoteModal(false); setSelectedQuote(null); }} 
+                className="p-2 hover:bg-white/10 rounded-lg" 
+                title="Fechar"
+                aria-label="Fechar modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="bg-white/5 rounded-xl p-4 space-y-2">
+              <p><span className="text-gray-400">Tipo de Veículo:</span> {selectedQuote.vehicleType}</p>
+              <p><span className="text-gray-400">Nível Solicitado:</span> {selectedQuote.blindingLevel}</p>
+              <p><span className="text-gray-400">Data da Solicitação:</span> {new Date(selectedQuote.createdAt).toLocaleDateString('pt-BR')}</p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Valor Exato do Orçamento *</label>
+                <input 
+                  type="text" 
+                  value={quoteExactPrice}
+                  onChange={(e) => setQuoteExactPrice(e.target.value)}
+                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                  placeholder="R$ 85.000,00"
+                  title="Valor exato do orçamento"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Prazo Estimado (dias) *</label>
+                <input 
+                  type="number" 
+                  value={quoteEstimatedDays}
+                  onChange={(e) => setQuoteEstimatedDays(e.target.value)}
+                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                  placeholder="20"
+                  title="Prazo estimado em dias"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Observações para o Cliente</label>
+              <textarea
+                value={quoteNotes}
+                onChange={(e) => setQuoteNotes(e.target.value)}
+                placeholder="Detalhes do orçamento, condições de pagamento, etc..."
+                rows={3}
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-500 resize-none"
+              />
+            </div>
+
+            <div className="flex space-x-3">
+              <button 
+                onClick={() => { setShowQuoteModal(false); setSelectedQuote(null); }}
+                className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={() => {
+                  if (!quoteExactPrice || !quoteEstimatedDays) {
+                    addNotification({ type: 'error', title: 'Campos Obrigatórios', message: 'Preencha o valor e o prazo estimado.' })
+                    return
+                  }
+                  updateQuoteStatus(selectedQuote.id, 'sent', {
+                    estimatedPrice: quoteExactPrice,
+                    estimatedDays: parseInt(quoteEstimatedDays),
+                    executorNotes: quoteNotes
+                  })
+                  addNotification({ 
+                    type: 'success', 
+                    title: 'Orçamento Enviado', 
+                    message: `Orçamento de ${quoteExactPrice} enviado para ${selectedQuote.clientName}. Aguardando aprovação.` 
+                  })
+                  setShowQuoteModal(false)
+                  setSelectedQuote(null)
+                  setQuoteExactPrice('')
+                  setQuoteEstimatedDays('')
+                  setQuoteNotes('')
+                }}
+                className="flex-1 px-6 py-3 bg-primary hover:bg-primary/90 text-black font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+              >
+                <Send className="w-4 h-4" />
+                Enviar Orçamento
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+    </div>
+  )
+}
