@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLeads } from '../contexts/LeadsContext'
 import { useNotifications } from '../contexts/NotificationContext'
+import '../styles/LandingPage.css'
 
 export function LandingPage() {
   const navigate = useNavigate()
@@ -194,25 +195,17 @@ export function LandingPage() {
       {/* Hero Section */}
       <section id="inicio" className="min-h-screen hero-bg relative overflow-hidden">
         <div className="absolute inset-0 w-full h-full">
-          <div style={{ 
-            backgroundImage: "url('https://readdy.ai/api/search-image?query=luxury%20sports%20car%20being%20armored%20in%20high-tech%20modern%20facility%20with%20dramatic%20cinematic%20lighting%2C%20sophisticated%20automotive%20workshop%20with%20golden%20accent%20lights%2C%20sleek%20supercar%20with%20bulletproof%20glass%20installation%2C%20premium%20armoring%20process%20with%20metallic%20reflections%20and%20professional%20equipment%2C%20dark%20atmospheric%20setting%20with%20luxury%20vehicle%20protection%20services%2C%20cinematic%20automotive%20photography%20with%20dramatic%20shadows%20and%20premium%20lighting&width=1920&height=1080&seq=hero-armoring-process&orientation=landscape')",
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            width: '100%',
-            height: '100%',
-            filter: 'brightness(0.7) contrast(1.2)'
-          }} />
+          <div className="hero-bg-image" />
           <div className="hero-car-overlay absolute inset-0" />
         </div>
 
         {/* Floating particles */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-1/4 left-1/4 w-3 h-3 bg-primary rounded-full floating-animation opacity-60 luxury-glow" />
-          <div className="absolute top-3/4 right-1/4 w-2 h-2 bg-primary rounded-full floating-animation opacity-40 luxury-glow" style={{ animationDelay: '2s' }} />
-          <div className="absolute top-1/2 left-3/4 w-2.5 h-2.5 bg-primary rounded-full floating-animation opacity-50 luxury-glow" style={{ animationDelay: '4s' }} />
-          <div className="absolute top-1/3 right-1/3 w-1.5 h-1.5 bg-primary rounded-full floating-animation opacity-30 luxury-glow" style={{ animationDelay: '3s' }} />
-          <div className="absolute bottom-1/3 left-1/6 w-2 h-2 bg-primary rounded-full floating-animation opacity-45 luxury-glow" style={{ animationDelay: '5s' }} />
+          <div className="absolute top-3/4 right-1/4 w-2 h-2 bg-primary rounded-full floating-animation opacity-40 luxury-glow delay-2s" />
+          <div className="absolute top-1/2 left-3/4 w-2.5 h-2.5 bg-primary rounded-full floating-animation opacity-50 luxury-glow delay-4s" />
+          <div className="absolute top-1/3 right-1/3 w-1.5 h-1.5 bg-primary rounded-full floating-animation opacity-30 luxury-glow delay-3s" />
+          <div className="absolute bottom-1/3 left-1/6 w-2 h-2 bg-primary rounded-full floating-animation opacity-45 luxury-glow delay-5s" />
         </div>
 
         {/* Fixed Header */}
@@ -231,6 +224,8 @@ export function LandingPage() {
               <button 
                 onClick={() => navigate('/login')}
                 className="md:hidden text-white"
+                aria-label="Acessar login"
+                title="Acessar login"
               >
                 <i className="ri-login-box-line text-2xl"></i>
               </button>
@@ -283,14 +278,14 @@ export function LandingPage() {
               <h3 className="text-3xl font-bold mb-6 text-white">1. Agende</h3>
               <p className="text-gray-300 leading-relaxed text-lg">Solicite seu orçamento e agende a blindagem com nossa equipe especializada. Processo 100% personalizado para clientes exigentes.</p>
             </div>
-            <div className="glass-effect cinematic-blur p-10 rounded-3xl fade-in hover:bg-white/15 transition-all duration-500 transform hover:scale-105 premium-shadow group" style={{ animationDelay: '0.2s' }}>
+            <div className="glass-effect cinematic-blur p-10 rounded-3xl fade-in hover:bg-white/15 transition-all duration-500 transform hover:scale-105 premium-shadow group delay-0-2s">
               <div className="w-20 h-20 flex items-center justify-center bg-primary/25 rounded-3xl mb-8 luxury-glow group-hover:bg-primary/35 transition-all duration-300">
                 <i className="ri-eye-line text-3xl text-primary"></i>
               </div>
               <h3 className="text-3xl font-bold mb-6 text-white">2. Acompanhe em Tempo Real</h3>
               <p className="text-gray-300 leading-relaxed text-lg">Monitore cada etapa da blindagem através do EliteTrack™. Atualizações instantâneas e documentação completa em tempo real.</p>
             </div>
-            <div className="glass-effect cinematic-blur p-10 rounded-3xl fade-in hover:bg-white/15 transition-all duration-500 transform hover:scale-105 premium-shadow group" style={{ animationDelay: '0.4s' }}>
+            <div className="glass-effect cinematic-blur p-10 rounded-3xl fade-in hover:bg-white/15 transition-all duration-500 transform hover:scale-105 premium-shadow group delay-0-4s">
               <div className="w-20 h-20 flex items-center justify-center bg-primary/25 rounded-3xl mb-8 luxury-glow group-hover:bg-primary/35 transition-all duration-300">
                 <i className="ri-shield-check-line text-3xl text-primary"></i>
               </div>
@@ -304,11 +299,7 @@ export function LandingPage() {
       {/* Benefícios Principais */}
       <section id="beneficios" className="py-24 px-6 bg-gradient-to-br from-gray-900 via-black to-gray-900 relative">
         <div className="absolute inset-0 opacity-10">
-          <div style={{ 
-            backgroundImage: "url('https://readdy.ai/api/search-image?query=luxury%20automotive%20workshop%20with%20high-tech%20equipment%20and%20sophisticated%20armoring%20tools%2C%20premium%20vehicle%20protection%20facility%20with%20metallic%20surfaces%20and%20golden%20lighting%20accents%2C%20modern%20industrial%20setting%20with%20luxury%20car%20parts%20and%20bulletproof%20materials%2C%20cinematic%20automotive%20technology%20background%20with%20dramatic%20lighting&width=1920&height=1080&seq=benefits-bg&orientation=landscape')",
-            backgroundSize: 'cover',
-            backgroundPosition: 'center'
-          }} />
+          <div className="benefits-bg" />
         </div>
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-20 fade-in">
@@ -323,35 +314,35 @@ export function LandingPage() {
               <h3 className="text-2xl font-bold mb-6 text-white">Transparência Absoluta</h3>
               <p className="text-gray-300 text-lg leading-relaxed">Visibilidade completa de cada etapa do processo de blindagem em tempo real com tecnologia avançada.</p>
             </div>
-            <div className="glass-effect p-8 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group" style={{ animationDelay: '0.1s' }}>
+            <div className="glass-effect p-8 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group delay-0-1s">
               <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mb-6 group-hover:bg-primary/30 transition-colors">
                 <i className="ri-notification-3-line text-2xl text-primary"></i>
               </div>
               <h3 className="text-xl font-bold mb-4">Atualizações em Tempo Real</h3>
               <p className="text-gray-400">Notificações instantâneas sobre o progresso do seu veículo.</p>
             </div>
-            <div className="glass-effect p-8 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group" style={{ animationDelay: '0.2s' }}>
+            <div className="glass-effect p-8 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group delay-0-2s">
               <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mb-6 group-hover:bg-primary/30 transition-colors">
                 <i className="ri-file-shield-2-line text-2xl text-primary"></i>
               </div>
               <h3 className="text-xl font-bold mb-4">Documentos Centralizados</h3>
               <p className="text-gray-400">Todos os documentos e certificações organizados em um só lugar.</p>
             </div>
-            <div className="glass-effect p-8 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group" style={{ animationDelay: '0.3s' }}>
+            <div className="glass-effect p-8 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group delay-0-3s">
               <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mb-6 group-hover:bg-primary/30 transition-colors">
                 <i className="ri-vip-crown-line text-2xl text-primary"></i>
               </div>
               <h3 className="text-xl font-bold mb-4">Experiência Premium</h3>
               <p className="text-gray-400">Interface elegante e intuitiva projetada para clientes exigentes.</p>
             </div>
-            <div className="glass-effect p-8 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group" style={{ animationDelay: '0.4s' }}>
+            <div className="glass-effect p-8 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group delay-0-4s">
               <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mb-6 group-hover:bg-primary/30 transition-colors">
                 <i className="ri-rocket-line text-2xl text-primary"></i>
               </div>
               <h3 className="text-xl font-bold mb-4">Liderança Tecnológica</h3>
               <p className="text-gray-400">Primeira plataforma de rastreamento de blindagem do Brasil.</p>
             </div>
-            <div className="glass-effect p-8 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group" style={{ animationDelay: '0.5s' }}>
+            <div className="glass-effect p-8 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group delay-0-5s">
               <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mb-6 group-hover:bg-primary/30 transition-colors">
                 <i className="ri-lock-line text-2xl text-primary"></i>
               </div>
@@ -408,7 +399,7 @@ export function LandingPage() {
                 <div className="flex-1">
                   <h4 className="font-semibold text-primary">Instalação da Blindagem</h4>
                   <p className="text-sm text-gray-400">Em andamento - Aplicação do aço balístico</p>
-                  <div className="progress-bar w-full mt-2" style={{ width: '65%' }}></div>
+                  <div className="progress-bar w-full mt-2 progress-65"></div>
                 </div>
                 <span className="text-sm text-primary">Em andamento</span>
               </div>
@@ -452,21 +443,21 @@ export function LandingPage() {
               <h3 className="font-semibold mb-2">Laudos Técnicos</h3>
               <p className="text-sm text-gray-400">Relatórios detalhados de cada etapa</p>
             </div>
-            <div className="glass-effect p-6 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group cursor-pointer" style={{ animationDelay: '0.1s' }}>
+            <div className="glass-effect p-6 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group cursor-pointer delay-0-1s">
               <div className="w-12 h-12 flex items-center justify-center bg-green-500/20 rounded-xl mb-4 group-hover:bg-green-500/30 transition-colors">
                 <i className="ri-receipt-line text-xl text-green-400"></i>
               </div>
               <h3 className="font-semibold mb-2">Notas Fiscais</h3>
               <p className="text-sm text-gray-400">Documentação fiscal completa</p>
             </div>
-            <div className="glass-effect p-6 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group cursor-pointer" style={{ animationDelay: '0.2s' }}>
+            <div className="glass-effect p-6 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group cursor-pointer delay-0-2s">
               <div className="w-12 h-12 flex items-center justify-center bg-purple-500/20 rounded-xl mb-4 group-hover:bg-purple-500/30 transition-colors">
                 <i className="ri-camera-line text-xl text-purple-400"></i>
               </div>
               <h3 className="font-semibold mb-2">Fotos do Processo</h3>
               <p className="text-sm text-gray-400">Registro visual de cada etapa</p>
             </div>
-            <div className="glass-effect p-6 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group cursor-pointer" style={{ animationDelay: '0.3s' }}>
+            <div className="glass-effect p-6 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group cursor-pointer delay-0-3s">
               <div className="w-12 h-12 flex items-center justify-center bg-primary/20 rounded-xl mb-4 group-hover:bg-primary/30 transition-colors">
                 <i className="ri-award-line text-xl text-primary"></i>
               </div>
@@ -492,21 +483,21 @@ export function LandingPage() {
               <h3 className="font-semibold mb-2">ISO 9001</h3>
               <p className="text-sm text-gray-400">Gestão de qualidade certificada</p>
             </div>
-            <div className="text-center fade-in" style={{ animationDelay: '0.1s' }}>
+            <div className="text-center fade-in delay-0-1s">
               <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mx-auto mb-4">
                 <i className="ri-lock-line text-2xl text-primary"></i>
               </div>
               <h3 className="font-semibold mb-2">Dados Seguros</h3>
               <p className="text-sm text-gray-400">Criptografia de nível bancário</p>
             </div>
-            <div className="text-center fade-in" style={{ animationDelay: '0.2s' }}>
+            <div className="text-center fade-in delay-0-2s">
               <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mx-auto mb-4">
                 <i className="ri-eye-off-line text-2xl text-primary"></i>
               </div>
               <h3 className="font-semibold mb-2">Privacidade</h3>
               <p className="text-sm text-gray-400">LGPD compliance total</p>
             </div>
-            <div className="text-center fade-in" style={{ animationDelay: '0.3s' }}>
+            <div className="text-center fade-in delay-0-3s">
               <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mx-auto mb-4">
                 <i className="ri-medal-line text-2xl text-primary"></i>
               </div>
@@ -532,7 +523,7 @@ export function LandingPage() {
                 <p className="text-sm text-gray-500">CEO, Mendes Holdings</p>
               </div>
             </div>
-            <div className="glass-effect p-8 rounded-2xl fade-in" style={{ animationDelay: '0.2s' }}>
+            <div className="glass-effect p-8 rounded-2xl fade-in delay-0-2s">
               <div className="text-4xl text-primary mb-4">"</div>
               <p className="text-gray-300 italic mb-6 leading-relaxed">A transparência é impressionante. Consegui acompanhar minha frota inteira sendo blindada, com documentação completa e atualizações constantes. Serviço premium de verdade.</p>
               <div>
@@ -540,7 +531,7 @@ export function LandingPage() {
                 <p className="text-sm text-gray-500">Diretora, Silva Transportes</p>
               </div>
             </div>
-            <div className="glass-effect p-8 rounded-2xl fade-in" style={{ animationDelay: '0.4s' }}>
+            <div className="glass-effect p-8 rounded-2xl fade-in delay-0-4s">
               <div className="text-4xl text-primary mb-4">"</div>
               <p className="text-gray-300 italic mb-6 leading-relaxed">Tecnologia de ponta aliada à qualidade Elite Blindagem. O EliteTrack™ me deu total confiança no processo, desde o primeiro dia até a entrega final.</p>
               <div>
@@ -659,14 +650,14 @@ export function LandingPage() {
           <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center">
             <p className="text-sm text-gray-500">© 2024 Elite Blindagem. Todos os direitos reservados.</p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <a href="#" className="text-gray-500 hover:text-primary transition-colors">
+              <a href="#" className="text-gray-500 hover:text-primary transition-colors" title="Instagram">
                 <i className="ri-instagram-line text-xl"></i>
               </a>
-              <a href="#" className="text-gray-500 hover:text-primary transition-colors">
+              <a href="#" className="text-gray-500 hover:text-primary transition-colors" title="LinkedIn">
                 <i className="ri-linkedin-line text-xl"></i>
               </a>
-              <a href="#" className="text-gray-500 hover:text-primary transition-colors">
-                <i className="ri-youtube-line text-xl"></i>
+              <a href="#" className="text-gray-500 hover:text-primary transition-colors" title="Facebook">
+                <i className="ri-facebook-line text-xl"></i>
               </a>
             </div>
           </div>

@@ -1,0 +1,40 @@
+/* Animation delays for staggered animations */
+.delay-0s { animation-delay: 0s; }
+.delay-0-1s { animation-delay: 0.1s; }
+.delay-0-2s { animation-delay: 0.2s; }
+.delay-0-3s { animation-delay: 0.3s; }
+.delay-0-4s { animation-delay: 0.4s; }
+.delay-0-5s { animation-delay: 0.5s; }
+.delay-2s { animation-delay: 2s; }
+.delay-3s { animation-delay: 3s; }
+.delay-4s { animation-delay: 4s; }
+.delay-5s { animation-delay: 5s; }
+
+/* Progress bar widths */
+.progress-65 { width: 65%; }
+
+/* Benefits background */
+.benefits-bg {
+  background-image: url('https://readdy.ai/api/search-image?query=luxury%20automotive%20workshop%20with%20high-tech%20equipment%20and%20sophisticated%20armoring%20tools%2C%20premium%20vehicle%20protection%20facility%20with%20metallic%20surfaces%20and%20golden%20lighting%20accents%2C%20modern%20industrial%20setting%20with%20luxury%20car%20parts%20and%20bulletproof%20materials%2C%20cinematic%20automotive%20technology%20background%20with%20dramatic%20lighting&width=1920&height=1080&seq=benefits-bg&orientation=landscape');
+  background-size: cover;
+  background-position: center;
+}
+
+/* Custom background gradient */
+.hero-gradient {
+  background: linear-gradient(135deg, 
+    rgba(10, 10, 10, 0.9) 0%, 
+    rgba(212, 175, 55, 0.1) 100%
+  );
+}
+
+/* Hero background image */
+.hero-bg-image {
+  background-image: url('https://readdy.ai/api/search-image?query=luxury%20sports%20car%20being%20armored%20in%20high-tech%20modern%20facility%20with%20dramatic%20cinematic%20lighting%2C%20sophisticated%20automotive%20workshop%20with%20golden%20accent%20lights%2C%20sleek%20supercar%20with%20bulletproof%20glass%20installation%2C%20premium%20armoring%20process%20with%20metallic%20reflections%20and%20professional%20equipment%2C%20dark%20atmospheric%20setting%20with%20luxury%20vehicle%20protection%20services%2C%20cinematic%20automotive%20photography%20with%20dramatic%20shadows%20and%20premium%20lighting&width=1920&height=1080&seq=hero-armoring-process&orientation=landscape');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 100%;
+  height: 100%;
+  filter: brightness(0.7) contrast(1.2);
+}
