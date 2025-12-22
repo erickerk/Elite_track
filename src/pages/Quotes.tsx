@@ -7,7 +7,7 @@ import {
 import { Modal } from '../components/ui/Modal'
 import { useAuth } from '../contexts/AuthContext'
 import { useNotifications } from '../contexts/NotificationContext'
-import { useQuotes } from '../contexts/QuoteContext'
+import { useQuotes, QuoteRequest } from '../contexts/QuoteContext'
 import { useProjects } from '../contexts/ProjectContext'
 import { cn } from '../lib/utils'
 import type { Vehicle } from '../types'
@@ -95,7 +95,7 @@ export function Quotes() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { addNotification } = useNotifications()
-  const { addQuote, getQuotesByClient } = useQuotes()
+  const { addQuote, getQuotesByClient, clientApproveQuote, clientRejectQuote } = useQuotes()
   const { userProjects } = useProjects()
   
   const myQuotes = user ? getQuotesByClient(user.email) : []
@@ -117,6 +117,9 @@ export function Quotes() {
   const [selectedServiceType, setSelectedServiceType] = useState<string>('')
   const [selectedService, setSelectedService] = useState<string | null>(null)
   const [customDescription, setCustomDescription] = useState('')
+  const [showQuoteDetailModal, setShowQuoteDetailModal] = useState(false)
+  const [selectedQuoteDetail, setSelectedQuoteDetail] = useState<QuoteRequest | null>(null)
+  const [clientResponseText, setClientResponseText] = useState('')
 
   const handleSelectVehicle = (vehicle: Vehicle) => {
     setSelectedVehicle(vehicle)
@@ -161,15 +164,26 @@ export function Quotes() {
 
   const handleRequestQuote = () => {
     if (user) {
+      const serviceDesc = selectedServiceType === 'new-blinding' 
+        ? `Nova Blindagem - Nível ${selectedLevel?.replace('level-', '').toUpperCase()}`
+        : selectedServiceType === 'other'
+        ? 'Serviço personalizado'
+        : getSelectedServiceOption()?.name || ''
+
       addQuote({
         clientId: user.id || '1',
         clientName: user.name,
         clientEmail: user.email,
+        clientPhone: user.phone,
         vehicleType,
         vehicleBrand,
         vehicleModel,
         vehicleYear,
-        blindingLevel: selectedLevel || '',
+        vehiclePlate: selectedVehicle?.plate,
+        blindingLevel: selectedLevel?.replace('level-', '').toUpperCase() || '',
+        serviceType: selectedServiceType as 'new-blinding' | 'glass-replacement' | 'door-replacement' | 'maintenance' | 'revision' | 'other',
+        serviceDescription: serviceDesc,
+        clientDescription: customDescription || undefined,
       })
     }
     addNotification({ 
@@ -185,6 +199,9 @@ export function Quotes() {
     setVehicleYear('')
     setSelectedLevel(null)
     setQuoteGenerated(false)
+    setCustomDescription('')
+    setSelectedServiceType('')
+    setSelectedService(null)
   }
 
   const selectedOption = blindingOptions.find(o => o.id === selectedLevel)
@@ -231,7 +248,19 @@ export function Quotes() {
             {showMyQuotes && (
               <div className="mt-4 space-y-3">
                 {myQuotes.map((quote) => (
-                  <div key={quote.id} className="p-4 bg-white/5 border border-white/10 rounded-xl">
+                  <div 
+                    key={quote.id} 
+                    className={cn(
+                      "p-4 bg-white/5 border rounded-xl transition-colors",
+                      quote.status === 'sent' ? "border-primary/50 cursor-pointer hover:bg-white/10" : "border-white/10"
+                    )}
+                    onClick={() => {
+                      if (quote.status === 'sent') {
+                        setSelectedQuoteDetail(quote)
+                        setShowQuoteDetailModal(true)
+                      }
+                    }}
+                  >
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-semibold">{quote.vehicleBrand} {quote.vehicleModel}</span>
                       <span className={cn(
@@ -244,16 +273,27 @@ export function Quotes() {
                       )}>
                         {quote.status === 'pending' ? 'Aguardando Análise' :
                          quote.status === 'analyzed' ? 'Em Análise' :
-                         quote.status === 'sent' ? 'Orçamento Enviado' :
+                         quote.status === 'sent' ? 'Aguardando Sua Aprovação' :
                          quote.status === 'approved' ? 'Aprovado' : 'Recusado'}
                       </span>
                     </div>
                     <div className="text-sm text-gray-400">
                       <p>Nível: {quote.blindingLevel} • {new Date(quote.createdAt).toLocaleDateString('pt-BR')}</p>
                       {quote.estimatedPrice && (
-                        <p className="text-primary mt-1">Valor: {quote.estimatedPrice}</p>
+                        <p className="text-primary mt-1 font-semibold">Valor: {quote.estimatedPrice}</p>
+                      )}
+                      {quote.estimatedDays && (
+                        <p className="text-gray-500">Prazo: {quote.estimatedDays} dias</p>
                       )}
                     </div>
+                    {quote.status === 'sent' && (
+                      <div className="mt-3 pt-3 border-t border-white/10">
+                        <p className="text-xs text-primary flex items-center gap-1">
+                          <CheckCircle className="w-3 h-3" />
+                          Clique para ver detalhes e aprovar/rejeitar
+                        </p>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -627,7 +667,24 @@ export function Quotes() {
               </>
             )}
 
-            <div className="flex space-x-4">
+            {/* Campo de descrição adicional para todos os tipos de serviço (exceto 'other' que já tem) */}
+            {selectedServiceType && selectedServiceType !== 'other' && (
+              <div className="mt-6 p-4 bg-white/5 border border-white/10 rounded-2xl">
+                <label className="block text-sm text-gray-400 mb-2">
+                  Observações adicionais (opcional)
+                </label>
+                <textarea
+                  value={customDescription}
+                  onChange={(e) => setCustomDescription(e.target.value)}
+                  placeholder="Descreva detalhes adicionais sobre o serviço desejado, condições do veículo, urgência, etc."
+                  rows={3}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-primary/50 focus:outline-none resize-none"
+                  title="Observações adicionais"
+                />
+              </div>
+            )}
+
+            <div className="flex space-x-4 mt-6">
               <button onClick={() => setStep(2)} className="flex-1 bg-white/10 py-4 rounded-xl font-semibold">
                 Voltar
               </button>
@@ -701,6 +758,96 @@ export function Quotes() {
           )}
         </div>
       </Modal>
+
+      {/* Modal de Detalhes do Orçamento - Aprovação/Rejeição pelo Cliente */}
+      {showQuoteDetailModal && selectedQuoteDetail && (
+        <Modal isOpen={showQuoteDetailModal} onClose={() => { setShowQuoteDetailModal(false); setSelectedQuoteDetail(null); setClientResponseText(''); }} size="lg">
+          <div className="p-6 space-y-6">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Calculator className="w-8 h-8 text-primary" />
+              </div>
+              <h2 className="text-xl font-bold mb-1">Orçamento Recebido</h2>
+              <p className="text-gray-400">Analise os detalhes e aprove ou recuse</p>
+            </div>
+
+            {/* Informações do Veículo */}
+            <div className="bg-white/5 rounded-xl p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <Car className="w-5 h-5 text-primary" />
+                <span className="font-semibold">{selectedQuoteDetail.vehicleBrand} {selectedQuoteDetail.vehicleModel}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <p><span className="text-gray-400">Ano:</span> {selectedQuoteDetail.vehicleYear}</p>
+                <p><span className="text-gray-400">Nível:</span> {selectedQuoteDetail.blindingLevel}</p>
+              </div>
+            </div>
+
+            {/* Valor e Prazo */}
+            <div className="bg-primary/10 border border-primary/30 rounded-xl p-6 text-center">
+              <div className="text-4xl font-bold text-primary mb-2">{selectedQuoteDetail.estimatedPrice}</div>
+              <div className="text-sm text-gray-400">Prazo estimado: <span className="text-white font-semibold">{selectedQuoteDetail.estimatedDays} dias úteis</span></div>
+            </div>
+
+            {/* Observações do Executor */}
+            {selectedQuoteDetail.executorNotes && (
+              <div className="bg-white/5 rounded-xl p-4">
+                <h4 className="text-sm font-semibold text-gray-300 mb-2">Observações:</h4>
+                <p className="text-sm text-gray-400">{selectedQuoteDetail.executorNotes}</p>
+              </div>
+            )}
+
+            {/* Campo de Resposta do Cliente */}
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Sua resposta (opcional)</label>
+              <textarea
+                value={clientResponseText}
+                onChange={(e) => setClientResponseText(e.target.value)}
+                placeholder="Deixe uma mensagem para a blindadora..."
+                rows={3}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-primary/50 focus:outline-none resize-none"
+              />
+            </div>
+
+            {/* Botões de Ação */}
+            <div className="flex space-x-3">
+              <button 
+                onClick={() => {
+                  clientRejectQuote(selectedQuoteDetail.id, clientResponseText)
+                  addNotification({ 
+                    type: 'info', 
+                    title: 'Orçamento Recusado', 
+                    message: 'O orçamento foi recusado. A blindadora será notificada.' 
+                  })
+                  setShowQuoteDetailModal(false)
+                  setSelectedQuoteDetail(null)
+                  setClientResponseText('')
+                }}
+                className="flex-1 px-6 py-3 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-xl font-semibold transition-colors"
+              >
+                Recusar
+              </button>
+              <button 
+                onClick={() => {
+                  clientApproveQuote(selectedQuoteDetail.id, clientResponseText)
+                  addNotification({ 
+                    type: 'success', 
+                    title: 'Orçamento Aprovado!', 
+                    message: 'Parabéns! O orçamento foi aprovado. Entraremos em contato para agendar o serviço.' 
+                  })
+                  setShowQuoteDetailModal(false)
+                  setSelectedQuoteDetail(null)
+                  setClientResponseText('')
+                }}
+                className="flex-1 px-6 py-3 bg-green-500 text-white hover:bg-green-600 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+              >
+                <CheckCircle className="w-5 h-5" />
+                Aprovar Orçamento
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }

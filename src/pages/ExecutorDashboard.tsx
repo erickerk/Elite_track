@@ -108,7 +108,7 @@ export function ExecutorDashboard() {
   const { unreadCount, addNotification } = useNotifications()
   const { totalUnreadCount: chatUnreadCount } = useChat()
   const { projects: globalProjects, addProject: addGlobalProject } = useProjects()
-  const { quotes, updateQuoteStatus, getPendingQuotes } = useQuotes()
+  const { quotes, updateQuoteStatus, getPendingQuotes, createQuoteFromExecutor } = useQuotes()
 
   const [activeTab, setActiveTab] = useState<TabType>('dashboard')
   const [showQuoteModal, setShowQuoteModal] = useState(false)
@@ -119,6 +119,22 @@ export function ExecutorDashboard() {
   const [ticketAttachmentName, setTicketAttachmentName] = useState('')
   const ticketAttachmentRef = useRef<HTMLInputElement>(null)
   const [selectedClientVehicle, setSelectedClientVehicle] = useState<string | null>(null)
+  const [showNewQuoteModal, setShowNewQuoteModal] = useState(false)
+  const [newQuoteData, setNewQuoteData] = useState({
+    clientName: '',
+    clientEmail: '',
+    clientPhone: '',
+    vehicleBrand: '',
+    vehicleModel: '',
+    vehicleYear: '',
+    vehiclePlate: '',
+    serviceType: 'new-blinding' as 'new-blinding' | 'glass-replacement' | 'door-replacement' | 'maintenance' | 'revision' | 'other',
+    blindingLevel: 'III-A',
+    serviceDescription: '',
+    estimatedPrice: '',
+    estimatedDays: '',
+    executorNotes: '',
+  })
   const [showNotifications, setShowNotifications] = useState(false)
   const [showQRScanner, setShowQRScanner] = useState(false)
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
@@ -1590,10 +1606,17 @@ export function ExecutorDashboard() {
                   <h2 className="text-xl font-bold">Orçamentos</h2>
                   <p className="text-sm text-gray-400">Gerencie solicitações de orçamento dos clientes</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm">
                     {getPendingQuotes().length} pendentes
                   </span>
+                  <button
+                    onClick={() => setShowNewQuoteModal(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-primary text-black rounded-xl font-semibold hover:bg-primary/90 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Novo Orçamento
+                  </button>
                 </div>
               </div>
 
@@ -2233,8 +2256,26 @@ export function ExecutorDashboard() {
             <div className="bg-white/5 rounded-xl p-4 space-y-2">
               <p><span className="text-gray-400">Tipo de Veículo:</span> {selectedQuote.vehicleType}</p>
               <p><span className="text-gray-400">Nível Solicitado:</span> {selectedQuote.blindingLevel}</p>
+              <p><span className="text-gray-400">Tipo de Serviço:</span> {selectedQuote.serviceType === 'new-blinding' ? 'Nova Blindagem' : selectedQuote.serviceType === 'glass-replacement' ? 'Troca de Vidro' : selectedQuote.serviceType === 'door-replacement' ? 'Troca de Porta' : selectedQuote.serviceType === 'maintenance' ? 'Manutenção' : selectedQuote.serviceType === 'revision' ? 'Revisão' : 'Outro Serviço'}</p>
+              {selectedQuote.serviceDescription && (
+                <p><span className="text-gray-400">Serviço:</span> {selectedQuote.serviceDescription}</p>
+              )}
               <p><span className="text-gray-400">Data da Solicitação:</span> {new Date(selectedQuote.createdAt).toLocaleDateString('pt-BR')}</p>
+              {selectedQuote.clientPhone && (
+                <p><span className="text-gray-400">Telefone:</span> {selectedQuote.clientPhone}</p>
+              )}
             </div>
+
+            {/* Descrição do Cliente */}
+            {selectedQuote.clientDescription && (
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+                <h4 className="text-sm font-semibold text-yellow-400 mb-2 flex items-center gap-2">
+                  <MessageCircle className="w-4 h-4" />
+                  Observações do Cliente
+                </h4>
+                <p className="text-sm text-gray-300">{selectedQuote.clientDescription}</p>
+              </div>
+            )}
 
             <div className="grid md:grid-cols-2 gap-4">
               <div>
@@ -2310,6 +2351,246 @@ export function ExecutorDashboard() {
           </div>
         </Modal>
       )}
+
+      {/* Modal Novo Orçamento - Criado pelo Executor */}
+      <Modal isOpen={showNewQuoteModal} onClose={() => setShowNewQuoteModal(false)} size="lg">
+        <div className="p-6 space-y-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-xl font-bold">Criar Novo Orçamento</h2>
+              <p className="text-sm text-gray-400">Envie um orçamento diretamente para o cliente</p>
+            </div>
+            <button 
+              onClick={() => setShowNewQuoteModal(false)} 
+              className="p-2 hover:bg-white/10 rounded-lg" 
+              title="Fechar"
+              aria-label="Fechar modal"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Dados do Cliente */}
+          <div>
+            <h3 className="font-semibold text-primary mb-3">Dados do Cliente</h3>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-sm text-gray-400 mb-2">Nome Completo *</label>
+                <input 
+                  type="text" 
+                  value={newQuoteData.clientName}
+                  onChange={(e) => setNewQuoteData({...newQuoteData, clientName: e.target.value})}
+                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                  placeholder="Nome do cliente"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">E-mail *</label>
+                <input 
+                  type="email" 
+                  value={newQuoteData.clientEmail}
+                  onChange={(e) => setNewQuoteData({...newQuoteData, clientEmail: e.target.value})}
+                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                  placeholder="email@exemplo.com"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Telefone</label>
+                <input 
+                  type="tel" 
+                  value={newQuoteData.clientPhone}
+                  onChange={(e) => setNewQuoteData({...newQuoteData, clientPhone: e.target.value})}
+                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                  placeholder="(11) 99999-9999"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Dados do Veículo */}
+          <div>
+            <h3 className="font-semibold text-primary mb-3">Dados do Veículo</h3>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Marca *</label>
+                <input 
+                  type="text" 
+                  value={newQuoteData.vehicleBrand}
+                  onChange={(e) => setNewQuoteData({...newQuoteData, vehicleBrand: e.target.value})}
+                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                  placeholder="Ex: BMW"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Modelo *</label>
+                <input 
+                  type="text" 
+                  value={newQuoteData.vehicleModel}
+                  onChange={(e) => setNewQuoteData({...newQuoteData, vehicleModel: e.target.value})}
+                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                  placeholder="Ex: X5"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Ano</label>
+                <input 
+                  type="text" 
+                  value={newQuoteData.vehicleYear}
+                  onChange={(e) => setNewQuoteData({...newQuoteData, vehicleYear: e.target.value})}
+                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                  placeholder="2024"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Placa</label>
+                <input 
+                  type="text" 
+                  value={newQuoteData.vehiclePlate}
+                  onChange={(e) => setNewQuoteData({...newQuoteData, vehiclePlate: e.target.value})}
+                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                  placeholder="ABC-1234"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Tipo de Serviço */}
+          <div>
+            <h3 className="font-semibold text-primary mb-3">Serviço</h3>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Tipo de Serviço</label>
+                <select 
+                  value={newQuoteData.serviceType}
+                  onChange={(e) => setNewQuoteData({...newQuoteData, serviceType: e.target.value as typeof newQuoteData.serviceType})}
+                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                  title="Tipo de serviço"
+                >
+                  <option value="new-blinding">Nova Blindagem</option>
+                  <option value="glass-replacement">Troca de Vidro</option>
+                  <option value="door-replacement">Troca de Porta</option>
+                  <option value="maintenance">Manutenção</option>
+                  <option value="revision">Revisão</option>
+                  <option value="other">Outro</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Nível de Blindagem</label>
+                <select 
+                  value={newQuoteData.blindingLevel}
+                  onChange={(e) => setNewQuoteData({...newQuoteData, blindingLevel: e.target.value})}
+                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                  title="Nível de blindagem"
+                >
+                  <option value="II">Nível II</option>
+                  <option value="III-A">Nível III-A</option>
+                  <option value="III">Nível III</option>
+                </select>
+              </div>
+            </div>
+            <div className="mt-4">
+              <label className="block text-sm text-gray-400 mb-2">Descrição do Serviço</label>
+              <textarea
+                value={newQuoteData.serviceDescription}
+                onChange={(e) => setNewQuoteData({...newQuoteData, serviceDescription: e.target.value})}
+                placeholder="Descreva os detalhes do serviço..."
+                rows={2}
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-500 resize-none"
+              />
+            </div>
+          </div>
+
+          {/* Orçamento */}
+          <div>
+            <h3 className="font-semibold text-primary mb-3">Orçamento</h3>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Valor *</label>
+                <input 
+                  type="text" 
+                  value={newQuoteData.estimatedPrice}
+                  onChange={(e) => setNewQuoteData({...newQuoteData, estimatedPrice: e.target.value})}
+                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                  placeholder="R$ 85.000,00"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Prazo (dias) *</label>
+                <input 
+                  type="number" 
+                  value={newQuoteData.estimatedDays}
+                  onChange={(e) => setNewQuoteData({...newQuoteData, estimatedDays: e.target.value})}
+                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                  placeholder="20"
+                />
+              </div>
+            </div>
+            <div className="mt-4">
+              <label className="block text-sm text-gray-400 mb-2">Observações</label>
+              <textarea
+                value={newQuoteData.executorNotes}
+                onChange={(e) => setNewQuoteData({...newQuoteData, executorNotes: e.target.value})}
+                placeholder="Condições de pagamento, observações, etc..."
+                rows={2}
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-500 resize-none"
+              />
+            </div>
+          </div>
+
+          <div className="flex space-x-3">
+            <button 
+              onClick={() => setShowNewQuoteModal(false)}
+              className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors"
+            >
+              Cancelar
+            </button>
+            <button 
+              onClick={() => {
+                if (!newQuoteData.clientName || !newQuoteData.clientEmail || !newQuoteData.vehicleBrand || !newQuoteData.vehicleModel || !newQuoteData.estimatedPrice || !newQuoteData.estimatedDays) {
+                  addNotification({ type: 'error', title: 'Campos Obrigatórios', message: 'Preencha todos os campos obrigatórios.' })
+                  return
+                }
+                createQuoteFromExecutor({
+                  clientId: `client-${Date.now()}`,
+                  clientName: newQuoteData.clientName,
+                  clientEmail: newQuoteData.clientEmail,
+                  clientPhone: newQuoteData.clientPhone,
+                  vehicleType: 'suv',
+                  vehicleBrand: newQuoteData.vehicleBrand,
+                  vehicleModel: newQuoteData.vehicleModel,
+                  vehicleYear: newQuoteData.vehicleYear,
+                  vehiclePlate: newQuoteData.vehiclePlate,
+                  blindingLevel: newQuoteData.blindingLevel,
+                  serviceType: newQuoteData.serviceType,
+                  serviceDescription: newQuoteData.serviceDescription,
+                  status: 'sent',
+                  estimatedPrice: newQuoteData.estimatedPrice,
+                  estimatedDays: parseInt(newQuoteData.estimatedDays),
+                  executorNotes: newQuoteData.executorNotes,
+                  executorId: user?.id,
+                  executorName: user?.name,
+                })
+                addNotification({ 
+                  type: 'success', 
+                  title: 'Orçamento Criado', 
+                  message: `Orçamento de ${newQuoteData.estimatedPrice} enviado para ${newQuoteData.clientName}.` 
+                })
+                setShowNewQuoteModal(false)
+                setNewQuoteData({
+                  clientName: '', clientEmail: '', clientPhone: '',
+                  vehicleBrand: '', vehicleModel: '', vehicleYear: '', vehiclePlate: '',
+                  serviceType: 'new-blinding', blindingLevel: 'III-A', serviceDescription: '',
+                  estimatedPrice: '', estimatedDays: '', executorNotes: '',
+                })
+              }}
+              className="flex-1 px-6 py-3 bg-primary hover:bg-primary/90 text-black font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+            >
+              <Send className="w-4 h-4" />
+              Enviar Orçamento
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

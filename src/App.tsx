@@ -5,6 +5,8 @@ import { NotificationProvider } from './contexts/NotificationContext'
 import { ChatProvider } from './contexts/ChatContext'
 import { ProjectProvider } from './contexts/ProjectContext'
 import { QuoteProvider } from './contexts/QuoteContext'
+import { PushNotificationProvider } from './contexts/PushNotificationContext'
+import { LeadsProvider } from './contexts/LeadsContext'
 import { Layout, ExecutorLayout, AdminLayout } from './components/layout'
 import { 
   Dashboard, Timeline, Gallery, Chat, Profile, Login, QRCodePage,
@@ -229,13 +231,17 @@ export default function App() {
       <ThemeProvider>
         <AuthProvider>
           <NotificationProvider>
-            <ChatProvider>
-              <ProjectProvider>
-                <QuoteProvider>
-                  <AppRoutes />
-                </QuoteProvider>
-              </ProjectProvider>
-            </ChatProvider>
+            <PushNotificationProvider>
+              <LeadsProvider>
+                <ChatProvider>
+                  <ProjectProvider>
+                    <QuoteProvider>
+                      <AppRoutes />
+                    </QuoteProvider>
+                  </ProjectProvider>
+                </ChatProvider>
+              </LeadsProvider>
+            </PushNotificationProvider>
           </NotificationProvider>
         </AuthProvider>
       </ThemeProvider>

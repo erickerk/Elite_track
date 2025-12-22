@@ -3,13 +3,14 @@ import {
   Users, Car, BarChart3, Search, Shield, Key, Trash2,
   CheckCircle, Clock, TrendingUp, Settings, UserCheck,
   Eye, EyeOff, UserPlus, LogOut, Activity, Database,
-  DollarSign, Calendar, FileText, Download, X, ChevronRight
+  DollarSign, Calendar, FileText, Download, X, ChevronRight, Mail
 } from 'lucide-react'
 import { Modal } from '../components/ui/Modal'
 import { useAuth } from '../contexts/AuthContext'
 import { useNotifications } from '../contexts/NotificationContext'
 import { useProjects } from '../contexts/ProjectContext'
 import { useQuotes } from '../contexts/QuoteContext'
+import { useLeads } from '../contexts/LeadsContext'
 import { cn } from '../lib/utils'
 
 interface ExecutorUser {
@@ -30,7 +31,7 @@ const initialExecutors: ExecutorUser[] = [
   { id: 'EXE-003', name: 'Fernando Santos', email: 'fernando@eliteblindagens.com.br', phone: '(11) 99999-3333', role: 'executor', status: 'inactive', createdAt: '2024-06-10', projectsCount: 5 },
 ]
 
-type AdminTab = 'dashboard' | 'executors' | 'clients' | 'projects' | 'quotes' | 'schedule' | 'settings'
+type AdminTab = 'dashboard' | 'executors' | 'clients' | 'projects' | 'quotes' | 'schedule' | 'leads' | 'settings'
 
 interface ClientInfo {
   id: string
@@ -48,6 +49,7 @@ export function AdminDashboard() {
   const { addNotification } = useNotifications()
   const { projects } = useProjects()
   const { quotes, getPendingQuotes } = useQuotes()
+  const { leads, exportToExcel, removeLead, clearAllLeads } = useLeads()
   
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard')
   const [executors, setExecutors] = useState<ExecutorUser[]>(initialExecutors)
@@ -188,6 +190,7 @@ export function AdminDashboard() {
     { id: 'projects' as AdminTab, label: 'Projetos', icon: Car },
     { id: 'quotes' as AdminTab, label: 'Orçamentos', icon: DollarSign, badge: pendingQuotes.length },
     { id: 'schedule' as AdminTab, label: 'Agenda', icon: Calendar },
+    { id: 'leads' as AdminTab, label: 'Leads', icon: Mail, badge: leads.length },
     { id: 'settings' as AdminTab, label: 'Configurações', icon: Settings },
   ]
 
@@ -273,6 +276,7 @@ export function AdminDashboard() {
                   {activeTab === 'projects' && 'Projetos'}
                   {activeTab === 'quotes' && 'Gestão de Orçamentos'}
                   {activeTab === 'schedule' && 'Agenda de Revisões'}
+                  {activeTab === 'leads' && 'Gestão de Leads'}
                   {activeTab === 'settings' && 'Configurações'}
                 </h2>
               </div>
@@ -962,6 +966,144 @@ export function AdminDashboard() {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Leads Tab */}
+          {activeTab === 'leads' && (
+            <div className="space-y-6">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-semibold">Leads Capturados</h3>
+                  <p className="text-sm text-gray-400">Contatos interessados cadastrados na landing page</p>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={exportToExcel}
+                    disabled={leads.length === 0}
+                    className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-xl transition-colors"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Exportar Excel</span>
+                  </button>
+                  {leads.length > 0 && (
+                    <button
+                      onClick={() => {
+                        if (confirm('Tem certeza que deseja limpar todos os leads?')) {
+                          clearAllLeads()
+                          addNotification({ type: 'success', title: 'Leads limpos', message: 'Todos os leads foram removidos.' })
+                        }
+                      }}
+                      className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span>Limpar Todos</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                  <div className="flex items-center justify-between mb-2">
+                    <Mail className="w-6 h-6 text-primary" />
+                    <span className="text-2xl font-bold">{leads.length}</span>
+                  </div>
+                  <p className="text-sm text-gray-400">Total de Leads</p>
+                </div>
+                <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                  <div className="flex items-center justify-between mb-2">
+                    <UserCheck className="w-6 h-6 text-green-500" />
+                    <span className="text-2xl font-bold">{leads.filter(l => l.wantsSpecialist).length}</span>
+                  </div>
+                  <p className="text-sm text-gray-400">Querem Especialista</p>
+                </div>
+                <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                  <div className="flex items-center justify-between mb-2">
+                    <Clock className="w-6 h-6 text-blue-500" />
+                    <span className="text-2xl font-bold">
+                      {leads.filter(l => {
+                        const date = new Date(l.createdAt)
+                        const today = new Date()
+                        return date.toDateString() === today.toDateString()
+                      }).length}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-400">Hoje</p>
+                </div>
+                <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                  <div className="flex items-center justify-between mb-2">
+                    <TrendingUp className="w-6 h-6 text-yellow-500" />
+                    <span className="text-2xl font-bold">
+                      {leads.filter(l => {
+                        const date = new Date(l.createdAt)
+                        const weekAgo = new Date()
+                        weekAgo.setDate(weekAgo.getDate() - 7)
+                        return date >= weekAgo
+                      }).length}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-400">Última Semana</p>
+                </div>
+              </div>
+
+              {/* Leads List */}
+              {leads.length === 0 ? (
+                <div className="bg-white/5 rounded-2xl p-12 border border-white/10 text-center">
+                  <Mail className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Nenhum lead cadastrado</h3>
+                  <p className="text-gray-400">Os leads capturados na landing page aparecerão aqui.</p>
+                </div>
+              ) : (
+                <div className="bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-white/5">
+                        <tr>
+                          <th className="text-left p-4 font-medium text-gray-400">Nome</th>
+                          <th className="text-left p-4 font-medium text-gray-400">Email</th>
+                          <th className="text-left p-4 font-medium text-gray-400">Telefone</th>
+                          <th className="text-left p-4 font-medium text-gray-400">Especialista</th>
+                          <th className="text-left p-4 font-medium text-gray-400">Data</th>
+                          <th className="text-right p-4 font-medium text-gray-400">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/10">
+                        {leads.map((lead) => (
+                          <tr key={lead.id} className="hover:bg-white/5 transition-colors">
+                            <td className="p-4 font-medium">{lead.name}</td>
+                            <td className="p-4 text-gray-300">{lead.email}</td>
+                            <td className="p-4 text-gray-300">{lead.phone}</td>
+                            <td className="p-4">
+                              {lead.wantsSpecialist ? (
+                                <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">Sim</span>
+                              ) : (
+                                <span className="px-2 py-1 bg-gray-500/20 text-gray-400 rounded-full text-xs">Não</span>
+                              )}
+                            </td>
+                            <td className="p-4 text-gray-400 text-sm">
+                              {new Date(lead.createdAt).toLocaleDateString('pt-BR')}
+                            </td>
+                            <td className="p-4 text-right">
+                              <button
+                                onClick={() => {
+                                  removeLead(lead.id)
+                                  addNotification({ type: 'success', title: 'Lead removido', message: `${lead.name} foi removido.` })
+                                }}
+                                className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
+                                title="Remover lead"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

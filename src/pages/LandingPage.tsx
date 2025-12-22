@@ -1,9 +1,62 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useLeads } from '../contexts/LeadsContext'
+import { useNotifications } from '../contexts/NotificationContext'
 
 export function LandingPage() {
   const navigate = useNavigate()
   const headerRef = useRef<HTMLElement>(null)
+  const { addLead } = useLeads()
+  const { addNotification } = useNotifications()
+  
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    wantsSpecialist: false
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!formData.name || !formData.email || !formData.phone) {
+      addNotification({
+        type: 'error',
+        title: 'Campos obrigatórios',
+        message: 'Por favor, preencha todos os campos.'
+      })
+      return
+    }
+
+    setIsSubmitting(true)
+    
+    try {
+      addLead({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        wantsSpecialist: formData.wantsSpecialist,
+        source: 'landing-page'
+      })
+
+      addNotification({
+        type: 'success',
+        title: 'Cadastro realizado!',
+        message: 'Em breve entraremos em contato.'
+      })
+
+      setFormData({ name: '', email: '', phone: '', wantsSpecialist: false })
+    } catch {
+      addNotification({
+        type: 'error',
+        title: 'Erro',
+        message: 'Ocorreu um erro. Tente novamente.'
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
   
   useEffect(() => {
     // Scroll animations
@@ -507,32 +560,60 @@ export function LandingPage() {
             <p className="text-xl text-gray-400">Entre em contato e descubra a blindagem do futuro</p>
           </div>
           <div className="glass-effect p-8 rounded-3xl fade-in">
-            <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+            <form className="space-y-6" onSubmit={handleFormSubmit}>
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium mb-2">Nome Completo</label>
-                  <input type="text" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-primary focus:outline-none transition-colors" placeholder="Seu nome completo" />
+                  <input 
+                    type="text" 
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-primary focus:outline-none transition-colors" 
+                    placeholder="Seu nome completo" 
+                    required
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">Email</label>
-                  <input type="email" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-primary focus:outline-none transition-colors" placeholder="seu@email.com" />
+                  <input 
+                    type="email" 
+                    value={formData.email}
+                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-primary focus:outline-none transition-colors" 
+                    placeholder="seu@email.com" 
+                    required
+                  />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">WhatsApp</label>
-                <input type="tel" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-primary focus:outline-none transition-colors" placeholder="(11) 99999-9999" />
+                <input 
+                  type="tel" 
+                  value={formData.phone}
+                  onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-primary focus:outline-none transition-colors" 
+                  placeholder="(11) 99999-9999" 
+                  required
+                />
               </div>
               <div className="flex items-center space-x-3">
-                <input type="checkbox" id="specialist" className="hidden peer" />
-                <label htmlFor="specialist" className="flex items-center cursor-pointer group">
-                  <div className="w-5 h-5 border-2 border-white/30 rounded flex items-center justify-center mr-3 transition-colors hover:border-primary peer-checked:bg-primary/20 peer-checked:border-primary">
-                    <i className="ri-check-line text-xs text-primary opacity-0 transition-opacity peer-checked:opacity-100 group-hover:opacity-50"></i>
-                  </div>
-                  <span className="text-gray-300">Quero falar com um especialista</span>
+                <input 
+                  type="checkbox" 
+                  id="specialist" 
+                  checked={formData.wantsSpecialist}
+                  onChange={(e) => setFormData(prev => ({ ...prev, wantsSpecialist: e.target.checked }))}
+                  className="w-5 h-5 rounded border-white/30 bg-white/5 text-primary focus:ring-primary cursor-pointer" 
+                />
+                <label htmlFor="specialist" className="text-gray-300 cursor-pointer">
+                  Quero falar com um especialista
                 </label>
               </div>
-              <button type="submit" className="w-full gradient-gold text-black font-semibold py-4 rounded-lg hover:shadow-2xl hover:shadow-primary/20 transition-all duration-300 whitespace-nowrap">
-                Solicitar Contato
+              <button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="w-full gradient-gold text-black font-semibold py-4 rounded-lg hover:shadow-2xl hover:shadow-primary/20 transition-all duration-300 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? 'Enviando...' : 'Solicitar Contato'}
               </button>
             </form>
           </div>
