@@ -252,9 +252,14 @@ export function LandingPage() {
                   >
                     Inicie sua Experiência
                   </button>
-                  <button className="glass-effect cinematic-blur border border-primary/50 text-primary font-semibold px-8 py-3 rounded-lg hover:bg-primary hover:text-black transition-all duration-300 whitespace-nowrap transform hover:scale-105 text-sm uppercase tracking-wider">
+                  <a 
+                    href="https://wa.me/5511913123071?text=Olá!%20Gostaria%20de%20falar%20com%20um%20especialista%20sobre%20blindagem%20de%20veículos."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="glass-effect cinematic-blur border border-primary/50 text-primary font-semibold px-8 py-3 rounded-lg hover:bg-primary hover:text-black transition-all duration-300 whitespace-nowrap transform hover:scale-105 text-sm uppercase tracking-wider inline-block text-center"
+                  >
                     Fale com Especialista
-                  </button>
+                  </a>
                 </div>
                 <p className="text-xs text-gray-500 uppercase tracking-widest font-light">Experiência premium • Máxima discrição</p>
               </div>
@@ -622,19 +627,19 @@ export function LandingPage() {
             <div>
               <h4 className="font-semibold mb-4">Empresa</h4>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-primary transition-colors">Sobre Nós</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Serviços</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Certificações</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Contato</a></li>
+                <li><a href="https://elite-blindagens.vercel.app/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Sobre Nós</a></li>
+                <li><a href="https://elite-blindagens.vercel.app/#servicos" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Serviços</a></li>
+                <li><a href="https://wa.me/5511913123071?text=Olá!%20Gostaria%20de%20ver%20as%20certificações%20da%20Elite%20Blindagens." target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Certificações</a></li>
+                <li><a href="https://wa.me/5511913123071?text=Olá!%20Gostaria%20de%20falar%20com%20o%20contato%20da%20Elite%20Blindagens." target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Contato</a></li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold mb-4">Suporte</h4>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-primary transition-colors">Central de Ajuda</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">FAQ</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Documentação</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Status do Sistema</a></li>
+                <li><a href="https://wa.me/5511913123071?text=Olá!%20Preciso%20de%20ajuda%20com%20o%20sistema%20EliteTrack." target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Central de Ajuda</a></li>
+                <li><a href="https://wa.me/5511913123071?text=Olá!%20Tenho%20uma%20dúvida%20sobre%20o%20EliteTrack." target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">FAQ</a></li>
+                <li><a href="https://wa.me/5511913123071?text=Olá!%20Gostaria%20de%20acessar%20a%20documentação%20do%20EliteTrack." target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Documentação</a></li>
+                <li><a href="https://wa.me/5511913123071?text=Olá!%20Gostaria%20de%20verificar%20o%20status%20do%20sistema%20EliteTrack." target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Status do Sistema</a></li>
               </ul>
             </div>
             <div>
