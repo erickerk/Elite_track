@@ -3,9 +3,10 @@ import {
   Users, Car, BarChart3, Search, Shield, Key, Trash2,
   CheckCircle, Clock, TrendingUp, Settings, UserCheck,
   Eye, EyeOff, UserPlus, LogOut, Activity, Database,
-  DollarSign, Calendar, FileText, Download, X, ChevronRight, Mail
+  DollarSign, Calendar, FileText, Download, X, ChevronRight, Mail, Send
 } from 'lucide-react'
 import { Modal } from '../components/ui/Modal'
+import { InviteManager } from '../components/admin/InviteManager'
 import { useAuth } from '../contexts/AuthContext'
 import { useNotifications } from '../contexts/NotificationContext'
 import { useProjects } from '../contexts/ProjectContext'
@@ -31,7 +32,7 @@ const initialExecutors: ExecutorUser[] = [
   { id: 'EXE-003', name: 'Fernando Santos', email: 'fernando@eliteblindagens.com.br', phone: '(11) 99999-3333', role: 'executor', status: 'inactive', createdAt: '2024-06-10', projectsCount: 5 },
 ]
 
-type AdminTab = 'dashboard' | 'executors' | 'clients' | 'projects' | 'quotes' | 'schedule' | 'leads' | 'settings'
+type AdminTab = 'dashboard' | 'executors' | 'clients' | 'projects' | 'quotes' | 'schedule' | 'leads' | 'invites' | 'settings'
 
 interface ClientInfo {
   id: string
@@ -191,6 +192,7 @@ export function AdminDashboard() {
     { id: 'quotes' as AdminTab, label: 'Orçamentos', icon: DollarSign, badge: pendingQuotes.length },
     { id: 'schedule' as AdminTab, label: 'Agenda', icon: Calendar },
     { id: 'leads' as AdminTab, label: 'Leads', icon: Mail, badge: leads.length },
+    { id: 'invites' as AdminTab, label: 'Convites', icon: Send },
     { id: 'settings' as AdminTab, label: 'Configurações', icon: Settings },
   ]
 
@@ -276,6 +278,7 @@ export function AdminDashboard() {
                   {activeTab === 'projects' && 'Projetos'}
                   {activeTab === 'quotes' && 'Gestão de Orçamentos'}
                   {activeTab === 'schedule' && 'Agenda de Revisões'}
+                  {activeTab === 'invites' && 'Gestão de Convites'}
                   {activeTab === 'leads' && 'Gestão de Leads'}
                   {activeTab === 'settings' && 'Configurações'}
                 </h2>
@@ -1104,6 +1107,13 @@ export function AdminDashboard() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Invites Tab */}
+          {activeTab === 'invites' && (
+            <div className="space-y-6">
+              <InviteManager />
             </div>
           )}
 

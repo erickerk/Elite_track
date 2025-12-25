@@ -161,3 +161,46 @@ export interface ChatConversation {
   lastMessage?: ChatMessage
   unreadCount: number
 }
+
+// Sistema de Convites para Cadastro Controlado
+export type InviteStatus = 'pending' | 'used' | 'expired' | 'revoked'
+
+export interface RegistrationInvite {
+  id: string
+  token: string
+  projectId: string
+  vehiclePlate: string
+  vehicleInfo: string
+  ownerName: string
+  ownerEmail?: string
+  ownerPhone?: string
+  status: InviteStatus
+  createdAt: string
+  expiresAt: string
+  usedAt?: string
+  usedBy?: string
+  createdBy: string
+  notes?: string
+}
+
+export interface PublicVehicleHistory {
+  projectId: string
+  vehicleInfo: {
+    brand: string
+    model: string
+    year: number
+    color: string
+    plate: string
+    blindingLevel: string
+    images: string[]
+  }
+  blindingSpecs?: BlindingSpecs
+  timeline: TimelineStep[]
+  status: 'pending' | 'in_progress' | 'completed' | 'delivered'
+  progress: number
+  startDate: string
+  estimatedDelivery: string
+  actualDelivery?: string
+  isAuthentic: boolean
+  verificationDate: string
+}

@@ -7,12 +7,13 @@ import { ProjectProvider } from './contexts/ProjectContext'
 import { QuoteProvider } from './contexts/QuoteContext'
 import { PushNotificationProvider } from './contexts/PushNotificationContext'
 import { LeadsProvider } from './contexts/LeadsContext'
+import { InviteProvider } from './contexts/InviteContext'
 import { Layout, ExecutorLayout, AdminLayout } from './components/layout'
 import { 
   Dashboard, Timeline, Gallery, Chat, Profile, Login, QRCodePage,
   ExecutorDashboard, AdminDashboard, PublicVerification, EliteShield, Revisions,
   LandingPage, EliteCard, Delivery, ProjectManager, SplashScreen,
-  Quotes, ClientDocuments, Achievements
+  Quotes, ClientDocuments, Achievements, Register, InviteManagement
 } from './pages'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -186,6 +187,15 @@ function AppRoutes() {
         }
       />
       <Route path="/verify/:projectId" element={<PublicVerification />} />
+      <Route path="/register/:token" element={<Register />} />
+      <Route
+        path="/invites"
+        element={
+          <PrivateRoute>
+            <InviteManagement />
+          </PrivateRoute>
+        }
+      />
       <Route
         path="/manage/:projectId"
         element={
@@ -233,6 +243,7 @@ export default function App() {
           <NotificationProvider>
             <PushNotificationProvider>
               <LeadsProvider>
+                <InviteProvider>
                 <ChatProvider>
                   <ProjectProvider>
                     <QuoteProvider>
@@ -240,6 +251,7 @@ export default function App() {
                     </QuoteProvider>
                   </ProjectProvider>
                 </ChatProvider>
+                </InviteProvider>
               </LeadsProvider>
             </PushNotificationProvider>
           </NotificationProvider>

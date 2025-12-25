@@ -722,32 +722,32 @@ export function ExecutorDashboard() {
                       <div className="mt-4 flex items-center justify-between">
                         <div className="flex space-x-2">
                           <button
-                            onClick={(e) => { e.stopPropagation(); setSelectedProject(project); setActiveTab('timeline'); }}
+                            onClick={(e) => { e.stopPropagation(); navigate(`/manage/${project.id}`); }}
                             className="p-2 bg-white/5 rounded-lg hover:bg-primary/20 transition-colors"
-                            title="Timeline"
+                            title="Ver timeline"
                             aria-label="Ver timeline"
                           >
                             <Clock className="w-4 h-4 text-primary" />
                           </button>
                           <button
-                            onClick={(e) => { e.stopPropagation(); setSelectedProject(project); setActiveTab('photos'); }}
+                            onClick={(e) => { e.stopPropagation(); navigate(`/manage/${project.id}`); }}
                             className="p-2 bg-white/5 rounded-lg hover:bg-blue-500/20 transition-colors"
-                            title="Fotos"
+                            title="Ver fotos"
                             aria-label="Ver fotos"
                           >
                             <Image className="w-4 h-4 text-blue-400" />
                           </button>
                           <button
-                            onClick={(e) => { e.stopPropagation(); setSelectedProject(project); setActiveTab('laudo'); }}
+                            onClick={(e) => { e.stopPropagation(); navigate(`/manage/${project.id}`); }}
                             className="p-2 bg-white/5 rounded-lg hover:bg-green-500/20 transition-colors"
-                            title="Laudo"
+                            title="Ver laudo"
                             aria-label="Ver laudo"
                           >
                             <FileText className="w-4 h-4 text-green-400" />
                           </button>
                         </div>
                         <button
-                          onClick={(e) => { e.stopPropagation(); setSelectedProject(project); setActiveTab('timeline'); }}
+                          onClick={(e) => { e.stopPropagation(); navigate(`/manage/${project.id}`); }}
                           className="flex items-center space-x-1 text-primary text-sm hover:underline"
                         >
                           <span>Gerenciar</span>

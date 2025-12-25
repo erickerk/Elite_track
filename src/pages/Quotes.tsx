@@ -329,7 +329,10 @@ export function Quotes() {
               {serviceTypes.map((service) => (
                 <button
                   key={service.id}
-                  onClick={() => setSelectedServiceType(service.id)}
+                  onClick={() => {
+                    console.log('Clicked service:', service.id);
+                    setSelectedServiceType(service.id);
+                  }}
                   className={cn(
                     "p-4 rounded-2xl border-2 transition-all text-center",
                     selectedServiceType === service.id 
