@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
 import QRCode from 'qrcode'
 import { useNavigate } from 'react-router-dom'
+import * as XLSX from 'xlsx'
 import { 
   CheckCircle, Clock, AlertCircle, Car, QrCode, Bell,
   FileText, CreditCard, MessageCircle, Settings, Search, 
   Users, Home, Image, LogOut, ChevronRight, Plus, X, Save, Edit3, Calendar,
-  DollarSign, Paperclip, Send, Eye
+  DollarSign, Paperclip, Send, Eye, Download, Filter, ExternalLink
 } from 'lucide-react'
 import { Modal } from '../components/ui/Modal'
 import { NotificationPanel } from '../components/ui/NotificationPanel'
@@ -156,6 +157,10 @@ export function ExecutorDashboard() {
   const [ticketResponse, setTicketResponse] = useState('')
   const [ticketNewStatus, setTicketNewStatus] = useState<string>('open')
   const [tickets, setTickets] = useState(mockTickets)
+  const [ticketFilterStatus, setTicketFilterStatus] = useState<string>('all')
+  const [ticketFilterMonth, setTicketFilterMonth] = useState<string>('all')
+  const [ticketFilterClient, setTicketFilterClient] = useState<string>('all')
+  const [showPublicPreview, setShowPublicPreview] = useState(false)
   const [createdProjectData, setCreatedProjectData] = useState<{ 
     id: string; 
     qrCode: string; 
@@ -278,11 +283,30 @@ export function ExecutorDashboard() {
   const handleUpdateStep = (stepId: string, updates: Record<string, unknown>) => {
     if (!selectedProject) return
 
-    // Atualizar a timeline do projeto
-    const updatedTimeline = selectedProject.timeline.map(step => {
+    // Encontrar índice da etapa atual
+    const currentStepIndex = selectedProject.timeline.findIndex(s => s.id === stepId)
+    
+    // Atualizar a timeline do projeto com lógica de sincronização
+    const updatedTimeline = selectedProject.timeline.map((step, index) => {
       if (step.id === stepId) {
-        return { ...step, ...updates }
+        const updatedStep = { ...step, ...updates }
+        
+        // Se a etapa foi concluída, garantir que tenha a data de conclusão
+        if (updates.status === 'completed' && !updatedStep.date) {
+          updatedStep.date = new Date().toISOString()
+        }
+        
+        return updatedStep
       }
+      
+      // Se a etapa atual foi concluída, a próxima deve ficar como 'pending' (pronta para iniciar)
+      if (index === currentStepIndex + 1 && updates.status === 'completed') {
+        // Garantir que a próxima etapa esteja como pendente (não bloqueada)
+        if (step.status !== 'completed' && step.status !== 'in_progress') {
+          return { ...step, status: 'pending' as const }
+        }
+      }
+      
       return step
     })
 
@@ -290,22 +314,35 @@ export function ExecutorDashboard() {
     const completedSteps = updatedTimeline.filter(s => s.status === 'completed').length
     const newProgress = Math.round((completedSteps / updatedTimeline.length) * 100)
 
+    // Determinar status do projeto
+    let projectStatus: 'pending' | 'in_progress' | 'completed' | 'delivered' = 'pending'
+    if (newProgress === 100) {
+      projectStatus = 'completed'
+    } else if (newProgress > 0 || updatedTimeline.some(s => s.status === 'in_progress')) {
+      projectStatus = 'in_progress'
+    }
+
     // Atualizar o projeto
     const updatedProject: Project = {
       ...selectedProject,
       timeline: updatedTimeline,
       progress: newProgress,
-      status: newProgress === 100 ? 'completed' : newProgress > 0 ? 'in_progress' : 'pending'
+      status: projectStatus,
+      completedDate: newProgress === 100 ? new Date().toISOString() : selectedProject.completedDate
     }
 
-    // Atualizar lista de projetos
+    // Atualizar lista de projetos (sincronização imediata)
     setProjects(prev => prev.map(p => p.id === updatedProject.id ? updatedProject : p))
     setSelectedProject(updatedProject)
 
+    // Notificação de sucesso
+    const stepName = updatedTimeline.find(s => s.id === stepId)?.title || 'Etapa'
     addNotification({
       type: 'success',
-      title: 'Etapa Atualizada',
-      message: `A etapa foi atualizada com sucesso. Progresso: ${newProgress}%`,
+      title: updates.status === 'completed' ? 'Etapa Concluída' : 'Etapa Atualizada',
+      message: updates.status === 'completed' 
+        ? `"${stepName}" foi concluída! Progresso: ${newProgress}%`
+        : `A etapa foi atualizada com sucesso. Progresso: ${newProgress}%`,
       projectId: selectedProject?.id,
       stepId,
     })
@@ -1044,6 +1081,13 @@ contato@eliteblindagens.com.br`
                       >
                         <Clock className="w-4 h-4" />
                         Ver Timeline
+                      </button>
+                      <button
+                        onClick={() => setShowPublicPreview(true)}
+                        className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl font-semibold text-sm transition-colors"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        Preview Público
                       </button>
                     </div>
                   </div>
@@ -1869,32 +1913,159 @@ contato@eliteblindagens.com.br`
           {/* Tickets Tab - Gestão de Tickets de Suporte */}
           {activeTab === 'tickets' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
                   <h2 className="text-2xl font-bold">Tickets de Suporte</h2>
                   <p className="text-gray-400">Gerencie os chamados abertos pelos clientes</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm">
-                    {mockTickets.filter(t => t.status === 'open').length} abertos
+                    {tickets.filter(t => t.status === 'open').length} abertos
                   </span>
                   <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">
-                    {mockTickets.filter(t => t.status === 'in_progress').length} em atendimento
+                    {tickets.filter(t => t.status === 'in_progress').length} em atendimento
                   </span>
+                  <button
+                    onClick={() => {
+                      // Filtrar tickets com base nos filtros atuais
+                      const filteredData = tickets.filter(t => {
+                        const matchStatus = ticketFilterStatus === 'all' || t.status === ticketFilterStatus
+                        const ticketMonth = new Date(t.createdAt).getMonth() + 1
+                        const matchMonth = ticketFilterMonth === 'all' || ticketMonth.toString() === ticketFilterMonth
+                        const matchClient = ticketFilterClient === 'all' || t.clientName === ticketFilterClient
+                        return matchStatus && matchMonth && matchClient
+                      })
+                      
+                      // Criar dados para Excel
+                      const excelData = filteredData.map(t => ({
+                        'ID': t.id,
+                        'Assunto': t.subject,
+                        'Cliente': t.clientName,
+                        'Veículo': t.vehicle,
+                        'Status': ticketStatusConfig[t.status as keyof typeof ticketStatusConfig]?.label || t.status,
+                        'Prioridade': ticketPriorityConfig[t.priority as keyof typeof ticketPriorityConfig]?.label || t.priority,
+                        'Data de Criação': new Date(t.createdAt).toLocaleDateString('pt-BR'),
+                        'Mensagem': t.message
+                      }))
+                      
+                      // Criar workbook e exportar
+                      const ws = XLSX.utils.json_to_sheet(excelData)
+                      const wb = XLSX.utils.book_new()
+                      XLSX.utils.book_append_sheet(wb, ws, 'Tickets')
+                      XLSX.writeFile(wb, `tickets_${new Date().toISOString().split('T')[0]}.xlsx`)
+                      
+                      addNotification({
+                        type: 'success',
+                        title: 'Relatório Exportado',
+                        message: `${filteredData.length} tickets exportados para Excel com sucesso!`
+                      })
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-500/20 text-green-400 hover:bg-green-500/30 rounded-xl text-sm font-medium transition-colors"
+                  >
+                    <Download className="w-4 h-4" />
+                    Exportar Excel
+                  </button>
                 </div>
               </div>
 
-              {/* Filtros */}
-              <div className="glass-effect rounded-2xl p-4 flex flex-wrap gap-2">
-                <button className="px-4 py-2 bg-primary text-black rounded-xl text-sm font-medium">Todos</button>
-                <button className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm">Abertos</button>
-                <button className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm">Em Atendimento</button>
-                <button className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm">Resolvidos</button>
+              {/* Filtros Avançados */}
+              <div className="glass-effect rounded-2xl p-4 space-y-4">
+                <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+                  <Filter className="w-4 h-4" />
+                  <span className="font-medium">Filtros</span>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Filtro por Status */}
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Status</label>
+                    <select
+                      value={ticketFilterStatus}
+                      onChange={(e) => setTicketFilterStatus(e.target.value)}
+                      className="w-full bg-white/10 border border-white/10 rounded-xl px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                    >
+                      <option value="all">Todos</option>
+                      <option value="open">Abertos</option>
+                      <option value="in_progress">Em Atendimento</option>
+                      <option value="resolved">Resolvidos</option>
+                    </select>
+                  </div>
+                  
+                  {/* Filtro por Mês */}
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Mês</label>
+                    <select
+                      value={ticketFilterMonth}
+                      onChange={(e) => setTicketFilterMonth(e.target.value)}
+                      className="w-full bg-white/10 border border-white/10 rounded-xl px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                    >
+                      <option value="all">Todos os meses</option>
+                      <option value="1">Janeiro</option>
+                      <option value="2">Fevereiro</option>
+                      <option value="3">Março</option>
+                      <option value="4">Abril</option>
+                      <option value="5">Maio</option>
+                      <option value="6">Junho</option>
+                      <option value="7">Julho</option>
+                      <option value="8">Agosto</option>
+                      <option value="9">Setembro</option>
+                      <option value="10">Outubro</option>
+                      <option value="11">Novembro</option>
+                      <option value="12">Dezembro</option>
+                    </select>
+                  </div>
+                  
+                  {/* Filtro por Cliente */}
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Cliente</label>
+                    <select
+                      value={ticketFilterClient}
+                      onChange={(e) => setTicketFilterClient(e.target.value)}
+                      className="w-full bg-white/10 border border-white/10 rounded-xl px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                    >
+                      <option value="all">Todos os clientes</option>
+                      {[...new Set(tickets.map(t => t.clientName))].map(client => (
+                        <option key={client} value={client}>{client}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                
+                {/* Botões de Filtro Rápido */}
+                <div className="flex flex-wrap gap-2 pt-2 border-t border-white/10">
+                  {[
+                    { value: 'all', label: 'Todos' },
+                    { value: 'open', label: 'Abertos' },
+                    { value: 'in_progress', label: 'Em Atendimento' },
+                    { value: 'resolved', label: 'Resolvidos' }
+                  ].map(filter => (
+                    <button
+                      key={filter.value}
+                      onClick={() => setTicketFilterStatus(filter.value)}
+                      className={cn(
+                        "px-4 py-2 rounded-xl text-sm font-medium transition-colors",
+                        ticketFilterStatus === filter.value
+                          ? "bg-primary text-black"
+                          : "bg-white/10 hover:bg-white/20"
+                      )}
+                    >
+                      {filter.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Lista de Tickets */}
               <div className="space-y-3">
-                {tickets.map((ticket) => (
+                {tickets
+                  .filter(t => {
+                    const matchStatus = ticketFilterStatus === 'all' || t.status === ticketFilterStatus
+                    const ticketMonth = new Date(t.createdAt).getMonth() + 1
+                    const matchMonth = ticketFilterMonth === 'all' || ticketMonth.toString() === ticketFilterMonth
+                    const matchClient = ticketFilterClient === 'all' || t.clientName === ticketFilterClient
+                    return matchStatus && matchMonth && matchClient
+                  })
+                  .map((ticket) => (
                   <div 
                     key={ticket.id} 
                     className="glass-effect rounded-2xl p-4 hover:bg-white/5 transition-colors cursor-pointer"
@@ -3260,6 +3431,176 @@ contato@eliteblindagens.com.br`
             </div>
           )}
         </div>
+      </Modal>
+
+      {/* Modal Preview da Consulta Pública */}
+      <Modal isOpen={showPublicPreview && !!selectedProject} onClose={() => setShowPublicPreview(false)} size="lg">
+        {selectedProject && (
+          <div className="p-6 max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                  <Eye className="w-6 h-6 text-primary" />
+                  Preview da Consulta Pública
+                </h2>
+                <p className="text-sm text-gray-400">Visualize como o cliente verá as informações do projeto</p>
+              </div>
+              <button
+                onClick={() => window.open(`/verify/${selectedProject.id}`, '_blank')}
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-black rounded-xl font-semibold text-sm hover:bg-primary/90 transition-colors"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Abrir em Nova Aba
+              </button>
+            </div>
+
+            {/* Preview Container */}
+            <div className="bg-gradient-to-br from-carbon-900 to-carbon-800 rounded-2xl border-2 border-primary/30 overflow-hidden">
+              {/* Header do Preview */}
+              <div className="bg-primary/10 p-4 border-b border-primary/30">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center">
+                    <Car className="w-6 h-6 text-black" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">EliteTrack™</h3>
+                    <p className="text-xs text-gray-400">Sistema de Rastreamento de Blindagem</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Conteúdo do Preview */}
+              <div className="p-6 space-y-6">
+                {/* Informações do Veículo */}
+                <div className="bg-white/5 rounded-xl p-4">
+                  <h4 className="font-semibold text-primary mb-3 flex items-center gap-2">
+                    <Car className="w-4 h-4" />
+                    Dados do Veículo
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-400">Marca/Modelo:</span>
+                      <p className="font-semibold">{selectedProject.vehicle.brand} {selectedProject.vehicle.model}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">Ano:</span>
+                      <p className="font-semibold">{selectedProject.vehicle.year}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">Placa:</span>
+                      <p className="font-mono font-bold text-primary">{selectedProject.vehicle.plate}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">Cor:</span>
+                      <p className="font-semibold">{selectedProject.vehicle.color}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status do Projeto */}
+                <div className="bg-white/5 rounded-xl p-4">
+                  <h4 className="font-semibold text-primary mb-3 flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    Status do Projeto
+                  </h4>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className={cn(
+                      "px-3 py-1 rounded-full text-sm font-semibold",
+                      statusConfig[selectedProject.status]?.color,
+                      "text-white"
+                    )}>
+                      {statusConfig[selectedProject.status]?.label}
+                    </span>
+                    <span className="text-2xl font-bold text-primary">{selectedProject.progress}%</span>
+                  </div>
+                  <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden">
+                    <div 
+                      className="bg-primary h-3 rounded-full transition-all"
+                      style={{ width: `${selectedProject.progress}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Timeline Resumida */}
+                <div className="bg-white/5 rounded-xl p-4">
+                  <h4 className="font-semibold text-primary mb-3 flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4" />
+                    Etapas do Processo
+                  </h4>
+                  <div className="space-y-2">
+                    {selectedProject.timeline.map((step, index) => (
+                      <div key={step.id} className="flex items-center gap-3">
+                        <div className={cn(
+                          "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
+                          step.status === 'completed' ? "bg-green-500 text-white" :
+                          step.status === 'in_progress' ? "bg-primary text-black" :
+                          "bg-gray-600 text-gray-300"
+                        )}>
+                          {step.status === 'completed' ? '✓' : index + 1}
+                        </div>
+                        <span className={cn(
+                          "text-sm flex-1",
+                          step.status === 'completed' ? "text-green-400" :
+                          step.status === 'in_progress' ? "text-primary font-semibold" :
+                          "text-gray-500"
+                        )}>
+                          {step.title}
+                        </span>
+                        {step.status === 'completed' && step.date && (
+                          <span className="text-xs text-gray-500">
+                            {new Date(step.date).toLocaleDateString('pt-BR')}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Certificação */}
+                <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
+                  <h4 className="font-semibold text-green-400 mb-2 flex items-center gap-2">
+                    <FileText className="w-4 h-4" />
+                    Certificação
+                  </h4>
+                  <p className="text-sm text-gray-300">
+                    Nível de Proteção: <strong className="text-green-400">{selectedProject.vehicle.blindingLevel || 'IIIA'}</strong>
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Certificado de acordo com as normas ABNT NBR 15000
+                  </p>
+                </div>
+              </div>
+
+              {/* Footer do Preview */}
+              <div className="bg-white/5 p-4 border-t border-white/10 text-center">
+                <p className="text-xs text-gray-500">
+                  © {new Date().getFullYear()} Elite Blindagens - Todos os direitos reservados
+                </p>
+              </div>
+            </div>
+
+            {/* Ações */}
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={() => setShowPublicPreview(false)}
+                className="flex-1 bg-white/10 hover:bg-white/20 text-white py-3 rounded-xl font-semibold transition-colors"
+              >
+                Fechar Preview
+              </button>
+              <button
+                onClick={() => {
+                  setShowPublicPreview(false)
+                  // Navegar para edição do projeto
+                  setActiveTab('timeline')
+                }}
+                className="flex-1 bg-primary hover:bg-primary/90 text-black py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+              >
+                <Edit3 className="w-4 h-4" />
+                Editar Projeto
+              </button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   )
