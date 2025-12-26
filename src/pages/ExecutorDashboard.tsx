@@ -189,7 +189,15 @@ export function ExecutorDashboard() {
     plate: '',
     color: '',
     chassis: '',
+    vehicleReceivedDate: new Date().toISOString().split('T')[0], // Data de recebimento do veículo
+    processStartDate: '', // Data de início do processo
+    estimatedDeliveryDate: '', // Previsão de entrega
   })
+  
+  // Estado para área de consulta de QR Codes
+  const [showQRLookup, setShowQRLookup] = useState(false)
+  const [qrLookupPlate, setQrLookupPlate] = useState('')
+  const [foundProject, setFoundProject] = useState<Project | null>(null)
   const [vehiclePhoto, setVehiclePhoto] = useState<string | null>(null)
   const vehiclePhotoInputRef = useRef<HTMLInputElement>(null)
 
@@ -443,7 +451,16 @@ export function ExecutorDashboard() {
       progress: 0,
       timeline: defaultTimeline,
       startDate: new Date().toISOString(),
-      estimatedDelivery: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      estimatedDelivery: newCarData.estimatedDeliveryDate 
+        ? new Date(newCarData.estimatedDeliveryDate).toISOString() 
+        : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      // Datas importantes do processo
+      vehicleReceivedDate: newCarData.vehicleReceivedDate 
+        ? new Date(newCarData.vehicleReceivedDate).toISOString() 
+        : new Date().toISOString(),
+      processStartDate: newCarData.processStartDate 
+        ? new Date(newCarData.processStartDate).toISOString() 
+        : undefined,
     }
 
     setProjects(prev => [newProject, ...prev])
@@ -507,6 +524,9 @@ export function ExecutorDashboard() {
     setNewCarData({
       clientName: '', clientEmail: '', clientPhone: '',
       brand: '', model: '', year: '', plate: '', color: '', chassis: '',
+      vehicleReceivedDate: new Date().toISOString().split('T')[0],
+      processStartDate: '',
+      estimatedDeliveryDate: '',
     })
     setVehiclePhoto(null)
     
@@ -753,6 +773,17 @@ contato@eliteblindagens.com.br`
 
               {/* Actions */}
               <div className="flex items-center space-x-3">
+                {/* Consultar QR Codes */}
+                <button
+                  onClick={() => setShowQRLookup(true)}
+                  className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2.5 rounded-xl font-semibold hover:bg-blue-700 transition-colors"
+                  title="Consultar QR Codes por Placa"
+                  aria-label="Consultar QR Codes"
+                >
+                  <Search className="w-5 h-5" />
+                  <span className="hidden md:inline">QR por Placa</span>
+                </button>
+
                 {/* QR Scanner */}
                 <button
                   onClick={() => setShowQRScanner(true)}
@@ -2257,8 +2288,58 @@ contato@eliteblindagens.com.br`
                     placeholder="9BWXXXXXXXXXXXXXXX"
                   />
                 </div>
+              </div>
+            </div>
+
+            {/* Datas do Processo */}
+            <div>
+              <h3 className="font-semibold text-primary mb-4 flex items-center gap-2">
+                <Calendar className="w-5 h-5" />
+                Datas do Processo
+              </h3>
+              <div className="grid md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Data de Recebimento *</label>
+                  <input 
+                    type="date" 
+                    value={newCarData.vehicleReceivedDate}
+                    onChange={(e) => setNewCarData({...newCarData, vehicleReceivedDate: e.target.value})}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                    title="Data que o veículo chegou"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Quando o veículo chegou na empresa</p>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Início do Processo</label>
+                  <input 
+                    type="date" 
+                    value={newCarData.processStartDate}
+                    onChange={(e) => setNewCarData({...newCarData, processStartDate: e.target.value})}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                    title="Data de início do processo"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Quando a blindagem iniciou</p>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Previsão de Entrega</label>
+                  <input 
+                    type="date" 
+                    value={newCarData.estimatedDeliveryDate}
+                    onChange={(e) => setNewCarData({...newCarData, estimatedDeliveryDate: e.target.value})}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                    title="Previsão de entrega"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Data estimada de conclusão</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Foto do Veículo */}
+            <div>
+              <h3 className="font-semibold text-primary mb-4">Foto do Veículo</h3>
+              <div className="grid md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
-                  <label className="block text-sm text-gray-400 mb-2">Foto do Veículo</label>
+                  <label className="block text-sm text-gray-400 mb-2">Foto Inicial</label>
                   <input 
                     ref={vehiclePhotoInputRef}
                     type="file" 
@@ -2935,6 +3016,189 @@ contato@eliteblindagens.com.br`
               Enviar Orçamento
             </button>
           </div>
+        </div>
+      </Modal>
+
+      {/* Modal Consulta de QR Codes por Placa */}
+      <Modal isOpen={showQRLookup} onClose={() => { setShowQRLookup(false); setFoundProject(null); setQrLookupPlate(''); }} size="lg">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
+                <QrCode className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">Consultar QR Codes</h2>
+                <p className="text-sm text-gray-400">Buscar por placa para reenviar QR Codes</p>
+              </div>
+            </div>
+            <button onClick={() => { setShowQRLookup(false); setFoundProject(null); }} className="p-2 hover:bg-white/10 rounded-lg" title="Fechar">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Busca por Placa */}
+          <div className="mb-6">
+            <label className="block text-sm text-gray-400 mb-2">Digite a Placa do Veículo</label>
+            <div className="flex gap-3">
+              <input 
+                type="text" 
+                value={qrLookupPlate}
+                onChange={(e) => setQrLookupPlate(e.target.value.toUpperCase())}
+                className="flex-1 bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white uppercase text-lg font-mono"
+                placeholder="ABC-1D23"
+                maxLength={8}
+              />
+              <button
+                onClick={() => {
+                  const found = projects.find(p => 
+                    p.vehicle.plate.toUpperCase().replace(/[^A-Z0-9]/g, '') === 
+                    qrLookupPlate.toUpperCase().replace(/[^A-Z0-9]/g, '')
+                  )
+                  setFoundProject(found || null)
+                  if (!found) {
+                    addNotification({ type: 'warning', title: 'Não Encontrado', message: `Nenhum projeto encontrado com a placa ${qrLookupPlate}` })
+                  }
+                }}
+                className="px-6 py-3 bg-primary text-black rounded-xl font-semibold flex items-center gap-2"
+              >
+                <Search className="w-5 h-5" />
+                Buscar
+              </button>
+            </div>
+          </div>
+
+          {/* Resultado da Busca */}
+          {foundProject && (
+            <div className="space-y-4">
+              {/* Info do Veículo */}
+              <div className="bg-green-500/10 border border-green-500/50 rounded-xl p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <CheckCircle className="w-6 h-6 text-green-500" />
+                  <span className="font-bold text-green-400">PROJETO ENCONTRADO!</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-xl overflow-hidden bg-white/10">
+                    {foundProject.vehicle.images?.[0] ? (
+                      <img src={foundProject.vehicle.images[0]} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Car className="w-8 h-8 text-gray-500" />
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">{foundProject.vehicle.brand} {foundProject.vehicle.model}</h3>
+                    <p className="text-sm text-gray-400">
+                      Placa: <span className="font-mono font-bold text-white">{foundProject.vehicle.plate}</span> • 
+                      Cliente: {foundProject.user.name}
+                    </p>
+                    <p className="text-xs text-gray-500">Projeto: {foundProject.id}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* QR Codes */}
+              <div className="grid md:grid-cols-2 gap-4">
+                {/* QR Code de Cadastro */}
+                <div className="bg-blue-500/10 border border-blue-500/50 rounded-xl p-4">
+                  <div className="text-center mb-3">
+                    <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold">CADASTRO</span>
+                    <p className="text-xs text-gray-400 mt-1">Para o cliente se cadastrar</p>
+                  </div>
+                  <div className="bg-white rounded-xl p-3 flex justify-center mb-3">
+                    <QrCode className="w-32 h-32 text-black" />
+                  </div>
+                  <button
+                    onClick={() => {
+                      const token = `INV-${Date.now()}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
+                      const registerUrl = `${window.location.origin}/register?token=${token}&project=${foundProject.id}`
+                      QRCode.toDataURL(registerUrl, { width: 400, margin: 3 }).then((url: string) => {
+                        const link = document.createElement('a')
+                        link.href = url
+                        link.download = `QR-Cadastro-${foundProject.vehicle.plate}.png`
+                        link.click()
+                        addNotification({ type: 'success', title: 'QR Code Baixado', message: 'QR Code de cadastro salvo!' })
+                      })
+                    }}
+                    className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg font-bold text-sm"
+                  >
+                    <Save className="w-4 h-4 inline mr-2" />
+                    Baixar QR Cadastro
+                  </button>
+                </div>
+
+                {/* QR Code Permanente */}
+                <div className="bg-primary/10 border border-primary/50 rounded-xl p-4">
+                  <div className="text-center mb-3">
+                    <span className="bg-primary text-black px-3 py-1 rounded-full text-xs font-bold">PERMANENTE</span>
+                    <p className="text-xs text-gray-400 mt-1">QR Code vitalício do projeto</p>
+                  </div>
+                  <div className="bg-white rounded-xl p-3 flex justify-center mb-3">
+                    <QrCode className="w-32 h-32 text-primary" />
+                  </div>
+                  <button
+                    onClick={() => {
+                      const verifyUrl = `${window.location.origin}/verify/${foundProject.id}`
+                      QRCode.toDataURL(verifyUrl, { width: 400, margin: 3, color: { dark: '#D4AF37' } }).then((url: string) => {
+                        const link = document.createElement('a')
+                        link.href = url
+                        link.download = `QR-Projeto-${foundProject.vehicle.plate}.png`
+                        link.click()
+                        addNotification({ type: 'success', title: 'QR Code Baixado', message: 'QR Code permanente salvo!' })
+                      })
+                    }}
+                    className="w-full bg-primary hover:bg-primary/90 text-black py-2 rounded-lg font-bold text-sm"
+                  >
+                    <Save className="w-4 h-4 inline mr-2" />
+                    Baixar QR Projeto
+                  </button>
+                </div>
+              </div>
+
+              {/* Ações de Compartilhamento */}
+              <div className="bg-white/5 rounded-xl p-4">
+                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                  <Send className="w-4 h-4 text-primary" />
+                  Reenviar para o Cliente
+                </h4>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      const verifyUrl = `${window.location.origin}/verify/${foundProject.id}`
+                      const message = `*ELITE BLINDAGENS*\n\nOlá ${foundProject.user.name}!\n\nAqui está o link para acompanhar seu veículo:\n${verifyUrl}\n\nPlaca: ${foundProject.vehicle.plate}\nVeículo: ${foundProject.vehicle.brand} ${foundProject.vehicle.model}`
+                      window.open(`https://wa.me/55${foundProject.user.phone?.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`, '_blank')
+                    }}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2"
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                    WhatsApp
+                  </button>
+                  <button
+                    onClick={() => {
+                      const verifyUrl = `${window.location.origin}/verify/${foundProject.id}`
+                      const subject = `Elite Blindagens - Acesso ao Projeto ${foundProject.vehicle.plate}`
+                      const body = `Olá ${foundProject.user.name}!\n\nAqui está o link para acompanhar seu veículo:\n${verifyUrl}\n\nPlaca: ${foundProject.vehicle.plate}\nVeículo: ${foundProject.vehicle.brand} ${foundProject.vehicle.model}`
+                      window.open(`mailto:${foundProject.user.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank')
+                    }}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2"
+                  >
+                    <FileText className="w-5 h-5" />
+                    E-mail
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Estado vazio */}
+          {!foundProject && qrLookupPlate === '' && (
+            <div className="text-center py-12 bg-white/5 rounded-xl">
+              <Search className="w-16 h-16 mx-auto text-gray-600 mb-4" />
+              <p className="text-gray-400 font-medium">Digite a placa do veículo para buscar</p>
+              <p className="text-sm text-gray-500 mt-1">Os QR Codes serão exibidos após encontrar o projeto</p>
+            </div>
+          )}
         </div>
       </Modal>
     </div>

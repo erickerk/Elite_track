@@ -122,6 +122,15 @@ export interface Project {
   estimatedDelivery: string
   actualDelivery?: string
   qrCode: string
+  // Datas importantes do processo
+  vehicleReceivedDate?: string // Data que o veículo chegou na empresa
+  processStartDate?: string // Data que o processo de blindagem iniciou
+  completedDate?: string // Data que o processo foi concluído
+  // QR Codes para consulta
+  registrationQrCode?: string // QR Code temporário de cadastro (base64)
+  permanentQrCode?: string // QR Code permanente do projeto (base64)
+  inviteToken?: string // Token de convite para cadastro
+  inviteExpiresAt?: string // Data de expiração do convite
   blindingSpecs?: BlindingSpecs
   deliveryChecklist?: DeliveryChecklist[]
   deliverySchedule?: DeliverySchedule

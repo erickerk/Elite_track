@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { 
   CheckCircle, Clock, AlertCircle, ChevronDown, ChevronUp,
-  Camera, Upload, Play, Pause, Save, X, Edit3, Plus
+  Camera, Upload, Play, Pause, Save, X, Edit3, Plus, Car, Lock, Shield
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import type { Project, TimelineStep } from '../../types'
@@ -10,6 +10,80 @@ interface ExecutorTimelineProps {
   project: Project
   onUpdateStep: (stepId: string, updates: Partial<TimelineStep>) => void
   onAddPhoto: (stepId: string, photoType: string) => void
+}
+
+// Componente de Cabeçalho do Veículo Selecionado
+function VehicleHeader({ project, isLocked }: { project: Project; isLocked: boolean }) {
+  return (
+    <div className={cn(
+      "rounded-2xl p-4 mb-4 border-2",
+      isLocked 
+        ? "bg-red-500/10 border-red-500/50" 
+        : "bg-primary/10 border-primary/50"
+    )}>
+      <div className="flex items-center gap-4">
+        {/* Foto do Veículo */}
+        <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-white/10">
+          {project.vehicle.images?.[0] ? (
+            <img 
+              src={project.vehicle.images[0]} 
+              alt={project.vehicle.model} 
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Car className="w-8 h-8 text-gray-500" />
+            </div>
+          )}
+        </div>
+        
+        {/* Info do Veículo */}
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            {isLocked && <Lock className="w-4 h-4 text-red-400" />}
+            <span className={cn(
+              "text-xs font-bold px-2 py-0.5 rounded-full",
+              isLocked ? "bg-red-500/20 text-red-400" : "bg-primary/20 text-primary"
+            )}>
+              {isLocked ? 'PROJETO CONCLUÍDO - BLOQUEADO' : 'VEÍCULO SELECIONADO'}
+            </span>
+          </div>
+          <h3 className="text-xl font-bold text-white">
+            {project.vehicle.brand} {project.vehicle.model}
+          </h3>
+          <div className="flex items-center gap-4 text-sm text-gray-400 mt-1">
+            <span className="flex items-center gap-1">
+              <span className="font-mono font-bold text-white bg-primary/20 px-2 py-0.5 rounded">
+                {project.vehicle.plate}
+              </span>
+            </span>
+            <span>{project.vehicle.year}</span>
+            <span>{project.vehicle.color}</span>
+          </div>
+        </div>
+
+        {/* Status */}
+        <div className="text-right">
+          <div className={cn(
+            "text-3xl font-bold",
+            isLocked ? "text-green-400" : "text-primary"
+          )}>
+            {project.progress}%
+          </div>
+          <div className="text-xs text-gray-400">
+            {project.user.name}
+          </div>
+        </div>
+      </div>
+
+      {isLocked && (
+        <div className="mt-3 pt-3 border-t border-red-500/30 flex items-center gap-2 text-sm text-red-400">
+          <Shield className="w-4 h-4" />
+          <span>Este projeto está concluído. Edições bloqueadas para auditoria.</span>
+        </div>
+      )}
+    </div>
+  )
 }
 
 const photoTypes = [
@@ -30,6 +104,9 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto }: Executor
   const [descriptions, setDescriptions] = useState<Record<string, string>>({})
   const [showPhotoModal, setShowPhotoModal] = useState<string | null>(null)
   const [selectedPhotoType, setSelectedPhotoType] = useState<string>('during')
+
+  // Verificar se o projeto está concluído (bloqueado para edição)
+  const isProjectLocked = project.status === 'completed' || project.status === 'delivered'
 
   // Calcular progresso dinamicamente
   const completedSteps = project.timeline.filter(s => s.status === 'completed').length
@@ -83,6 +160,9 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto }: Executor
 
   return (
     <div className="space-y-4">
+      {/* Cabeçalho do Veículo Selecionado */}
+      <VehicleHeader project={project} isLocked={isProjectLocked} />
+
       {/* Progress Header */}
       <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl">
         <div>
@@ -207,18 +287,26 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto }: Executor
                     ) : (
                       <div className="flex items-start justify-between">
                         <p className="text-sm text-gray-300 flex-1">{step.description}</p>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setDescriptions({ ...descriptions, [step.id]: step.description }); setEditingDescription(step.id); }}
-                          className="ml-2 p-1.5 hover:bg-white/10 rounded-lg transition-colors"
-                          title="Editar descrição"
-                        >
-                          <Edit3 className="w-4 h-4 text-gray-400" />
-                        </button>
+                        {!isProjectLocked && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setDescriptions({ ...descriptions, [step.id]: step.description }); setEditingDescription(step.id); }}
+                            className="ml-2 p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+                            title="Editar descrição"
+                          >
+                            <Edit3 className="w-4 h-4 text-gray-400" />
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
 
-                  {/* Status Actions */}
+                  {/* Status Actions - Bloqueado se projeto concluído */}
+                  {isProjectLocked ? (
+                    <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
+                      <Lock className="w-4 h-4" />
+                      <span>Edições bloqueadas - Projeto concluído</span>
+                    </div>
+                  ) : (
                   <div className="flex flex-wrap gap-2">
                     {step.status === 'pending' && (
                       <button
@@ -257,18 +345,21 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto }: Executor
                       </button>
                     )}
                   </div>
+                  )}
 
                   {/* Photos Section */}
                   <div>
                     <div className="flex items-center justify-between mb-3">
                       <h5 className="font-semibold text-sm">Fotos da Etapa</h5>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setShowPhotoModal(step.id); }}
-                        className="flex items-center space-x-1 text-primary text-sm hover:underline"
-                      >
-                        <Plus className="w-4 h-4" />
-                        <span>Adicionar Foto</span>
-                      </button>
+                      {!isProjectLocked && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setShowPhotoModal(step.id); }}
+                          className="flex items-center space-x-1 text-primary text-sm hover:underline"
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span>Adicionar Foto</span>
+                        </button>
+                      )}
                     </div>
                     {step.photos.length > 0 ? (
                       <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
@@ -282,16 +373,18 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto }: Executor
                             </div>
                           </div>
                         ))}
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setShowPhotoModal(step.id); }}
-                          className="aspect-video rounded-xl border-2 border-dashed border-white/20 flex items-center justify-center hover:border-primary/50 transition-colors"
-                          title="Adicionar foto"
-                          aria-label="Adicionar foto"
-                        >
-                          <Camera className="w-6 h-6 text-gray-500" />
-                        </button>
+                        {!isProjectLocked && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setShowPhotoModal(step.id); }}
+                            className="aspect-video rounded-xl border-2 border-dashed border-white/20 flex items-center justify-center hover:border-primary/50 transition-colors"
+                            title="Adicionar foto"
+                            aria-label="Adicionar foto"
+                          >
+                            <Camera className="w-6 h-6 text-gray-500" />
+                          </button>
+                        )}
                       </div>
-                    ) : (
+                    ) : !isProjectLocked ? (
                       <button
                         onClick={(e) => { e.stopPropagation(); setShowPhotoModal(step.id); }}
                         className="w-full p-6 rounded-xl border-2 border-dashed border-white/20 text-center hover:border-primary/50 transition-colors"
@@ -299,6 +392,8 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto }: Executor
                         <Camera className="w-8 h-8 text-gray-500 mx-auto mb-2" />
                         <p className="text-sm text-gray-400">Adicionar fotos desta etapa</p>
                       </button>
+                    ) : (
+                      <p className="text-sm text-gray-500 italic">Nenhuma foto registrada</p>
                     )}
                   </div>
 
@@ -306,7 +401,7 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto }: Executor
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <h5 className="font-semibold text-sm">Observações</h5>
-                      {!isEditing && (
+                      {!isEditing && !isProjectLocked && (
                         <button
                           onClick={(e) => { 
                             e.stopPropagation(); 

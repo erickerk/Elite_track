@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { 
   Camera, Upload, X, Check, Image as ImageIcon, 
-  Folder, Tag, Clock, ChevronDown
+  Folder, Tag, Clock, ChevronDown, Car, Lock, Shield
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import type { Project, TimelineStep } from '../../types'
@@ -9,6 +9,62 @@ import type { Project, TimelineStep } from '../../types'
 interface ExecutorPhotosProps {
   project: Project
   onUploadPhoto: (stepId: string, photoType: string, description: string) => void
+}
+
+// Componente de Cabeçalho do Veículo Selecionado
+function VehicleHeader({ project, isLocked }: { project: Project; isLocked: boolean }) {
+  return (
+    <div className={cn(
+      "rounded-2xl p-4 mb-4 border-2",
+      isLocked 
+        ? "bg-red-500/10 border-red-500/50" 
+        : "bg-primary/10 border-primary/50"
+    )}>
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-white/10">
+          {project.vehicle.images?.[0] ? (
+            <img 
+              src={project.vehicle.images[0]} 
+              alt={project.vehicle.model} 
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Car className="w-6 h-6 text-gray-500" />
+            </div>
+          )}
+        </div>
+        
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            {isLocked && <Lock className="w-4 h-4 text-red-400" />}
+            <span className={cn(
+              "text-xs font-bold px-2 py-0.5 rounded-full",
+              isLocked ? "bg-red-500/20 text-red-400" : "bg-primary/20 text-primary"
+            )}>
+              {isLocked ? 'BLOQUEADO' : 'SELECIONADO'}
+            </span>
+          </div>
+          <h3 className="text-lg font-bold text-white">
+            {project.vehicle.brand} {project.vehicle.model}
+          </h3>
+          <div className="flex items-center gap-3 text-sm text-gray-400">
+            <span className="font-mono font-bold text-white bg-primary/20 px-2 py-0.5 rounded">
+              {project.vehicle.plate}
+            </span>
+            <span>{project.user.name}</span>
+          </div>
+        </div>
+
+        {isLocked && (
+          <div className="flex items-center gap-2 text-xs text-red-400 bg-red-500/10 px-3 py-2 rounded-lg">
+            <Shield className="w-4 h-4" />
+            <span>Projeto Concluído</span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }
 
 const photoCategories = [
@@ -28,6 +84,9 @@ export function ExecutorPhotos({ project, onUploadPhoto }: ExecutorPhotosProps) 
   const [photoCategory, setPhotoCategory] = useState('details')
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Verificar se o projeto está concluído (bloqueado para edição)
+  const isProjectLocked = project.status === 'completed' || project.status === 'delivered'
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -70,6 +129,9 @@ export function ExecutorPhotos({ project, onUploadPhoto }: ExecutorPhotosProps) 
 
   return (
     <div className="space-y-6">
+      {/* Cabeçalho do Veículo Selecionado */}
+      <VehicleHeader project={project} isLocked={isProjectLocked} />
+
       {/* Summary Header */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white/5 rounded-2xl p-4 text-center">
@@ -121,13 +183,15 @@ export function ExecutorPhotos({ project, onUploadPhoto }: ExecutorPhotosProps) 
                     </p>
                   </div>
                 </div>
-                <button
-                  onClick={() => openUploadModal(step)}
-                  className="flex items-center space-x-2 bg-primary/20 text-primary px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary/30 transition-colors"
-                >
-                  <Camera className="w-4 h-4" />
-                  <span>Adicionar</span>
-                </button>
+                {!isProjectLocked && (
+                  <button
+                    onClick={() => openUploadModal(step)}
+                    className="flex items-center space-x-2 bg-primary/20 text-primary px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary/30 transition-colors"
+                  >
+                    <Camera className="w-4 h-4" />
+                    <span>Adicionar</span>
+                  </button>
+                )}
               </div>
 
               {/* Photos Grid */}
@@ -151,18 +215,20 @@ export function ExecutorPhotos({ project, onUploadPhoto }: ExecutorPhotosProps) 
                         </div>
                       </div>
                     ))}
-                    {/* Add Photo Button */}
-                    <button
-                      onClick={() => openUploadModal(step)}
-                      className="aspect-square rounded-xl border-2 border-dashed border-white/20 flex flex-col items-center justify-center hover:border-primary/50 hover:bg-white/5 transition-all"
-                      title="Adicionar foto"
-                      aria-label="Adicionar foto"
-                    >
-                      <Camera className="w-6 h-6 text-gray-500 mb-1" />
-                      <span className="text-xs text-gray-500">Adicionar</span>
-                    </button>
+                    {/* Add Photo Button - apenas se não bloqueado */}
+                    {!isProjectLocked && (
+                      <button
+                        onClick={() => openUploadModal(step)}
+                        className="aspect-square rounded-xl border-2 border-dashed border-white/20 flex flex-col items-center justify-center hover:border-primary/50 hover:bg-white/5 transition-all"
+                        title="Adicionar foto"
+                        aria-label="Adicionar foto"
+                      >
+                        <Camera className="w-6 h-6 text-gray-500 mb-1" />
+                        <span className="text-xs text-gray-500">Adicionar</span>
+                      </button>
+                    )}
                   </div>
-                ) : (
+                ) : !isProjectLocked ? (
                   <button
                     onClick={() => openUploadModal(step)}
                     className="w-full p-8 rounded-xl border-2 border-dashed border-white/20 text-center hover:border-primary/50 hover:bg-white/5 transition-all"
@@ -171,6 +237,8 @@ export function ExecutorPhotos({ project, onUploadPhoto }: ExecutorPhotosProps) 
                     <p className="text-gray-400 font-medium">Adicionar fotos para esta etapa</p>
                     <p className="text-xs text-gray-500 mt-1">Clique para selecionar ou arraste arquivos</p>
                   </button>
+                ) : (
+                  <p className="text-sm text-gray-500 italic text-center py-4">Nenhuma foto registrada</p>
                 )}
               </div>
             </div>
