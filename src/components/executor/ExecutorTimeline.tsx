@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { 
   CheckCircle, Clock, AlertCircle, ChevronDown, ChevronUp,
-  Camera, Upload, Play, Pause, Save, X, Edit3, Plus, Car, Lock, Shield
+  Camera, Upload, Play, Pause, Save, X, Edit3, Plus, Car, Lock, Shield, Calendar
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import type { Project, TimelineStep } from '../../types'
@@ -11,6 +11,7 @@ interface ExecutorTimelineProps {
   onUpdateStep: (stepId: string, updates: Partial<TimelineStep>) => void
   onAddPhoto: (stepId: string, photoType: string) => void
   onUpdateProjectDates?: (updates: { vehicleReceivedDate?: string; estimatedDelivery?: string }) => void
+  onUpdateNextStepDate?: (stepId: string, estimatedDate: string) => void
 }
 
 // Função para calcular dias
@@ -288,6 +289,12 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
   const [descriptions, setDescriptions] = useState<Record<string, string>>({})
   const [showPhotoModal, setShowPhotoModal] = useState<string | null>(null)
   const [selectedPhotoType, setSelectedPhotoType] = useState<string>('during')
+  
+  // Estados para modal de data de previsão obrigatória
+  const [showDateModal, setShowDateModal] = useState(false)
+  const [pendingCompletionStep, setPendingCompletionStep] = useState<TimelineStep | null>(null)
+  const [nextStepDate, setNextStepDate] = useState('')
+  const [dateError, setDateError] = useState('')
 
   // Verificar se o projeto está concluído (bloqueado para edição)
   const isProjectLocked = project.status === 'completed' || project.status === 'delivered'
@@ -295,6 +302,75 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
   // Calcular progresso dinamicamente
   const completedSteps = project.timeline.filter(s => s.status === 'completed').length
   const calculatedProgress = Math.round((completedSteps / project.timeline.length) * 100)
+
+  // Verificar se a etapa anterior está concluída (para controle sequencial)
+  const canStartStep = (stepIndex: number): boolean => {
+    if (stepIndex === 0) return true // Primeira etapa sempre pode ser iniciada
+    const previousStep = project.timeline[stepIndex - 1]
+    return previousStep?.status === 'completed'
+  }
+
+  // Verificar se existe próxima etapa
+  const getNextStep = (currentStepId: string): TimelineStep | null => {
+    const currentIndex = project.timeline.findIndex(s => s.id === currentStepId)
+    if (currentIndex === -1 || currentIndex >= project.timeline.length - 1) return null
+    return project.timeline[currentIndex + 1]
+  }
+
+  // Handler para solicitar conclusão de etapa (abre modal se houver próxima etapa)
+  const handleRequestCompletion = (step: TimelineStep) => {
+    const nextStep = getNextStep(step.id)
+    
+    if (nextStep) {
+      // Há próxima etapa - exigir data de previsão
+      setPendingCompletionStep(step)
+      setNextStepDate(nextStep.estimatedDate?.split('T')[0] || '')
+      setDateError('')
+      setShowDateModal(true)
+    } else {
+      // Última etapa - concluir diretamente
+      handleStatusChange(step, 'completed')
+    }
+  }
+
+  // Confirmar conclusão com data de previsão
+  const handleConfirmCompletion = () => {
+    if (!pendingCompletionStep) return
+    
+    if (!nextStepDate) {
+      setDateError('A data de previsão é obrigatória!')
+      return
+    }
+
+    const selectedDate = new Date(nextStepDate)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    if (selectedDate < today) {
+      setDateError('A data de previsão não pode ser no passado!')
+      return
+    }
+
+    // Atualizar a etapa atual como concluída
+    onUpdateStep(pendingCompletionStep.id, { 
+      status: 'completed',
+      date: new Date().toISOString()
+    })
+
+    // Atualizar a data de previsão da próxima etapa
+    const nextStep = getNextStep(pendingCompletionStep.id)
+    if (nextStep) {
+      onUpdateStep(nextStep.id, { 
+        estimatedDate: new Date(nextStepDate).toISOString()
+      })
+    }
+
+    // Limpar estados
+    setShowDateModal(false)
+    setPendingCompletionStep(null)
+    setNextStepDate('')
+    setDateError('')
+  }
 
   const handleStatusChange = (step: TimelineStep, newStatus: 'pending' | 'in_progress' | 'completed') => {
     onUpdateStep(step.id, { 
@@ -367,6 +443,8 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
           const Icon = config.icon
           const isExpanded = expandedStep === step.id
           const isEditing = editingNotes === step.id
+          const canStart = canStartStep(index)
+          const isBlocked = step.status === 'pending' && !canStart
 
           return (
             <div
@@ -374,7 +452,8 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
               className={cn(
                 "rounded-2xl border transition-all overflow-hidden",
                 config.border,
-                step.status === 'in_progress' && "ring-1 ring-primary/30"
+                step.status === 'in_progress' && "ring-1 ring-primary/30",
+                isBlocked && "opacity-60"
               )}
             >
               {/* Step Header */}
@@ -490,9 +569,14 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
                       <Lock className="w-4 h-4" />
                       <span>Edições bloqueadas - Projeto concluído</span>
                     </div>
+                  ) : isBlocked ? (
+                    <div className="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-xl text-yellow-400 text-sm">
+                      <Lock className="w-4 h-4" />
+                      <span>🔒 Conclua a etapa anterior para desbloquear</span>
+                    </div>
                   ) : (
                   <div className="flex flex-wrap gap-2">
-                    {step.status === 'pending' && (
+                    {step.status === 'pending' && canStart && (
                       <button
                         onClick={(e) => { e.stopPropagation(); handleStatusChange(step, 'in_progress'); }}
                         className="flex items-center space-x-2 bg-primary text-black px-4 py-2 rounded-xl font-semibold hover:bg-primary/90 transition-colors"
@@ -504,7 +588,7 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
                     {step.status === 'in_progress' && (
                       <>
                         <button
-                          onClick={(e) => { e.stopPropagation(); handleStatusChange(step, 'completed'); }}
+                          onClick={(e) => { e.stopPropagation(); handleRequestCompletion(step); }}
                           className="flex items-center space-x-2 bg-green-500 text-white px-4 py-2 rounded-xl font-semibold hover:bg-green-600 transition-colors"
                         >
                           <CheckCircle className="w-4 h-4" />
@@ -698,6 +782,91 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
           )
         })}
       </div>
+
+      {/* Modal de Data de Previsão Obrigatória */}
+      {showDateModal && pendingCompletionStep && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+          onClick={() => setShowDateModal(false)}
+        >
+          <div 
+            className="bg-carbon-800 rounded-3xl p-6 max-w-md w-full mx-4 border-2 border-primary/50"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
+                  <Calendar className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">Concluir Etapa</h3>
+                  <p className="text-sm text-gray-400">Defina a previsão da próxima</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowDateModal(false)}
+                className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center hover:bg-white/20"
+                aria-label="Fechar"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Etapa sendo concluída */}
+            <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 mb-4">
+              <p className="text-sm text-green-400 font-semibold mb-1">✓ Concluindo:</p>
+              <p className="text-white font-bold text-lg">{pendingCompletionStep.title}</p>
+            </div>
+
+            {/* Próxima etapa */}
+            {getNextStep(pendingCompletionStep.id) && (
+              <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 mb-4">
+                <p className="text-sm text-primary font-semibold mb-1">⏭️ Próxima etapa:</p>
+                <p className="text-white font-bold text-lg">{getNextStep(pendingCompletionStep.id)?.title}</p>
+              </div>
+            )}
+
+            {/* Campo de data obrigatória */}
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-white mb-2">
+                📅 Data de previsão da próxima etapa <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="date"
+                value={nextStepDate}
+                onChange={(e) => { setNextStepDate(e.target.value); setDateError(''); }}
+                className={cn(
+                  "w-full bg-white/10 border-2 rounded-xl px-4 py-3 text-white text-lg font-semibold",
+                  dateError ? "border-red-500" : "border-white/20 focus:border-primary"
+                )}
+                min={new Date().toISOString().split('T')[0]}
+                title="Data de previsão"
+                aria-label="Data de previsão da próxima etapa"
+              />
+              {dateError && (
+                <p className="text-red-400 text-sm mt-2 font-semibold">⚠️ {dateError}</p>
+              )}
+            </div>
+
+            {/* Botões de ação */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDateModal(false)}
+                className="flex-1 bg-white/10 text-white py-4 rounded-xl font-semibold hover:bg-white/20 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmCompletion}
+                className="flex-1 bg-green-500 text-white py-4 rounded-xl font-semibold hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
+              >
+                <CheckCircle className="w-5 h-5" />
+                <span>Confirmar</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
