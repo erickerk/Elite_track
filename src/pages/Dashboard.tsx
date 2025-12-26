@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
-  ChevronDown, Share2, Copy, CheckCircle
+  ChevronDown, Share2, Copy, CheckCircle, Plus, QrCode, Link2, MessageCircle, Phone
 } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
@@ -27,8 +27,19 @@ export function Dashboard() {
   const [selectedProject, setSelectedProject] = useState<Project>(userProjects[0] || projects[0])
   const [showVehicleSelector, setShowVehicleSelector] = useState(false)
   const [showQRModal, setShowQRModal] = useState(false)
+  const [showAddVehicleModal, setShowAddVehicleModal] = useState(false)
+  const [newVehicleLink, setNewVehicleLink] = useState('')
+  const [linkError, setLinkError] = useState('')
   const [copied, setCopied] = useState(false)
   const [photoModal, setPhotoModal] = useState<{ src: string; alt: string } | null>(null)
+
+  // Informações de contato da empresa
+  const companyInfo = {
+    whatsapp: '5511999999999',
+    phone: '(11) 3333-4444',
+    whatsappDisplay: '(11) 99999-9999',
+    name: 'Elite Blindagens'
+  }
 
   useEffect(() => {
     const next = userProjects[0] || projects[0]
@@ -71,6 +82,52 @@ export function Dashboard() {
     } else {
       handleCopyQR()
     }
+  }
+
+  const handleAddVehicle = () => {
+    setLinkError('')
+    
+    if (!newVehicleLink.trim()) {
+      setLinkError('Por favor, insira o link ou código do projeto')
+      return
+    }
+
+    // Extrair ID do projeto do link
+    let projectId = newVehicleLink.trim()
+    
+    // Se for uma URL, extrair o ID
+    if (projectId.includes('/verify/')) {
+      const match = projectId.match(/\/verify\/([^/?]+)/)
+      if (match) {
+        projectId = match[1]
+      }
+    } else if (projectId.includes('PRJ-')) {
+      // Já é um ID de projeto
+      projectId = projectId.match(/PRJ-\d{4}-\d{3}/)?.[0] || projectId
+    }
+
+    // Verificar se o projeto existe
+    const existingProject = projects.find(p => p.id === projectId)
+    if (existingProject) {
+      // Verificar se já está na lista do usuário
+      if (userProjects.find(p => p.id === projectId)) {
+        setLinkError('Este veículo já está cadastrado na sua conta')
+        return
+      }
+      
+      // Adicionar à lista (em produção, seria uma chamada API)
+      setSelectedProject(existingProject)
+      setShowAddVehicleModal(false)
+      setNewVehicleLink('')
+      // Aqui seria feita a associação do projeto ao usuário
+    } else {
+      setLinkError('Projeto não encontrado. Verifique o link ou código.')
+    }
+  }
+
+  const openWhatsApp = () => {
+    const message = encodeURIComponent(`Olá ${companyInfo.name}! Gostaria de informações sobre minha blindagem.`)
+    window.open(`https://wa.me/${companyInfo.whatsapp}?text=${message}`, '_blank')
   }
 
   // Calculate days
@@ -173,6 +230,23 @@ export function Dashboard() {
                     </Badge>
                   </button>
                 ))}
+                
+                {/* Botão para adicionar novo veículo */}
+                <button
+                  onClick={() => {
+                    setShowVehicleSelector(false)
+                    setShowAddVehicleModal(true)
+                  }}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl border border-dashed border-primary/50 bg-primary/5 hover:bg-primary/10 transition-all"
+                >
+                  <div className="w-12 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                    <Plus className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="font-medium text-sm text-primary">Cadastrar Novo Veículo</p>
+                    <p className="text-xs text-gray-400">Via QR Code ou link recebido</p>
+                  </div>
+                </button>
               </div>
             )}
           </div>
@@ -428,10 +502,24 @@ export function Dashboard() {
                   <h3 className="font-semibold mb-4">Ações Rápidas</h3>
                   <div className="space-y-3">
                     <button 
+                      onClick={openWhatsApp}
+                      className="w-full bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/30 py-3 rounded-lg transition-colors text-sm whitespace-nowrap flex items-center justify-center"
+                    >
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      WhatsApp {companyInfo.whatsappDisplay}
+                    </button>
+                    <button 
+                      onClick={() => window.open(`tel:${companyInfo.phone.replace(/\D/g, '')}`, '_self')}
+                      className="w-full bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 py-3 rounded-lg transition-colors text-sm whitespace-nowrap flex items-center justify-center"
+                    >
+                      <Phone className="w-4 h-4 mr-2" />
+                      Ligar {companyInfo.phone}
+                    </button>
+                    <button 
                       onClick={() => navigate('/chat')}
                       className="w-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 py-3 rounded-lg transition-colors text-sm whitespace-nowrap flex items-center justify-center"
                     >
-                      <i className="ri-phone-line mr-2"></i>Contatar Equipe
+                      <i className="ri-chat-3-line mr-2"></i>Chat Interno
                       {chatUnreadCount > 0 && (
                         <span className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{chatUnreadCount}</span>
                       )}
@@ -577,7 +665,71 @@ export function Dashboard() {
         </div>
       </Modal>
 
-      
+      {/* Modal para Adicionar Novo Veículo */}
+      <Modal
+        isOpen={showAddVehicleModal}
+        onClose={() => {
+          setShowAddVehicleModal(false)
+          setNewVehicleLink('')
+          setLinkError('')
+        }}
+        title="Cadastrar Novo Veículo"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-400">
+            Cole o link ou código do projeto que você recebeu via WhatsApp ou e-mail do executor.
+          </p>
+          
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">Link ou Código do Projeto</label>
+            <div className={cn(
+              'flex items-center gap-2 p-3 rounded-xl border',
+              isDark ? 'bg-carbon-700/50 border-white/10' : 'bg-gray-100 border-gray-200'
+            )}>
+              <Link2 className="w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                value={newVehicleLink}
+                onChange={(e) => {
+                  setNewVehicleLink(e.target.value)
+                  setLinkError('')
+                }}
+                placeholder="Ex: https://elitetrack.com/verify/PRJ-2025-001"
+                className="flex-1 bg-transparent text-sm outline-none"
+              />
+            </div>
+            {linkError && (
+              <p className="text-sm text-red-400">{linkError}</p>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-primary/10 border border-primary/30">
+            <QrCode className="w-5 h-5 text-primary" />
+            <p className="text-sm text-primary">
+              Você também pode escanear o QR Code enviado pelo executor
+            </p>
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button 
+              variant="outline" 
+              className="flex-1"
+              onClick={() => {
+                setShowAddVehicleModal(false)
+                setNewVehicleLink('')
+                setLinkError('')
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button className="flex-1" onClick={handleAddVehicle}>
+              Cadastrar
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
       {/* Photo Modal */}
       {photoModal && (
         <div 
