@@ -261,6 +261,25 @@ export function LandingPage() {
                     Fale com Especialista
                   </a>
                 </div>
+                
+                {/* Consulta Pública via QR Code */}
+                <div className="glass-effect cinematic-blur p-6 rounded-2xl border border-primary/30 mb-4">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <i className="ri-qr-code-line text-2xl text-primary"></i>
+                    <h3 className="text-lg font-semibold">Consulta Pública de Histórico</h3>
+                  </div>
+                  <p className="text-sm text-gray-400 mb-4">Tem um veículo blindado? Consulte o histórico completo de blindagem e manutenções via QR Code ou código do projeto.</p>
+                  <button
+                    onClick={() => {
+                      const projectId = prompt('Digite o código do projeto (ex: PRJ-2025-003):');
+                      if (projectId) navigate(`/verify/${projectId}`);
+                    }}
+                    className="w-full bg-white/10 border border-white/20 text-white font-medium px-6 py-2.5 rounded-lg hover:bg-white/20 transition-all duration-300 text-sm"
+                  >
+                    <i className="ri-search-line mr-2"></i>
+                    Consultar Histórico do Veículo
+                  </button>
+                </div>
                 <p className="text-xs text-gray-500 uppercase tracking-widest font-light">Experiência premium • Máxima discrição</p>
               </div>
             </div>
@@ -629,7 +648,6 @@ export function LandingPage() {
               <ul className="space-y-2 text-sm text-gray-400">
                 <li><a href="https://elite-blindagens.vercel.app/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Sobre Nós</a></li>
                 <li><a href="https://elite-blindagens.vercel.app/#servicos" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Serviços</a></li>
-                <li><a href="https://wa.me/5511913123071?text=Olá!%20Gostaria%20de%20ver%20as%20certificações%20da%20Elite%20Blindagens." target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Certificações</a></li>
                 <li><a href="https://wa.me/5511913123071?text=Olá!%20Gostaria%20de%20falar%20com%20o%20contato%20da%20Elite%20Blindagens." target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Contato</a></li>
               </ul>
             </div>
@@ -637,32 +655,25 @@ export function LandingPage() {
               <h4 className="font-semibold mb-4">Suporte</h4>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li><a href="https://wa.me/5511913123071?text=Olá!%20Preciso%20de%20ajuda%20com%20o%20sistema%20EliteTrack." target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Central de Ajuda</a></li>
-                <li><a href="https://wa.me/5511913123071?text=Olá!%20Tenho%20uma%20dúvida%20sobre%20o%20EliteTrack." target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">FAQ</a></li>
-                <li><a href="https://wa.me/5511913123071?text=Olá!%20Gostaria%20de%20acessar%20a%20documentação%20do%20EliteTrack." target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Documentação</a></li>
-                <li><a href="https://wa.me/5511913123071?text=Olá!%20Gostaria%20de%20verificar%20o%20status%20do%20sistema%20EliteTrack." target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Status do Sistema</a></li>
+                <li><a href="#contato" className="hover:text-primary transition-colors">Solicitar Contato</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Legal</h4>
+              <h4 className="font-semibold mb-4">EliteTrack</h4>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-primary transition-colors">Privacidade</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Termos de Uso</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">LGPD</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Cookies</a></li>
+                <li><button onClick={() => navigate('/login')} className="hover:text-primary transition-colors">Acessar Sistema</button></li>
+                <li><button onClick={() => {
+                  const projectId = prompt('Digite o código do projeto:');
+                  if (projectId) navigate(`/verify/${projectId}`);
+                }} className="hover:text-primary transition-colors">Consulta Pública</button></li>
               </ul>
             </div>
           </div>
           <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-sm text-gray-500">© 2024 Elite Blindagem. Todos os direitos reservados.</p>
+            <p className="text-sm text-gray-500">© 2025 Elite Blindagem. Todos os direitos reservados.</p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <a href="#" className="text-gray-500 hover:text-primary transition-colors" title="Instagram">
-                <i className="ri-instagram-line text-xl"></i>
-              </a>
-              <a href="#" className="text-gray-500 hover:text-primary transition-colors" title="LinkedIn">
-                <i className="ri-linkedin-line text-xl"></i>
-              </a>
-              <a href="#" className="text-gray-500 hover:text-primary transition-colors" title="Facebook">
-                <i className="ri-facebook-line text-xl"></i>
+              <a href="https://wa.me/5511913123071" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-primary transition-colors" title="WhatsApp">
+                <i className="ri-whatsapp-line text-xl"></i>
               </a>
             </div>
           </div>

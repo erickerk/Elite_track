@@ -109,9 +109,9 @@ export function EliteShield() {
         <div class="section">
           <h3>🏆 Materiais Utilizados</h3>
           <ul>
-            <li>Manta Aramida Kevlar - LOT-2024-K001 (Portas e Colunas)</li>
-            <li>Aço Balístico Hardox 500 - LOT-2024-H002 (Assoalho)</li>
-            <li>Vidro Laminado Multilayer - LOT-2024-V003 (Todos os vidros)</li>
+            <li>Manta Aramida Kevlar - LOT-2025-K001 (Portas e Colunas)</li>
+            <li>Aço Balístico Hardox 500 - LOT-2025-H002 (Assoalho)</li>
+            <li>Vidro Laminado Multilayer - LOT-2025-V003 (Todos os vidros)</li>
           </ul>
         </div>
         
@@ -456,9 +456,9 @@ ${COMPANY_INFO.websiteDisplay}
             </h3>
             <div className="space-y-2">
               {[
-                { nome: 'Manta Aramida Kevlar', lote: 'LOT-2024-K001', area: 'Portas e Colunas' },
-                { nome: 'Aço Balístico Hardox 500', lote: 'LOT-2024-H002', area: 'Assoalho' },
-                { nome: 'Vidro Laminado Multilayer', lote: 'LOT-2024-V003', area: 'Todos os vidros' },
+                { nome: 'Manta Aramida Kevlar', lote: 'LOT-2025-K001', area: 'Portas e Colunas' },
+                { nome: 'Aço Balístico Hardox 500', lote: 'LOT-2025-H002', area: 'Assoalho' },
+                { nome: 'Vidro Laminado Multilayer', lote: 'LOT-2025-V003', area: 'Todos os vidros' },
               ].map((material, index) => (
                 <div key={index} className={cn(
                   'p-3 rounded-xl flex justify-between items-center',

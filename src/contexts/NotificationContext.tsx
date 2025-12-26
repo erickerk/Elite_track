@@ -30,7 +30,7 @@ const initialNotifications: Notification[] = [
     message: 'A instalação dos vidros blindados foi finalizada com sucesso.',
     timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
     read: false,
-    projectId: 'PRJ-2024-001',
+    projectId: 'PRJ-2025-001',
     stepId: '3',
   },
   {
@@ -40,7 +40,7 @@ const initialNotifications: Notification[] = [
     message: 'A instalação da manta opaca foi iniciada. Acompanhe o progresso.',
     timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
     read: false,
-    projectId: 'PRJ-2024-001',
+    projectId: 'PRJ-2025-001',
     stepId: '4',
   },
   {
@@ -50,7 +50,7 @@ const initialNotifications: Notification[] = [
     message: 'Novas fotos da etapa de desmontagem foram adicionadas à galeria.',
     timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
     read: true,
-    projectId: 'PRJ-2024-001',
+    projectId: 'PRJ-2025-001',
   },
   {
     id: '4',

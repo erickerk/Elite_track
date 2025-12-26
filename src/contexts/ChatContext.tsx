@@ -16,7 +16,7 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined)
 const initialConversations: ChatConversation[] = [
   {
     id: 'conv-1',
-    projectId: 'PRJ-2024-001',
+    projectId: 'PRJ-2025-001',
     participants: ['1', '2', '3'],
     messages: [
       {
@@ -27,7 +27,7 @@ const initialConversations: ChatConversation[] = [
         content: 'Olá! Gostaria de saber como está o andamento da blindagem do meu veículo.',
         timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000),
         read: true,
-        projectId: 'PRJ-2024-001',
+        projectId: 'PRJ-2025-001',
       },
       {
         id: 'msg-2',
@@ -37,7 +37,7 @@ const initialConversations: ChatConversation[] = [
         content: 'Olá Ricardo! Seu veículo está na etapa de instalação da manta opaca. Tudo correndo conforme planejado!',
         timestamp: new Date(Date.now() - 47 * 60 * 60 * 1000),
         read: true,
-        projectId: 'PRJ-2024-001',
+        projectId: 'PRJ-2025-001',
       },
       {
         id: 'msg-3',
@@ -47,7 +47,7 @@ const initialConversations: ChatConversation[] = [
         content: 'Excelente! Vocês conseguem me enviar algumas fotos do processo?',
         timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
         read: true,
-        projectId: 'PRJ-2024-001',
+        projectId: 'PRJ-2025-001',
       },
       {
         id: 'msg-4',
@@ -57,7 +57,7 @@ const initialConversations: ChatConversation[] = [
         content: 'Claro! Acabamos de adicionar novas fotos na galeria do seu projeto. Você pode acessar pelo app a qualquer momento.',
         timestamp: new Date(Date.now() - 23 * 60 * 60 * 1000),
         read: true,
-        projectId: 'PRJ-2024-001',
+        projectId: 'PRJ-2025-001',
       },
       {
         id: 'msg-5',
@@ -67,14 +67,14 @@ const initialConversations: ChatConversation[] = [
         content: 'Perfeito! Vocês podem me dar uma previsão mais exata de quando ficará pronto?',
         timestamp: new Date(Date.now() - 30 * 60 * 1000),
         read: false,
-        projectId: 'PRJ-2024-001',
+        projectId: 'PRJ-2025-001',
       },
     ],
     unreadCount: 1,
   },
   {
     id: 'conv-2',
-    projectId: 'PRJ-2024-002',
+    projectId: 'PRJ-2025-002',
     participants: ['4', '2', '3'],
     messages: [
       {
@@ -85,7 +85,7 @@ const initialConversations: ChatConversation[] = [
         content: 'Bom dia! Preciso de informações sobre o nível de proteção do meu veículo.',
         timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
         read: true,
-        projectId: 'PRJ-2024-002',
+        projectId: 'PRJ-2025-002',
       },
       {
         id: 'msg-7',
@@ -95,14 +95,14 @@ const initialConversations: ChatConversation[] = [
         content: 'Também queria saber se vocês já iniciaram a instalação dos vidros blindados.',
         timestamp: new Date(Date.now() - 15 * 60 * 1000),
         read: false,
-        projectId: 'PRJ-2024-002',
+        projectId: 'PRJ-2025-002',
       },
     ],
     unreadCount: 1,
   },
   {
     id: 'conv-3',
-    projectId: 'PRJ-2024-003',
+    projectId: 'PRJ-2025-003',
     participants: ['5', '2', '3'],
     messages: [
       {
@@ -113,7 +113,7 @@ const initialConversations: ChatConversation[] = [
         content: 'Boa tarde! Meu carro já está na fase final?',
         timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000),
         read: true,
-        projectId: 'PRJ-2024-003',
+        projectId: 'PRJ-2025-003',
       },
       {
         id: 'msg-9',
@@ -123,7 +123,7 @@ const initialConversations: ChatConversation[] = [
         content: 'Olá Pedro! Sim, estamos finalizando os ajustes. Em breve entraremos em contato para agendar a entrega.',
         timestamp: new Date(Date.now() - 2.5 * 60 * 60 * 1000),
         read: true,
-        projectId: 'PRJ-2024-003',
+        projectId: 'PRJ-2025-003',
       },
       {
         id: 'msg-10',
@@ -133,7 +133,7 @@ const initialConversations: ChatConversation[] = [
         content: 'Ótimo! Aguardo o contato. Já estou ansioso para ver o resultado!',
         timestamp: new Date(Date.now() - 10 * 60 * 1000),
         read: false,
-        projectId: 'PRJ-2024-003',
+        projectId: 'PRJ-2025-003',
       },
     ],
     unreadCount: 1,

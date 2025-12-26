@@ -41,7 +41,7 @@ export const mockTimeline: TimelineStep[] = [
     title: 'Check-in do Veículo',
     description: 'Veículo recebido e documentado. Inspeção inicial realizada com registro fotográfico completo.',
     status: 'completed',
-    date: '2024-12-10T09:00:00',
+    date: '2025-12-10T09:00:00',
     technician: 'Carlos Silva',
     photos: [
       'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400',
@@ -54,7 +54,7 @@ export const mockTimeline: TimelineStep[] = [
     title: 'Desmontagem',
     description: 'Remoção completa de painéis internos, forros, bancos e componentes para acesso às áreas de blindagem.',
     status: 'completed',
-    date: '2024-12-11T14:30:00',
+    date: '2025-12-11T14:30:00',
     technician: 'Roberto Almeida',
     photos: [
       'https://images.unsplash.com/photo-1489824904134-891ab64532f1?w=400',
@@ -65,7 +65,7 @@ export const mockTimeline: TimelineStep[] = [
     title: 'Instalação dos Vidros',
     description: 'Instalação dos vidros balísticos certificados com espessura de 21mm a 42mm conforme nível de proteção.',
     status: 'completed',
-    date: '2024-12-12T10:00:00',
+    date: '2025-12-12T10:00:00',
     technician: 'Fernando Costa',
     photos: [
       'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400',
@@ -77,7 +77,7 @@ export const mockTimeline: TimelineStep[] = [
     title: 'Instalação da Manta Opaca',
     description: 'Aplicação de mantas aramidas (Kevlar) e aço balístico em portas, colunas A/B/C, teto e assoalho.',
     status: 'in_progress',
-    estimatedDate: '2024-12-16T16:00:00',
+    estimatedDate: '2025-12-16T16:00:00',
     technician: 'Equipe Técnica A',
     photos: [
       'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=400',
@@ -89,7 +89,7 @@ export const mockTimeline: TimelineStep[] = [
     title: 'Montagem',
     description: 'Remontagem de todos os componentes internos: painéis, forros, bancos e sistemas elétricos.',
     status: 'pending',
-    estimatedDate: '2024-12-18T09:00:00',
+    estimatedDate: '2025-12-18T09:00:00',
     photos: [],
   },
   {
@@ -97,7 +97,7 @@ export const mockTimeline: TimelineStep[] = [
     title: 'Acabamento',
     description: 'Ajustes finos de acabamento, vedações, borrachas e alinhamento de portas e vidros.',
     status: 'pending',
-    estimatedDate: '2024-12-20T14:00:00',
+    estimatedDate: '2025-12-20T14:00:00',
     photos: [],
   },
   {
@@ -105,7 +105,7 @@ export const mockTimeline: TimelineStep[] = [
     title: 'Vistoria',
     description: 'Inspeção de qualidade completa por supervisor técnico certificado.',
     status: 'pending',
-    estimatedDate: '2024-12-21T10:00:00',
+    estimatedDate: '2025-12-21T10:00:00',
     photos: [],
   },
   {
@@ -113,7 +113,7 @@ export const mockTimeline: TimelineStep[] = [
     title: 'Laudo EliteShield™',
     description: 'Emissão do laudo técnico oficial com registro de materiais, lotes e certificações.',
     status: 'pending',
-    estimatedDate: '2024-12-22T11:00:00',
+    estimatedDate: '2025-12-22T11:00:00',
     photos: [],
   },
   {
@@ -121,7 +121,7 @@ export const mockTimeline: TimelineStep[] = [
     title: 'Testes',
     description: 'Testes de rodagem, funcionamento de vidros elétricos, travas e sistemas de segurança.',
     status: 'pending',
-    estimatedDate: '2024-12-23T09:00:00',
+    estimatedDate: '2025-12-23T09:00:00',
     photos: [],
   },
   {
@@ -129,7 +129,7 @@ export const mockTimeline: TimelineStep[] = [
     title: 'Higienização',
     description: 'Limpeza completa interna e externa, polimento e preparação para entrega.',
     status: 'pending',
-    estimatedDate: '2024-12-24T14:00:00',
+    estimatedDate: '2025-12-24T14:00:00',
     photos: [],
   },
   {
@@ -137,18 +137,18 @@ export const mockTimeline: TimelineStep[] = [
     title: 'Pronto para Entrega',
     description: 'Veículo finalizado, documentação preparada e agendamento com cliente para retirada.',
     status: 'pending',
-    estimatedDate: '2024-12-26T10:00:00',
+    estimatedDate: '2025-12-26T10:00:00',
     photos: [],
   },
 ]
 
 export const mockProject: Project = {
-  id: 'PRJ-2024-001',
+  id: 'PRJ-2025-001',
   vehicle: {
     id: 'VH-001',
     brand: 'Mercedes-Benz',
     model: 'GLE 450',
-    year: 2024,
+    year: 2025,
     color: 'Preto Obsidiana',
     plate: 'ABC-1234',
     images: [
@@ -162,9 +162,9 @@ export const mockProject: Project = {
   status: 'in_progress',
   progress: 36,
   timeline: mockTimeline,
-  startDate: '2024-01-15',
-  estimatedDelivery: '2024-02-08',
-  qrCode: 'ELITE-PRJ-2024-001-QR',
+  startDate: '2025-01-15',
+  estimatedDelivery: '2025-02-08',
+  qrCode: 'ELITE-PRJ-2025-001-QR',
 }
 
 // Timeline padrão para novos projetos
@@ -202,12 +202,12 @@ const createDefaultTimeline = (startDate: string, status: 'pending' | 'in_progre
 export const mockProjects: Project[] = [
   mockProject,
   {
-    id: 'PRJ-2024-002',
+    id: 'PRJ-2025-002',
     vehicle: {
       id: 'VH-002',
       brand: 'BMW',
       model: 'X5 M50i',
-      year: 2024,
+      year: 2025,
       color: 'Branco Mineral',
       plate: 'DEF-5678',
       images: [
@@ -219,13 +219,13 @@ export const mockProjects: Project[] = [
     user: mockClients[1],
     status: 'pending',
     progress: 0,
-    timeline: createDefaultTimeline('2024-02-01'),
-    startDate: '2024-02-01',
-    estimatedDelivery: '2024-02-28',
-    qrCode: 'ELITE-PRJ-2024-002-QR',
+    timeline: createDefaultTimeline('2025-02-01'),
+    startDate: '2025-02-01',
+    estimatedDelivery: '2025-02-28',
+    qrCode: 'ELITE-PRJ-2025-002-QR',
   },
   {
-    id: 'PRJ-2024-003',
+    id: 'PRJ-2025-003',
     vehicle: {
       id: 'VH-003',
       brand: 'Audi',
@@ -241,21 +241,21 @@ export const mockProjects: Project[] = [
     user: mockClients[2],
     status: 'completed',
     progress: 100,
-    timeline: createDefaultTimeline('2024-01-02').map(step => ({
+    timeline: createDefaultTimeline('2025-01-02').map(step => ({
       ...step,
       status: 'completed' as const,
       date: step.estimatedDate,
       technician: 'Carlos Silva',
       photos: ['https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=400'],
     })),
-    startDate: '2024-01-02',
-    estimatedDelivery: '2024-01-20',
-    actualDelivery: '2024-01-20',
-    qrCode: 'ELITE-PRJ-2024-003-QR',
+    startDate: '2025-01-02',
+    estimatedDelivery: '2025-01-20',
+    actualDelivery: '2025-01-20',
+    qrCode: 'ELITE-PRJ-2025-003-QR',
     blindingSpecs: {
       level: 'Nível III',
       certification: 'ABNT NBR 15000',
-      certificationNumber: 'CERT-2024-003-ELITE',
+      certificationNumber: 'CERT-2025-003-ELITE',
       validUntil: '2029-01-20',
       materials: [
         {
@@ -308,7 +308,7 @@ export const mockProjects: Project[] = [
       ],
       warranty: '5 anos de garantia contra defeitos de fabricação',
       technicalResponsible: 'Eng. Carlos Roberto Silva - CREA 123456/SP',
-      installationDate: '2024-01-20',
+      installationDate: '2025-01-20',
       totalWeight: '+280kg adicionados ao peso original',
     },
     deliveryChecklist: [
@@ -332,7 +332,7 @@ export const mockProjects: Project[] = [
       { id: 'DC018', item: 'Termo de recebimento assinado', checked: true, category: 'final' },
     ],
     deliverySchedule: {
-      date: '2024-01-20',
+      date: '2025-01-20',
       time: '10:00',
       location: 'Elite Blindagens - Sede Principal',
       contactPerson: 'Carlos Silva',
@@ -348,14 +348,14 @@ export const mockProjects: Project[] = [
         'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800',
         'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800',
       ],
-      certificateUrl: '/documents/certificate-PRJ-2024-003.pdf',
+      certificateUrl: '/documents/certificate-PRJ-2025-003.pdf',
       manualUrl: '/documents/manual-blindagem.pdf',
     },
     eliteCard: {
-      cardNumber: 'ELITE-2024-003-PLATINUM',
-      issueDate: '2024-01-20',
+      cardNumber: 'ELITE-2025-003-PLATINUM',
+      issueDate: '2025-01-20',
       expiryDate: '2029-01-20',
-      memberSince: '2024-01-02',
+      memberSince: '2025-01-02',
       benefits: [
         'Suporte 24/7 prioritário',
         'Elite Rescue (guincho) ilimitado',
@@ -375,22 +375,22 @@ export const mockProjects: Project[] = [
         status: 'resolved',
         priority: 'low',
         category: 'general',
-        createdAt: '2024-01-25T10:00:00',
-        updatedAt: '2024-01-25T14:30:00',
+        createdAt: '2025-01-25T10:00:00',
+        updatedAt: '2025-01-25T14:30:00',
         messages: [
-          { id: 'MSG001', sender: 'client', message: 'Qual a frequência de verificação dos vidros?', timestamp: '2024-01-25T10:00:00' },
-          { id: 'MSG002', sender: 'support', message: 'Recomendamos verificação semestral. Agende sua revisão conosco!', timestamp: '2024-01-25T14:30:00' },
+          { id: 'MSG001', sender: 'client', message: 'Qual a frequência de verificação dos vidros?', timestamp: '2025-01-25T10:00:00' },
+          { id: 'MSG002', sender: 'support', message: 'Recomendamos verificação semestral. Agende sua revisão conosco!', timestamp: '2025-01-25T14:30:00' },
         ],
       },
     ],
   },
   {
-    id: 'PRJ-2024-004',
+    id: 'PRJ-2025-004',
     vehicle: {
       id: 'VH-004',
       brand: 'Range Rover',
       model: 'Sport HSE',
-      year: 2024,
+      year: 2025,
       color: 'Verde British Racing',
       plate: 'JKL-3456',
       images: [
@@ -401,12 +401,12 @@ export const mockProjects: Project[] = [
     user: mockClients[3],
     status: 'in_progress',
     progress: 18,
-    timeline: createDefaultTimeline('2024-01-25').map((step, index) => {
+    timeline: createDefaultTimeline('2025-01-25').map((step, index) => {
       if (index === 0) {
         return {
           ...step,
           status: 'completed' as const,
-          date: '2024-01-25T09:00:00',
+          date: '2025-01-25T09:00:00',
           technician: 'Roberto Almeida',
           photos: ['https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=400'],
         }
@@ -420,9 +420,9 @@ export const mockProjects: Project[] = [
       }
       return step
     }),
-    startDate: '2024-01-25',
-    estimatedDelivery: '2024-02-20',
-    qrCode: 'ELITE-PRJ-2024-004-QR',
+    startDate: '2025-01-25',
+    estimatedDelivery: '2025-02-20',
+    qrCode: 'ELITE-PRJ-2025-004-QR',
   },
 ]
 
@@ -433,8 +433,8 @@ export const mockNotifications: Notification[] = [
     message: 'A etapa "Blindagem de Carroceria" foi iniciada. Acompanhe o progresso em tempo real.',
     type: 'info',
     read: false,
-    createdAt: '2024-01-25T10:30:00',
-    projectId: 'PRJ-2024-001',
+    createdAt: '2025-01-25T10:30:00',
+    projectId: 'PRJ-2025-001',
   },
   {
     id: '2',
@@ -442,16 +442,16 @@ export const mockNotifications: Notification[] = [
     message: 'Novas fotos foram adicionadas à etapa de instalação de vidros blindados.',
     type: 'success',
     read: false,
-    createdAt: '2024-01-22T16:45:00',
-    projectId: 'PRJ-2024-001',
+    createdAt: '2025-01-22T16:45:00',
+    projectId: 'PRJ-2025-001',
   },
   {
     id: '3',
     title: 'Previsão de entrega atualizada',
-    message: 'A data estimada de entrega foi confirmada para 08/02/2024.',
+    message: 'A data estimada de entrega foi confirmada para 08/02/2025.',
     type: 'info',
     read: true,
-    createdAt: '2024-01-20T09:00:00',
-    projectId: 'PRJ-2024-001',
+    createdAt: '2025-01-20T09:00:00',
+    projectId: 'PRJ-2025-001',
   },
 ]

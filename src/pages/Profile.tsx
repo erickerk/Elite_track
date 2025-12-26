@@ -210,7 +210,7 @@ export function Profile() {
                 </div>
                 <div className="flex-1 text-center lg:text-left">
                   <h1 className="text-3xl font-bold mb-2">{user?.name}</h1>
-                  <p className="text-gray-400 mb-4">Cliente Elite desde Novembro 2024</p>
+                  <p className="text-gray-400 mb-4">Cliente Elite desde Novembro 2025</p>
                   <div className="flex flex-wrap justify-center lg:justify-start gap-3 mb-4">
                     <div className="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm font-semibold"><i className="ri-vip-crown-line mr-1"></i>Elite Member</div>
                     <div className="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm font-semibold"><i className="ri-shield-check-line mr-1"></i>Verificado</div>
@@ -390,7 +390,7 @@ export function Profile() {
                         <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full">Resolvido</span>
                       </div>
                       <p className="text-sm text-gray-400">Dúvida sobre cronograma de entrega</p>
-                      <p className="text-xs text-gray-500 mt-2">Aberto em 10/12/2024</p>
+                      <p className="text-xs text-gray-500 mt-2">Aberto em 10/12/2025</p>
                     </div>
                     <div className="p-4 bg-white/5 rounded-xl border-l-4 border-yellow-500">
                       <div className="flex items-center justify-between mb-2">
@@ -398,7 +398,7 @@ export function Profile() {
                         <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded-full">Em análise</span>
                       </div>
                       <p className="text-sm text-gray-400">Solicitação de fotos adicionais</p>
-                      <p className="text-xs text-gray-500 mt-2">Aberto em 12/12/2024</p>
+                      <p className="text-xs text-gray-500 mt-2">Aberto em 12/12/2025</p>
                     </div>
                     <button onClick={() => navigate('/elite-card')} className="w-full p-3 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl flex items-center justify-center space-x-2 transition-colors">
                       <i className="ri-add-line"></i>

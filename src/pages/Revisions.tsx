@@ -39,7 +39,7 @@ const mockRevisions: Revision[] = [
     title: 'Checagem dos Vidros',
     description: 'Verificação de integridade e vedação dos vidros blindados',
     status: 'scheduled',
-    dueDate: '2024-12-20',
+    dueDate: '2025-12-20',
   },
   {
     id: 'REV-003',
@@ -47,8 +47,8 @@ const mockRevisions: Revision[] = [
     title: 'Checagem de Acabamento',
     description: 'Verificação de borrachas, guarnições e acabamentos internos',
     status: 'completed',
-    dueDate: '2024-06-15',
-    completedDate: '2024-06-14',
+    dueDate: '2025-06-15',
+    completedDate: '2025-06-14',
     notes: 'Todos os itens verificados e aprovados.',
   },
   {
@@ -57,8 +57,8 @@ const mockRevisions: Revision[] = [
     title: 'Manutenção Preventiva',
     description: 'Lubrificação de dobradiças e verificação de mecanismos',
     status: 'completed',
-    dueDate: '2024-03-10',
-    completedDate: '2024-03-10',
+    dueDate: '2025-03-10',
+    completedDate: '2025-03-10',
     notes: 'Dobradiças lubrificadas, vidros regulados.',
   },
 ]

@@ -21,10 +21,10 @@ interface Document {
 }
 
 const mockDocuments: Document[] = [
-  { id: '1', name: 'CNH_Frente.jpg', type: 'image', size: '1.2 MB', uploadedAt: '2024-12-10', status: 'approved', category: 'personal' },
-  { id: '2', name: 'CNH_Verso.jpg', type: 'image', size: '1.1 MB', uploadedAt: '2024-12-10', status: 'approved', category: 'personal' },
-  { id: '3', name: 'CRLV_2024.pdf', type: 'pdf', size: '856 KB', uploadedAt: '2024-12-11', status: 'approved', category: 'vehicle' },
-  { id: '4', name: 'Apolice_Seguro.pdf', type: 'pdf', size: '2.3 MB', uploadedAt: '2024-12-12', status: 'pending', category: 'insurance' },
+  { id: '1', name: 'CNH_Frente.jpg', type: 'image', size: '1.2 MB', uploadedAt: '2025-12-10', status: 'approved', category: 'personal' },
+  { id: '2', name: 'CNH_Verso.jpg', type: 'image', size: '1.1 MB', uploadedAt: '2025-12-10', status: 'approved', category: 'personal' },
+  { id: '3', name: 'CRLV_2025.pdf', type: 'pdf', size: '856 KB', uploadedAt: '2025-12-11', status: 'approved', category: 'vehicle' },
+  { id: '4', name: 'Apolice_Seguro.pdf', type: 'pdf', size: '2.3 MB', uploadedAt: '2025-12-12', status: 'pending', category: 'insurance' },
 ]
 
 const categories = [

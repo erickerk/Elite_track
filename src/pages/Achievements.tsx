@@ -49,7 +49,7 @@ export function Achievements() {
   const [referralPhone, setReferralPhone] = useState('')
   const [referralEmail, setReferralEmail] = useState('')
   const [referrals, setReferrals] = useState<Array<{name: string, phone: string, email: string, status: string, date: string}>>([
-    { name: 'Carlos Alberto', phone: '11999998888', email: 'carlos@email.com', status: 'pending', date: '2024-12-10' },
+    { name: 'Carlos Alberto', phone: '11999998888', email: 'carlos@email.com', status: 'pending', date: '2025-12-10' },
   ])
 
   // Código de indicação único do usuário
@@ -57,28 +57,28 @@ export function Achievements() {
 
   const achievements: Achievement[] = [
     // Progress
-    { id: 'first-step', name: 'Primeiro Passo', description: 'Seu veículo iniciou o processo de blindagem', icon: '🚗', category: 'progress', points: 50, unlocked: true, unlockedAt: '2024-12-01' },
-    { id: 'halfway', name: 'Meio Caminho', description: 'Processo de blindagem 50% concluído', icon: '⚡', category: 'progress', points: 100, unlocked: true, unlockedAt: '2024-12-07' },
-    { id: 'glass-done', name: 'Vidros Instalados', description: 'Etapa de vidros blindados concluída', icon: '🪟', category: 'progress', points: 75, unlocked: true, unlockedAt: '2024-12-05' },
-    { id: 'armor-done', name: 'Blindagem Completa', description: 'Manta balística instalada com sucesso', icon: '🛡️', category: 'progress', points: 100, unlocked: true, unlockedAt: '2024-12-08' },
-    { id: 'finished', name: 'Missão Cumprida', description: 'Blindagem 100% concluída', icon: '🏆', category: 'progress', points: 200, unlocked: completedProjects > 0, unlockedAt: completedProjects > 0 ? '2024-12-12' : undefined },
+    { id: 'first-step', name: 'Primeiro Passo', description: 'Seu veículo iniciou o processo de blindagem', icon: '🚗', category: 'progress', points: 50, unlocked: true, unlockedAt: '2025-12-01' },
+    { id: 'halfway', name: 'Meio Caminho', description: 'Processo de blindagem 50% concluído', icon: '⚡', category: 'progress', points: 100, unlocked: true, unlockedAt: '2025-12-07' },
+    { id: 'glass-done', name: 'Vidros Instalados', description: 'Etapa de vidros blindados concluída', icon: '🪟', category: 'progress', points: 75, unlocked: true, unlockedAt: '2025-12-05' },
+    { id: 'armor-done', name: 'Blindagem Completa', description: 'Manta balística instalada com sucesso', icon: '🛡️', category: 'progress', points: 100, unlocked: true, unlockedAt: '2025-12-08' },
+    { id: 'finished', name: 'Missão Cumprida', description: 'Blindagem 100% concluída', icon: '🏆', category: 'progress', points: 200, unlocked: completedProjects > 0, unlockedAt: completedProjects > 0 ? '2025-12-12' : undefined },
     
     // Engagement
-    { id: 'explorer', name: 'Explorador', description: 'Visitou todas as seções do app', icon: '🔍', category: 'engagement', points: 30, unlocked: true, unlockedAt: '2024-12-02' },
-    { id: 'photo-viewer', name: 'Olhos Atentos', description: 'Visualizou 10 fotos do processo', icon: '📸', category: 'engagement', points: 25, unlocked: true, unlockedAt: '2024-12-04' },
-    { id: 'chatter', name: 'Comunicador', description: 'Enviou sua primeira mensagem no chat', icon: '💬', category: 'engagement', points: 20, unlocked: true, unlockedAt: '2024-12-03' },
-    { id: 'notifier', name: 'Sempre Atualizado', description: 'Ativou notificações push', icon: '🔔', category: 'engagement', points: 15, unlocked: true, unlockedAt: '2024-12-01' },
+    { id: 'explorer', name: 'Explorador', description: 'Visitou todas as seções do app', icon: '🔍', category: 'engagement', points: 30, unlocked: true, unlockedAt: '2025-12-02' },
+    { id: 'photo-viewer', name: 'Olhos Atentos', description: 'Visualizou 10 fotos do processo', icon: '📸', category: 'engagement', points: 25, unlocked: true, unlockedAt: '2025-12-04' },
+    { id: 'chatter', name: 'Comunicador', description: 'Enviou sua primeira mensagem no chat', icon: '💬', category: 'engagement', points: 20, unlocked: true, unlockedAt: '2025-12-03' },
+    { id: 'notifier', name: 'Sempre Atualizado', description: 'Ativou notificações push', icon: '🔔', category: 'engagement', points: 15, unlocked: true, unlockedAt: '2025-12-01' },
     { id: 'sharer', name: 'Influenciador', description: 'Compartilhou o status da blindagem', icon: '📤', category: 'engagement', points: 40, unlocked: false, progress: 0, maxProgress: 1 },
     
     // Loyalty
-    { id: 'member', name: 'Membro Elite', description: 'Tornou-se cliente Elite Blindagens', icon: '⭐', category: 'loyalty', points: 100, unlocked: true, unlockedAt: '2024-12-01' },
+    { id: 'member', name: 'Membro Elite', description: 'Tornou-se cliente Elite Blindagens', icon: '⭐', category: 'loyalty', points: 100, unlocked: true, unlockedAt: '2025-12-01' },
     { id: 'prime', name: 'Elite Prime', description: 'Assinou o programa Elite Prime', icon: '👑', category: 'loyalty', points: 200, unlocked: false },
     { id: 'veteran', name: 'Veterano', description: 'Cliente há mais de 1 ano', icon: '🎖️', category: 'loyalty', points: 150, unlocked: false, progress: 30, maxProgress: 365 },
-    { id: 'multi-car', name: 'Frota Protegida', description: 'Blindou mais de um veículo', icon: '🚘', category: 'loyalty', points: 300, unlocked: userProjects.length > 1, unlockedAt: userProjects.length > 1 ? '2024-12-10' : undefined },
+    { id: 'multi-car', name: 'Frota Protegida', description: 'Blindou mais de um veículo', icon: '🚘', category: 'loyalty', points: 300, unlocked: userProjects.length > 1, unlockedAt: userProjects.length > 1 ? '2025-12-10' : undefined },
     { id: 'referral', name: 'Embaixador', description: 'Indicou um amigo que fechou blindagem', icon: '🤝', category: 'loyalty', points: 500, unlocked: referrals.some(r => r.status === 'converted'), progress: referrals.filter(r => r.status === 'converted').length, maxProgress: 1 },
     
     // Special
-    { id: 'early-adopter', name: 'Pioneiro', description: 'Um dos primeiros a usar o EliteTrack', icon: '🚀', category: 'special', points: 100, unlocked: true, unlockedAt: '2024-12-01' },
+    { id: 'early-adopter', name: 'Pioneiro', description: 'Um dos primeiros a usar o EliteTrack', icon: '🚀', category: 'special', points: 100, unlocked: true, unlockedAt: '2025-12-01' },
     { id: 'perfect-rating', name: 'Satisfação Total', description: 'Avaliou o serviço com 5 estrelas', icon: '⭐', category: 'special', points: 50, unlocked: false },
     { id: 'vip', name: 'Cliente VIP', description: 'Recebeu atendimento VIP exclusivo', icon: '💎', category: 'special', points: 250, unlocked: false },
     { id: 'collector', name: 'Colecionador', description: 'Desbloqueou 15 conquistas', icon: '🏅', category: 'special', points: 300, unlocked: false, progress: 10, maxProgress: 15 },

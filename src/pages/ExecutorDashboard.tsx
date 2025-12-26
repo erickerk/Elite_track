@@ -60,11 +60,11 @@ const mockScheduledRevisions = [
 
 // Mock de clientes que devem retornar para revisão anual
 const mockRevisionReminders = [
-  { id: 'R1', clientName: 'Carlos Alberto', vehicle: 'Toyota Hilux', blindingDate: '2024-01-25', nextRevisionDate: '2025-01-25', daysUntil: 4, phone: '11955555555', email: 'carlos@email.com' },
-  { id: 'R2', clientName: 'Ana Paula', vehicle: 'Jeep Compass', blindingDate: '2024-02-10', nextRevisionDate: '2025-02-10', daysUntil: 20, phone: '11944444444', email: 'ana@email.com' },
-  { id: 'R3', clientName: 'Roberto Lima', vehicle: 'Volvo XC90', blindingDate: '2024-01-20', nextRevisionDate: '2025-01-20', daysUntil: -1, phone: '11933333333', email: 'roberto@email.com' },
-  { id: 'R4', clientName: 'Patricia Santos', vehicle: 'Porsche Cayenne', blindingDate: '2024-02-28', nextRevisionDate: '2025-02-28', daysUntil: 38, phone: '11922222222', email: 'patricia@email.com' },
-  { id: 'R5', clientName: 'Fernando Oliveira', vehicle: 'Land Rover Defender', blindingDate: '2024-01-18', nextRevisionDate: '2025-01-18', daysUntil: -3, phone: '11911111111', email: 'fernando@email.com' },
+  { id: 'R1', clientName: 'Carlos Alberto', vehicle: 'Toyota Hilux', blindingDate: '2025-01-25', nextRevisionDate: '2025-01-25', daysUntil: 4, phone: '11955555555', email: 'carlos@email.com' },
+  { id: 'R2', clientName: 'Ana Paula', vehicle: 'Jeep Compass', blindingDate: '2025-02-10', nextRevisionDate: '2025-02-10', daysUntil: 20, phone: '11944444444', email: 'ana@email.com' },
+  { id: 'R3', clientName: 'Roberto Lima', vehicle: 'Volvo XC90', blindingDate: '2025-01-20', nextRevisionDate: '2025-01-20', daysUntil: -1, phone: '11933333333', email: 'roberto@email.com' },
+  { id: 'R4', clientName: 'Patricia Santos', vehicle: 'Porsche Cayenne', blindingDate: '2025-02-28', nextRevisionDate: '2025-02-28', daysUntil: 38, phone: '11922222222', email: 'patricia@email.com' },
+  { id: 'R5', clientName: 'Fernando Oliveira', vehicle: 'Land Rover Defender', blindingDate: '2025-01-18', nextRevisionDate: '2025-01-18', daysUntil: -3, phone: '11911111111', email: 'fernando@email.com' },
 ]
 
 // Mock de tickets de suporte
@@ -1805,7 +1805,7 @@ export function ExecutorDashboard() {
                 onChange={(e) => setLaudoData({...laudoData, certificationNumber: e.target.value})}
                 className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
                 title="Número do certificado"
-                placeholder="CERT-2024-XXXX"
+                placeholder="CERT-2025-XXXX"
               />
             </div>
             <div>
@@ -1946,7 +1946,7 @@ export function ExecutorDashboard() {
                     onChange={(e) => setNewCarData({...newCarData, year: e.target.value})}
                     className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
                     title="Ano do veículo"
-                    placeholder="2024"
+                    placeholder="2025"
                   />
                 </div>
                 <div>
@@ -2438,7 +2438,7 @@ export function ExecutorDashboard() {
                   value={newQuoteData.vehicleYear}
                   onChange={(e) => setNewQuoteData({...newQuoteData, vehicleYear: e.target.value})}
                   className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
-                  placeholder="2024"
+                  placeholder="2025"
                 />
               </div>
               <div>

@@ -27,9 +27,9 @@ interface ExecutorUser {
 }
 
 const initialExecutors: ExecutorUser[] = [
-  { id: 'EXE-001', name: 'Carlos Silva', email: 'carlos@eliteblindagens.com.br', phone: '(11) 99999-1111', role: 'executor', status: 'active', createdAt: '2024-01-15', lastLogin: '2024-12-14', projectsCount: 12 },
-  { id: 'EXE-002', name: 'Roberto Almeida', email: 'roberto@eliteblindagens.com.br', phone: '(11) 99999-2222', role: 'executor', status: 'active', createdAt: '2024-03-20', lastLogin: '2024-12-13', projectsCount: 8 },
-  { id: 'EXE-003', name: 'Fernando Santos', email: 'fernando@eliteblindagens.com.br', phone: '(11) 99999-3333', role: 'executor', status: 'inactive', createdAt: '2024-06-10', projectsCount: 5 },
+  { id: 'EXE-001', name: 'Carlos Silva', email: 'carlos@eliteblindagens.com.br', phone: '(11) 99999-1111', role: 'executor', status: 'active', createdAt: '2025-01-15', lastLogin: '2025-12-14', projectsCount: 12 },
+  { id: 'EXE-002', name: 'Roberto Almeida', email: 'roberto@eliteblindagens.com.br', phone: '(11) 99999-2222', role: 'executor', status: 'active', createdAt: '2025-03-20', lastLogin: '2025-12-13', projectsCount: 8 },
+  { id: 'EXE-003', name: 'Fernando Santos', email: 'fernando@eliteblindagens.com.br', phone: '(11) 99999-3333', role: 'executor', status: 'inactive', createdAt: '2025-06-10', projectsCount: 5 },
 ]
 
 type AdminTab = 'dashboard' | 'executors' | 'clients' | 'projects' | 'quotes' | 'schedule' | 'leads' | 'invites' | 'settings'
@@ -1155,7 +1155,7 @@ export function AdminDashboard() {
                   </div>
                   <div className="flex justify-between py-2 border-b border-white/10">
                     <span className="text-gray-400">Última atualização</span>
-                    <span>14/12/2024</span>
+                    <span>14/12/2025</span>
                   </div>
                   <div className="flex justify-between py-2">
                     <span className="text-gray-400">Ambiente</span>
