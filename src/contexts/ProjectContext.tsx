@@ -13,9 +13,13 @@ interface ProjectContextType {
   getProjectById: (projectId: string) => Project | undefined
   getProjectByQRCode: (qrCode: string) => Project | undefined
   getProjectsByEmail: (email: string) => Project[]
+  getProjectsByPhone: (phone: string) => Project[]
+  getClientByEmailOrPhone: (email: string, phone: string) => { exists: boolean; projects: Project[] }
+  getDelayedProjects: () => Project[]
   selectProjectByIndex: (index: number) => void
   addProject: (project: Project) => void
   updateProject: (projectId: string, updates: Partial<Project>) => void
+  refreshProjects: () => void
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined)
@@ -102,6 +106,32 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     return projects.filter(p => p.user.email === email)
   }, [projects])
 
+  const getProjectsByPhone = useCallback((phone: string) => {
+    return projects.filter(p => p.user.phone === phone)
+  }, [projects])
+
+  // Verifica se cliente já existe por email ou telefone
+  const getClientByEmailOrPhone = useCallback((email: string, phone: string) => {
+    const byEmail = projects.filter(p => p.user.email === email)
+    const byPhone = projects.filter(p => p.user.phone === phone)
+    const combined = [...byEmail, ...byPhone.filter(p => !byEmail.includes(p))]
+    return {
+      exists: combined.length > 0,
+      projects: combined
+    }
+  }, [projects])
+
+  // Retorna projetos com atraso
+  const getDelayedProjects = useCallback(() => {
+    const hoje = new Date()
+    return projects.filter(p => {
+      if (p.status === 'completed' || p.status === 'delivered') return false
+      if (!p.estimatedDelivery) return false
+      const estimada = new Date(p.estimatedDelivery)
+      return hoje > estimada
+    })
+  }, [projects])
+
   const addProject = useCallback((project: Project) => {
     setProjects(prev => [project, ...prev])
   }, [])
@@ -110,6 +140,10 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     setProjects(prev => prev.map(p => 
       p.id === projectId ? { ...p, ...updates } : p
     ))
+  }, [])
+
+  const refreshProjects = useCallback(() => {
+    setProjects(loadProjectsFromStorage())
   }, [])
 
   return (
@@ -124,9 +158,13 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         getProjectById,
         getProjectByQRCode,
         getProjectsByEmail,
+        getProjectsByPhone,
+        getClientByEmailOrPhone,
+        getDelayedProjects,
         selectProjectByIndex,
         addProject,
         updateProject,
+        refreshProjects,
       }}
     >
       {children}

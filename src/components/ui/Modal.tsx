@@ -52,7 +52,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className={cn(
-              'relative w-full rounded-2xl p-6 shadow-2xl overflow-hidden',
+              'relative w-full rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto',
               isDark ? 'bg-carbon-800 border border-carbon-700' : 'bg-white border border-gray-200',
               sizes[size]
             )}
@@ -63,8 +63,10 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
                 <button
                   onClick={onClose}
                   className="p-2 rounded-full hover:bg-gold/10 text-gold transition-colors"
+                  title="Fechar modal"
+                  aria-label="Fechar modal"
                 >
-                  <X size={20} />
+                  <X size={20} aria-hidden="true" />
                 </button>
               </div>
             )}
@@ -73,8 +75,10 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
               <button
                 onClick={onClose}
                 className="absolute top-4 right-4 p-2 rounded-full hover:bg-gold/10 text-gold transition-colors z-10"
+                title="Fechar modal"
+                aria-label="Fechar modal"
               >
-                <X size={20} />
+                <X size={20} aria-hidden="true" />
               </button>
             )}
             

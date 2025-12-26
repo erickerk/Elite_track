@@ -10,16 +10,64 @@ interface ExecutorTimelineProps {
   project: Project
   onUpdateStep: (stepId: string, updates: Partial<TimelineStep>) => void
   onAddPhoto: (stepId: string, photoType: string) => void
+  onUpdateProjectDates?: (updates: { vehicleReceivedDate?: string; estimatedDelivery?: string }) => void
+}
+
+// Função para calcular dias
+function calcularDias(dataInicio: string | undefined): number {
+  if (!dataInicio) return 0
+  const inicio = new Date(dataInicio)
+  const hoje = new Date()
+  const diff = hoje.getTime() - inicio.getTime()
+  return Math.floor(diff / (1000 * 60 * 60 * 24))
+}
+
+// Função para verificar atraso
+function verificarAtraso(dataEstimada: string | undefined): { atrasado: boolean; dias: number } {
+  if (!dataEstimada) return { atrasado: false, dias: 0 }
+  const estimada = new Date(dataEstimada)
+  const hoje = new Date()
+  const diff = hoje.getTime() - estimada.getTime()
+  const dias = Math.floor(diff / (1000 * 60 * 60 * 24))
+  return { atrasado: dias > 0, dias: Math.abs(dias) }
 }
 
 // Componente de Cabeçalho do Veículo Selecionado
-function VehicleHeader({ project, isLocked }: { project: Project; isLocked: boolean }) {
+function VehicleHeader({ 
+  project, 
+  isLocked,
+  onUpdateDates 
+}: { 
+  project: Project; 
+  isLocked: boolean;
+  onUpdateDates?: (updates: { vehicleReceivedDate?: string; estimatedDelivery?: string }) => void
+}) {
+  const [editingDate, setEditingDate] = useState<'received' | 'delivery' | null>(null)
+  const [tempDate, setTempDate] = useState('')
+  
+  const diasNaEmpresa = calcularDias(project.vehicleReceivedDate || project.startDate)
+  const { atrasado, dias: diasAtraso } = verificarAtraso(project.estimatedDelivery)
+
+  const handleSaveDate = (type: 'received' | 'delivery') => {
+    if (!tempDate || !onUpdateDates) return
+    
+    if (type === 'received') {
+      onUpdateDates({ vehicleReceivedDate: new Date(tempDate).toISOString() })
+    } else {
+      onUpdateDates({ estimatedDelivery: new Date(tempDate).toISOString() })
+    }
+    setEditingDate(null)
+    setTempDate('')
+  }
+  
   return (
     <div className={cn(
       "rounded-2xl p-4 mb-4 border-2",
-      isLocked 
-        ? "bg-red-500/10 border-red-500/50" 
-        : "bg-primary/10 border-primary/50"
+      atrasado && !isLocked
+        ? "bg-red-500/10 border-red-500/50"
+        : isLocked 
+          ? "bg-green-500/10 border-green-500/50" 
+          : "bg-primary/10 border-primary/50"
     )}>
       <div className="flex items-center gap-4">
         {/* Foto do Veículo */}
@@ -39,45 +87,181 @@ function VehicleHeader({ project, isLocked }: { project: Project; isLocked: bool
         
         {/* Info do Veículo */}
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            {isLocked && <Lock className="w-4 h-4 text-red-400" />}
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            {isLocked && <Lock className="w-4 h-4 text-green-400" />}
             <span className={cn(
               "text-xs font-bold px-2 py-0.5 rounded-full",
-              isLocked ? "bg-red-500/20 text-red-400" : "bg-primary/20 text-primary"
+              isLocked ? "bg-green-500/20 text-green-400" : "bg-primary/20 text-primary"
             )}>
-              {isLocked ? 'PROJETO CONCLUÍDO - BLOQUEADO' : 'VEÍCULO SELECIONADO'}
+              {isLocked ? 'PROJETO CONCLUÍDO' : 'VEÍCULO SELECIONADO'}
             </span>
+            {atrasado && !isLocked && (
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-red-500 text-white animate-pulse">
+                ⚠️ ATRASADO {diasAtraso} DIAS
+              </span>
+            )}
           </div>
           <h3 className="text-xl font-bold text-white">
             {project.vehicle.brand} {project.vehicle.model}
           </h3>
-          <div className="flex items-center gap-4 text-sm text-gray-400 mt-1">
-            <span className="flex items-center gap-1">
-              <span className="font-mono font-bold text-white bg-primary/20 px-2 py-0.5 rounded">
-                {project.vehicle.plate}
-              </span>
+          <div className="flex items-center gap-4 text-sm text-gray-400 mt-1 flex-wrap">
+            <span className="font-mono font-bold text-white bg-primary/20 px-2 py-0.5 rounded">
+              {project.vehicle.plate}
             </span>
             <span>{project.vehicle.year}</span>
             <span>{project.vehicle.color}</span>
           </div>
         </div>
 
-        {/* Status */}
+        {/* Status e Tempo */}
         <div className="text-right">
           <div className={cn(
             "text-3xl font-bold",
-            isLocked ? "text-green-400" : "text-primary"
+            isLocked ? "text-green-400" : atrasado ? "text-red-400" : "text-primary"
           )}>
             {project.progress}%
           </div>
           <div className="text-xs text-gray-400">
             {project.user.name}
           </div>
+          <div className="mt-2 text-xs">
+            <span className="bg-white/10 px-2 py-1 rounded-full">
+              📅 {diasNaEmpresa} dias na empresa
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Informações de Tempo para o Executor */}
+      <div className="mt-3 pt-3 border-t border-white/10 grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+        {/* Data de Recebimento - Editável */}
+        <div className="bg-white/5 rounded-lg p-2 group relative">
+          <span className="text-gray-400 block flex items-center gap-1">
+            Recebido em
+            {!isLocked && onUpdateDates && (
+              <button 
+                onClick={() => {
+                  setEditingDate('received')
+                  setTempDate(project.vehicleReceivedDate?.split('T')[0] || project.startDate.split('T')[0])
+                }}
+                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                title="Editar data de recebimento"
+                aria-label="Editar data de recebimento"
+              >
+                <Edit3 className="w-3 h-3 text-primary" />
+              </button>
+            )}
+          </span>
+          {editingDate === 'received' ? (
+            <div className="flex items-center gap-1 mt-1">
+              <input 
+                type="date" 
+                value={tempDate}
+                onChange={(e) => setTempDate(e.target.value)}
+                className="bg-white/10 rounded px-1 py-0.5 text-xs w-full"
+                title="Data de recebimento"
+                aria-label="Data de recebimento"
+                placeholder="dd/mm/aaaa"
+              />
+              <button 
+                onClick={() => handleSaveDate('received')} 
+                className="text-green-400"
+                title="Salvar data"
+                aria-label="Salvar data de recebimento"
+              >
+                <Save className="w-3 h-3" />
+              </button>
+              <button 
+                onClick={() => setEditingDate(null)} 
+                className="text-red-400"
+                title="Cancelar edição"
+                aria-label="Cancelar edição de data"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ) : (
+            <span className="font-bold">
+              {project.vehicleReceivedDate 
+                ? new Date(project.vehicleReceivedDate).toLocaleDateString('pt-BR')
+                : new Date(project.startDate).toLocaleDateString('pt-BR')}
+            </span>
+          )}
+        </div>
+        
+        <div className="bg-white/5 rounded-lg p-2">
+          <span className="text-gray-400 block">Dias na empresa</span>
+          <span className="font-bold text-primary">{diasNaEmpresa} dias</span>
+        </div>
+        
+        {/* Previsão de Entrega - Editável */}
+        <div className="bg-white/5 rounded-lg p-2 group relative">
+          <span className="text-gray-400 block flex items-center gap-1">
+            Previsão entrega
+            {!isLocked && onUpdateDates && (
+              <button 
+                onClick={() => {
+                  setEditingDate('delivery')
+                  setTempDate(project.estimatedDelivery?.split('T')[0] || '')
+                }}
+                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                title="Editar previsão de entrega"
+                aria-label="Editar previsão de entrega"
+              >
+                <Edit3 className="w-3 h-3 text-primary" />
+              </button>
+            )}
+          </span>
+          {editingDate === 'delivery' ? (
+            <div className="flex items-center gap-1 mt-1">
+              <input 
+                type="date" 
+                value={tempDate}
+                onChange={(e) => setTempDate(e.target.value)}
+                className="bg-white/10 rounded px-1 py-0.5 text-xs w-full"
+                title="Previsão de entrega"
+                aria-label="Previsão de entrega"
+                placeholder="dd/mm/aaaa"
+              />
+              <button 
+                onClick={() => handleSaveDate('delivery')} 
+                className="text-green-400"
+                title="Salvar data"
+                aria-label="Salvar previsão de entrega"
+              >
+                <Save className="w-3 h-3" />
+              </button>
+              <button 
+                onClick={() => setEditingDate(null)} 
+                className="text-red-400"
+                title="Cancelar edição"
+                aria-label="Cancelar edição de data"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ) : (
+            <span className={cn("font-bold", atrasado && !isLocked ? "text-red-400" : "text-green-400")}>
+              {project.estimatedDelivery 
+                ? new Date(project.estimatedDelivery).toLocaleDateString('pt-BR')
+                : 'Não definida'}
+            </span>
+          )}
+        </div>
+        
+        <div className={cn(
+          "rounded-lg p-2",
+          atrasado && !isLocked ? "bg-red-500/20" : "bg-green-500/20"
+        )}>
+          <span className="text-gray-400 block">Status</span>
+          <span className={cn("font-bold", atrasado && !isLocked ? "text-red-400" : "text-green-400")}>
+            {isLocked ? '✓ Concluído' : atrasado ? `⚠️ ${diasAtraso}d atrasado` : `✓ ${diasAtraso}d restantes`}
+          </span>
         </div>
       </div>
 
       {isLocked && (
-        <div className="mt-3 pt-3 border-t border-red-500/30 flex items-center gap-2 text-sm text-red-400">
+        <div className="mt-3 pt-3 border-t border-green-500/30 flex items-center gap-2 text-sm text-green-400">
           <Shield className="w-4 h-4" />
           <span>Este projeto está concluído. Edições bloqueadas para auditoria.</span>
         </div>
@@ -94,7 +278,7 @@ const photoTypes = [
   { id: 'material', label: 'Material', description: 'Foto do material utilizado' },
 ]
 
-export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto }: ExecutorTimelineProps) {
+export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdateProjectDates }: ExecutorTimelineProps) {
   const [expandedStep, setExpandedStep] = useState<string | null>(
     project.timeline.find(s => s.status === 'in_progress')?.id || null
   )
@@ -161,7 +345,7 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto }: Executor
   return (
     <div className="space-y-4">
       {/* Cabeçalho do Veículo Selecionado */}
-      <VehicleHeader project={project} isLocked={isProjectLocked} />
+      <VehicleHeader project={project} isLocked={isProjectLocked} onUpdateDates={onUpdateProjectDates} />
 
       {/* Progress Header */}
       <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl">

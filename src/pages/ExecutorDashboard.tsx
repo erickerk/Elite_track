@@ -60,13 +60,55 @@ const mockScheduledRevisions = [
   { id: '4', clientName: 'Maria Silva', vehicle: 'Range Rover', date: '2025-01-20', time: '11:00', type: 'revisao', status: 'pending', phone: '11966666666' },
 ]
 
-// Mock de clientes que devem retornar para revisão anual
+// Função para gerar lembretes de revisão a partir de projetos concluídos
+function generateRevisionReminders(projects: Project[]) {
+  const hoje = new Date()
+  return projects
+    .filter(p => p.status === 'completed' || p.status === 'delivered')
+    .map(p => {
+      // Revisão anual: 1 ano após a entrega
+      const entregaDate = p.actualDelivery || p.completedDate || p.estimatedDelivery
+      if (!entregaDate) return null
+      
+      const dataEntrega = new Date(entregaDate)
+      const proximaRevisao = new Date(dataEntrega)
+      proximaRevisao.setFullYear(proximaRevisao.getFullYear() + 1)
+      
+      const diffTime = proximaRevisao.getTime() - hoje.getTime()
+      const daysUntil = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      
+      return {
+        id: `REV-${p.id}`,
+        projectId: p.id,
+        clientName: p.user.name,
+        vehicle: `${p.vehicle.brand} ${p.vehicle.model}`,
+        plate: p.vehicle.plate,
+        blindingDate: entregaDate,
+        nextRevisionDate: proximaRevisao.toISOString(),
+        daysUntil,
+        phone: p.user.phone || '',
+        email: p.user.email || '',
+      }
+    })
+    .filter(Boolean) as {
+      id: string
+      projectId: string
+      clientName: string
+      vehicle: string
+      plate: string
+      blindingDate: string
+      nextRevisionDate: string
+      daysUntil: number
+      phone: string
+      email: string
+    }[]
+}
+
+// Mock inicial de revisões (será substituído por dados reais)
 const mockRevisionReminders = [
-  { id: 'R1', clientName: 'Carlos Alberto', vehicle: 'Toyota Hilux', blindingDate: '2025-01-25', nextRevisionDate: '2025-01-25', daysUntil: 4, phone: '11955555555', email: 'carlos@email.com' },
-  { id: 'R2', clientName: 'Ana Paula', vehicle: 'Jeep Compass', blindingDate: '2025-02-10', nextRevisionDate: '2025-02-10', daysUntil: 20, phone: '11944444444', email: 'ana@email.com' },
-  { id: 'R3', clientName: 'Roberto Lima', vehicle: 'Volvo XC90', blindingDate: '2025-01-20', nextRevisionDate: '2025-01-20', daysUntil: -1, phone: '11933333333', email: 'roberto@email.com' },
-  { id: 'R4', clientName: 'Patricia Santos', vehicle: 'Porsche Cayenne', blindingDate: '2025-02-28', nextRevisionDate: '2025-02-28', daysUntil: 38, phone: '11922222222', email: 'patricia@email.com' },
-  { id: 'R5', clientName: 'Fernando Oliveira', vehicle: 'Land Rover Defender', blindingDate: '2025-01-18', nextRevisionDate: '2025-01-18', daysUntil: -3, phone: '11911111111', email: 'fernando@email.com' },
+  { id: 'R1', clientName: 'Carlos Alberto', vehicle: 'Toyota Hilux', blindingDate: '2024-01-25', nextRevisionDate: '2025-01-25', daysUntil: -1, phone: '11955555555', email: 'carlos@email.com' },
+  { id: 'R2', clientName: 'Ana Paula', vehicle: 'Jeep Compass', blindingDate: '2024-02-10', nextRevisionDate: '2025-02-10', daysUntil: 45, phone: '11944444444', email: 'ana@email.com' },
+  { id: 'R3', clientName: 'Roberto Lima', vehicle: 'Volvo XC90', blindingDate: '2024-01-20', nextRevisionDate: '2025-01-20', daysUntil: -6, phone: '11933333333', email: 'roberto@email.com' },
 ]
 
 // Mock de tickets de suporte
@@ -109,7 +151,7 @@ export function ExecutorDashboard() {
   const { user, logout, registerTempPassword } = useAuth()
   const { unreadCount, addNotification } = useNotifications()
   const { totalUnreadCount: chatUnreadCount } = useChat()
-  const { projects: globalProjects, addProject: addGlobalProject } = useProjects()
+  const { projects: globalProjects, addProject: addGlobalProject, getClientByEmailOrPhone, getDelayedProjects } = useProjects()
   const { quotes, updateQuoteStatus, getPendingQuotes, createQuoteFromExecutor } = useQuotes()
 
   const [activeTab, setActiveTab] = useState<TabType>('dashboard')
@@ -244,11 +286,37 @@ export function ExecutorDashboard() {
     completed: allProjects.filter(p => p.status === 'completed').length,
   }
 
+  // Gerar lembretes de revisão sincronizados com projetos reais
+  const revisionReminders = [
+    ...generateRevisionReminders(allProjects),
+    ...mockRevisionReminders
+  ].sort((a, b) => a.daysUntil - b.daysUntil)
+
   useEffect(() => {
     if (!selectedProject && filteredProjects.length > 0) {
       setSelectedProject(filteredProjects[0])
     }
   }, [filteredProjects, selectedProject])
+
+  // Verificar projetos atrasados e notificar
+  useEffect(() => {
+    const delayedProjects = getDelayedProjects()
+    if (delayedProjects.length > 0) {
+      // Notificar sobre projetos atrasados
+      delayedProjects.forEach(project => {
+        const hoje = new Date()
+        const estimada = new Date(project.estimatedDelivery)
+        const diasAtraso = Math.floor((hoje.getTime() - estimada.getTime()) / (1000 * 60 * 60 * 24))
+        
+        addNotification({
+          type: 'warning',
+          title: `⚠️ ATRASO: ${project.vehicle.plate}`,
+          message: `${project.vehicle.brand} ${project.vehicle.model} está ${diasAtraso} dia(s) atrasado!`,
+          projectId: project.id,
+        })
+      })
+    }
+  }, []) // Executar apenas uma vez ao carregar
 
   const handleQRScan = (code: string) => {
     const project = allProjects.find(p => 
@@ -367,6 +435,27 @@ export function ExecutorDashboard() {
       return
     }
 
+    // Verificar se cliente já existe pelo email ou telefone
+    const existingClient = getClientByEmailOrPhone(
+      newCarData.clientEmail || '', 
+      newCarData.clientPhone || ''
+    )
+    
+    let clientId = `USR-${Date.now()}`
+    let isExistingClient = false
+    
+    if (existingClient.exists && existingClient.projects.length > 0) {
+      // Cliente já existe - usar o mesmo ID
+      clientId = existingClient.projects[0].user.id
+      isExistingClient = true
+      
+      addNotification({
+        type: 'info',
+        title: 'Cliente Existente',
+        message: `${newCarData.clientName} já possui ${existingClient.projects.length} veículo(s) cadastrado(s). Este será o ${existingClient.projects.length + 1}º veículo.`,
+      })
+    }
+
     // Etapas padrão do processo de blindagem
     const defaultTimeline = [
       {
@@ -441,11 +530,14 @@ export function ExecutorDashboard() {
         blindingLevel: 'IIIA',
       },
       user: {
-        id: `USR-${Date.now()}`,
+        id: clientId, // Usa ID existente se cliente já tiver outros veículos
         name: newCarData.clientName,
         email: newCarData.clientEmail || 'nao-informado@email.com',
         phone: newCarData.clientPhone || '',
         role: 'client',
+        vehicleIds: isExistingClient 
+          ? [...(existingClient.projects.map(p => p.id)), `PRJ-${Date.now()}`]
+          : [`PRJ-${Date.now()}`],
       },
       status: 'pending',
       progress: 0,
@@ -993,8 +1085,69 @@ contato@eliteblindagens.com.br`
                 )}
               </div>
 
+              {/* Indicador de Veículo Selecionado - GRANDE E VISÍVEL */}
+              {selectedProject && (
+                <div className="bg-primary/20 border-2 border-primary rounded-2xl p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 rounded-xl overflow-hidden bg-white/10 flex-shrink-0">
+                        {selectedProject.vehicle.images?.[0] ? (
+                          <img src={selectedProject.vehicle.images[0]} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Car className="w-8 h-8 text-primary" />
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="bg-primary text-black px-3 py-1 rounded-full text-xs font-bold">
+                            VEÍCULO SELECIONADO
+                          </span>
+                        </div>
+                        <h3 className="text-xl font-bold">{selectedProject.vehicle.brand} {selectedProject.vehicle.model}</h3>
+                        <div className="flex items-center gap-3 text-sm text-gray-300">
+                          <span className="font-mono font-bold bg-white/20 px-2 py-0.5 rounded">{selectedProject.vehicle.plate}</span>
+                          <span>•</span>
+                          <span>{selectedProject.user.name}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {/* Botão Enviar QR Code */}
+                      <button
+                        onClick={() => {
+                          setFoundProject(selectedProject)
+                          setShowQRLookup(true)
+                        }}
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-xl font-bold transition-colors flex items-center gap-2"
+                      >
+                        <QrCode className="w-5 h-5" />
+                        <span>Enviar QR</span>
+                      </button>
+                      {/* Limpar Seleção */}
+                      <button
+                        onClick={() => setSelectedProject(null)}
+                        className="bg-white/10 hover:bg-white/20 text-white p-3 rounded-xl transition-colors"
+                        title="Limpar seleção"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Botão Novo Projeto */}
-              <div className="flex justify-end">
+              <div className="flex justify-end gap-3">
+                {/* Botão QR por Placa */}
+                <button
+                  onClick={() => setShowQRLookup(true)}
+                  className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-blue-700 transition-colors"
+                >
+                  <Search className="w-4 h-4" />
+                  <span>QR por Placa</span>
+                </button>
                 <button
                   onClick={() => setShowNewCarModal(true)}
                   className="flex items-center space-x-2 bg-primary text-black px-4 py-2 rounded-xl font-semibold hover:bg-primary/90 transition-colors"
@@ -1289,81 +1442,69 @@ contato@eliteblindagens.com.br`
             <ExecutorChat onBack={() => setActiveTab('dashboard')} />
           )}
 
-          {/* Schedule Tab - Agenda de Revisões */}
+          {/* Schedule Tab - Contato Ativo com Clientes */}
           {activeTab === 'schedule' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold">Agenda de Revisões</h2>
-                  <p className="text-gray-400">Visualize todos os agendamentos de revisões e entregas</p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-400">{mockScheduledRevisions.length} agendamentos</span>
-                </div>
-              </div>
-
-              {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="glass-effect p-4 rounded-2xl">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                      <Calendar className="w-6 h-6 text-blue-400" />
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold">{mockScheduledRevisions.length}</div>
-                      <div className="text-sm text-gray-400">Total</div>
-                    </div>
+              {/* Header Simplificado */}
+              <div className="bg-gradient-to-r from-yellow-500/20 to-red-500/20 border border-yellow-500/50 rounded-2xl p-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-yellow-500/30 rounded-2xl flex items-center justify-center">
+                    <Bell className="w-8 h-8 text-yellow-400" />
                   </div>
-                </div>
-                <div className="glass-effect p-4 rounded-2xl">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
-                      <CheckCircle className="w-6 h-6 text-green-400" />
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold">{mockScheduledRevisions.filter(r => r.status === 'confirmed').length}</div>
-                      <div className="text-sm text-gray-400">Confirmados</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="glass-effect p-4 rounded-2xl">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center">
-                      <Clock className="w-6 h-6 text-yellow-400" />
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold">{mockScheduledRevisions.filter(r => r.status === 'pending').length}</div>
-                      <div className="text-sm text-gray-400">Pendentes</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="glass-effect p-4 rounded-2xl">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
-                      <Car className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold">{mockScheduledRevisions.filter(r => r.type === 'entrega').length}</div>
-                      <div className="text-sm text-gray-400">Entregas</div>
-                    </div>
+                  <div>
+                    <h2 className="text-2xl font-bold">Contato Ativo</h2>
+                    <p className="text-gray-300">Clientes com revisões e reparos próximos do vencimento</p>
                   </div>
                 </div>
               </div>
 
-              {/* Alertas de Revisão Anual */}
-              <div className="glass-effect rounded-2xl overflow-hidden mb-6">
-                <div className="p-4 border-b border-white/10 flex items-center justify-between">
+              {/* Cards de Urgência */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-red-500/20 border border-red-500/50 rounded-2xl p-5">
+                  <div className="flex items-center justify-between mb-2">
+                    <AlertCircle className="w-8 h-8 text-red-400" />
+                    <span className="text-3xl font-bold text-red-400">
+                      {revisionReminders.filter(r => r.daysUntil < 0).length}
+                    </span>
+                  </div>
+                  <h3 className="font-bold text-red-400">ATRASADOS</h3>
+                  <p className="text-xs text-gray-400">Contatar urgente!</p>
+                </div>
+                <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-2xl p-5">
+                  <div className="flex items-center justify-between mb-2">
+                    <Clock className="w-8 h-8 text-yellow-400" />
+                    <span className="text-3xl font-bold text-yellow-400">
+                      {revisionReminders.filter(r => r.daysUntil >= 0 && r.daysUntil <= 7).length}
+                    </span>
+                  </div>
+                  <h3 className="font-bold text-yellow-400">PRÓXIMOS 7 DIAS</h3>
+                  <p className="text-xs text-gray-400">Agendar revisão</p>
+                </div>
+                <div className="bg-blue-500/20 border border-blue-500/50 rounded-2xl p-5">
+                  <div className="flex items-center justify-between mb-2">
+                    <Calendar className="w-8 h-8 text-blue-400" />
+                    <span className="text-3xl font-bold text-blue-400">
+                      {revisionReminders.filter(r => r.daysUntil > 7 && r.daysUntil <= 30).length}
+                    </span>
+                  </div>
+                  <h3 className="font-bold text-blue-400">PRÓXIMOS 30 DIAS</h3>
+                  <p className="text-xs text-gray-400">Preparar contato</p>
+                </div>
+              </div>
+
+              {/* Lista de Clientes para Contato */}
+              <div className="glass-effect rounded-2xl overflow-hidden">
+                <div className="p-4 border-b border-white/10 flex items-center justify-between bg-yellow-500/10">
                   <div className="flex items-center gap-2">
-                    <Bell className="w-5 h-5 text-yellow-400" />
-                    <h3 className="font-semibold">Revisões Anuais Pendentes</h3>
+                    <Bell className="w-5 h-5 text-yellow-400 animate-pulse" />
+                    <h3 className="font-bold text-lg">Clientes para Contatar</h3>
                   </div>
-                  <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm">
-                    {mockRevisionReminders.filter(r => r.daysUntil <= 30).length} pendentes
+                  <span className="px-4 py-2 bg-yellow-500 text-black rounded-full text-sm font-bold">
+                    {revisionReminders.filter(r => r.daysUntil <= 30).length} pendentes
                   </span>
                 </div>
                 <div className="divide-y divide-white/10">
-                  {mockRevisionReminders
-                    .sort((a, b) => a.daysUntil - b.daysUntil)
+                  {revisionReminders
                     .map((reminder) => (
                     <div key={reminder.id} className="p-4 hover:bg-white/5 transition-colors">
                       <div className="flex items-center justify-between">
@@ -1639,109 +1780,54 @@ contato@eliteblindagens.com.br`
                     </div>
                   </div>
 
-                  {/* Documents Section - Simplificada */}
+                  {/* Seção de QR Codes e Laudo */}
                   <div className="mt-6">
                     <h4 className="font-semibold text-primary flex items-center gap-2 mb-4">
-                      <FileText className="w-4 h-4" />
-                      Documentos Essenciais
+                      <QrCode className="w-4 h-4" />
+                      QR Codes e Documentos
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* CNH - Dinâmico baseado nos dados do projeto */}
-                      <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
-                              <i className="ri-id-card-line text-primary text-xl"></i>
-                            </div>
-                            <div>
-                              <h5 className="font-semibold">CNH</h5>
-                              <p className="text-xs text-gray-400">Carteira de Habilitação</p>
-                            </div>
+                      {/* Enviar QR Codes */}
+                      <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                            <QrCode className="w-6 h-6 text-blue-400" />
                           </div>
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            selectedProject.status === 'pending' 
-                              ? 'bg-yellow-500/20 text-yellow-400' 
-                              : 'bg-green-500/20 text-green-400'
-                          }`}>
-                            {selectedProject.status === 'pending' ? 'Pendente' : 'Enviado'}
-                          </span>
+                          <div>
+                            <h5 className="font-semibold">Enviar QR Codes</h5>
+                            <p className="text-xs text-gray-400">Cadastro e acesso permanente</p>
+                          </div>
                         </div>
-                        <div className="flex gap-2">
-                          {selectedProject.status === 'pending' ? (
-                            <button 
-                              onClick={() => addNotification({ type: 'warning', title: 'Pendente', message: 'Solicite ao cliente o envio da CNH' })}
-                              className="flex-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 py-2 rounded-lg text-sm font-medium transition-colors"
-                            >
-                              <i className="ri-alert-line mr-1"></i> Solicitar
-                            </button>
-                          ) : (
-                            <>
-                              <button 
-                                onClick={() => addNotification({ type: 'info', title: 'CNH', message: 'Documento disponível para visualização' })}
-                                className="flex-1 bg-primary/20 hover:bg-primary/30 text-primary py-2 rounded-lg text-sm font-medium transition-colors"
-                              >
-                                <i className="ri-eye-line mr-1"></i> Visualizar
-                              </button>
-                              <button 
-                                onClick={() => addNotification({ type: 'success', title: 'Download', message: 'CNH baixado com sucesso!' })}
-                                className="px-3 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg text-sm transition-colors"
-                                title="Baixar CNH"
-                                aria-label="Baixar CNH"
-                              >
-                                <i className="ri-download-line"></i>
-                              </button>
-                            </>
-                          )}
-                        </div>
+                        <button 
+                          onClick={() => {
+                            setFoundProject(selectedProject)
+                            setShowQRLookup(true)
+                          }}
+                          className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-bold transition-colors flex items-center justify-center gap-2"
+                        >
+                          <Send className="w-4 h-4" />
+                          ENVIAR QR CODES PARA CLIENTE
+                        </button>
                       </div>
 
-                      {/* CRLV - Dinâmico baseado nos dados do projeto */}
-                      <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                              <i className="ri-car-line text-blue-400 text-xl"></i>
-                            </div>
-                            <div>
-                              <h5 className="font-semibold">CRLV</h5>
-                              <p className="text-xs text-gray-400">Documento do Veículo</p>
-                            </div>
+                      {/* Laudo Técnico */}
+                      <div className="bg-primary/10 border border-primary/30 rounded-xl p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
+                            <FileText className="w-6 h-6 text-primary" />
                           </div>
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            selectedProject.status === 'pending' 
-                              ? 'bg-yellow-500/20 text-yellow-400' 
-                              : 'bg-green-500/20 text-green-400'
-                          }`}>
-                            {selectedProject.status === 'pending' ? 'Pendente' : 'Enviado'}
-                          </span>
+                          <div>
+                            <h5 className="font-semibold">Laudo Técnico</h5>
+                            <p className="text-xs text-gray-400">Certificado de blindagem</p>
+                          </div>
                         </div>
-                        <div className="flex gap-2">
-                          {selectedProject.status === 'pending' ? (
-                            <button 
-                              onClick={() => addNotification({ type: 'warning', title: 'Pendente', message: 'Solicite ao cliente o envio do CRLV' })}
-                              className="flex-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 py-2 rounded-lg text-sm font-medium transition-colors"
-                            >
-                              <i className="ri-alert-line mr-1"></i> Solicitar
-                            </button>
-                          ) : (
-                            <>
-                              <button 
-                                onClick={() => addNotification({ type: 'info', title: 'CRLV', message: 'Documento disponível para visualização' })}
-                                className="flex-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 py-2 rounded-lg text-sm font-medium transition-colors"
-                              >
-                                <i className="ri-eye-line mr-1"></i> Visualizar
-                              </button>
-                              <button 
-                                onClick={() => addNotification({ type: 'success', title: 'Download', message: 'CRLV baixado com sucesso!' })}
-                                className="px-3 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg text-sm transition-colors"
-                                title="Baixar CRLV"
-                                aria-label="Baixar CRLV"
-                              >
-                                <i className="ri-download-line"></i>
-                              </button>
-                            </>
-                          )}
-                        </div>
+                        <button 
+                          onClick={() => setActiveTab('laudo')}
+                          className="w-full bg-primary hover:bg-primary/90 text-black py-3 rounded-lg font-bold transition-colors flex items-center justify-center gap-2"
+                        >
+                          <Eye className="w-4 h-4" />
+                          VER / EDITAR LAUDO
+                        </button>
                       </div>
                     </div>
 

@@ -13,8 +13,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
 import { ProgressRing } from '../components/ui/ProgressRing'
 import { cn } from '../lib/utils'
-import { mockProjects } from '../data/mockData'
 import { useAuth } from '../contexts/AuthContext'
+import { useProjects } from '../contexts/ProjectContext'
 import type { Project } from '../types'
 
 const statusConfig = {
@@ -28,6 +28,7 @@ export function PublicVerification() {
   const { projectId } = useParams<{ projectId: string }>()
   const navigate = useNavigate()
   const { user, isAuthenticated } = useAuth()
+  const { projects } = useProjects()
   const [project, setProject] = useState<Project | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -272,23 +273,28 @@ export function PublicVerification() {
   }
 
   useEffect(() => {
+    setLoading(true)
     const timer = setTimeout(() => {
-      const found = mockProjects.find(p => 
-        p.id === projectId || 
-        p.qrCode === projectId ||
-        p.id.replace('PRJ-', '') === projectId
+      const pid = projectId || ''
+      const found = projects.find(p =>
+        p.id === pid ||
+        p.qrCode === pid ||
+        p.id.replace('PRJ-', '') === pid
       )
-      
+
       if (found) {
         setProject(found)
+        setError(false)
       } else {
+        setProject(null)
         setError(true)
       }
+
       setLoading(false)
-    }, 1500)
+    }, 400)
 
     return () => clearTimeout(timer)
-  }, [projectId])
+  }, [projectId, projects])
 
   if (loading) {
     return (

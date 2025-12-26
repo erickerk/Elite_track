@@ -9,7 +9,7 @@ import { Modal } from '../components/ui/Modal'
 import { useAuth } from '../contexts/AuthContext'
 import { useNotifications } from '../contexts/NotificationContext'
 import { useChat } from '../contexts/ChatContext'
-import { mockProjects } from '../data/mockData'
+import { useProjects } from '../contexts/ProjectContext'
 import { cn } from '../lib/utils'
 import { useTheme } from '../contexts/ThemeContext'
 import type { Project } from '../types'
@@ -21,13 +21,21 @@ export function Dashboard() {
   const navigate = useNavigate()
   const { notifications, unreadCount, markAsRead } = useNotifications()
   const { totalUnreadCount: chatUnreadCount } = useChat()
+  const { projects } = useProjects()
 
-  const userProjects = mockProjects.filter(p => p.user.id === user?.id || p.user.email === user?.email)
-  const [selectedProject, setSelectedProject] = useState<Project>(userProjects[0] || mockProjects[0])
+  const userProjects = projects.filter(p => p.user.id === user?.id || p.user.email === user?.email)
+  const [selectedProject, setSelectedProject] = useState<Project>(userProjects[0] || projects[0])
   const [showVehicleSelector, setShowVehicleSelector] = useState(false)
-    const [showQRModal, setShowQRModal] = useState(false)
+  const [showQRModal, setShowQRModal] = useState(false)
   const [copied, setCopied] = useState(false)
   const [photoModal, setPhotoModal] = useState<{ src: string; alt: string } | null>(null)
+
+  useEffect(() => {
+    const next = userProjects[0] || projects[0]
+    if (next && next.id !== selectedProject.id) {
+      setSelectedProject(next)
+    }
+  }, [projects, userProjects, selectedProject.id])
 
   const currentStep = selectedProject.timeline.find(step => step.status === 'in_progress')
 

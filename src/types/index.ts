@@ -8,6 +8,19 @@ export interface User {
   avatar?: string
   role: UserRole
   vipLevel?: 'standard' | 'gold' | 'platinum'
+  // Suporte para múltiplos veículos
+  vehicleIds?: string[] // IDs dos projetos/veículos vinculados a este cliente
+  createdAt?: string
+  lastLogin?: string
+}
+
+// Cliente com múltiplos veículos
+export interface ClientWithVehicles {
+  client: User
+  projects: Project[]
+  totalVehicles: number
+  activeProjects: number
+  completedProjects: number
 }
 
 export interface Vehicle {
@@ -246,4 +259,30 @@ export interface PublicVehicleHistory {
   verificationDate: string
   owners?: VehicleOwner[]
   maintenanceHistory?: MaintenanceService[]
+}
+
+// Histórico de revisões anuais
+export interface RevisionHistory {
+  id: string
+  projectId: string
+  scheduledDate: string
+  completedDate?: string
+  status: 'scheduled' | 'completed' | 'overdue' | 'cancelled'
+  type: 'annual' | 'repair' | 'maintenance'
+  description: string
+  technician?: string
+  notes?: string
+  nextRevisionDate?: string
+  photos?: string[]
+}
+
+// Atraso de etapa
+export interface StepDelay {
+  stepId: string
+  stepTitle: string
+  originalDate: string
+  newDate?: string
+  daysDelayed: number
+  reason?: string
+  notified: boolean
 }
