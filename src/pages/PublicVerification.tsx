@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import html2canvas from 'html2canvas'
+// import html2canvas from 'html2canvas' // Removido - não utilizado
 import jsPDF from 'jspdf'
 import { 
   Shield, CheckCircle, Clock, AlertCircle, Calendar, Car,
@@ -54,10 +54,10 @@ export function PublicVerification() {
       const contentWidth = pageWidth - (2 * margin)
       let yPos = margin
 
-      // Cores
-      const goldColor = [212, 175, 55]
-      const darkColor = [26, 26, 26]
-      const grayColor = [128, 128, 128]
+      // Cores (tipadas como tuple para compatibilidade com jsPDF)
+      const goldColor: [number, number, number] = [212, 175, 55]
+      const darkColor: [number, number, number] = [26, 26, 26]
+      const grayColor: [number, number, number] = [128, 128, 128]
 
       // Cabeçalho oficial
       pdf.setFillColor(...goldColor)

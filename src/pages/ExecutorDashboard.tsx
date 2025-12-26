@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import QRCode from 'qrcode'
 import { useNavigate } from 'react-router-dom'
 import { 
   CheckCircle, Clock, AlertCircle, Car, QrCode, Bell,
@@ -141,6 +142,11 @@ export function ExecutorDashboard() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [projects, setProjects] = useState<Project[]>(globalProjects)
+
+  // Sincronizar com projetos globais
+  useEffect(() => {
+    setProjects(globalProjects)
+  }, [globalProjects])
   const [showLaudoModal, setShowLaudoModal] = useState(false)
   const [showNewCarModal, setShowNewCarModal] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
@@ -149,7 +155,8 @@ export function ExecutorDashboard() {
   const [ticketResponse, setTicketResponse] = useState('')
   const [ticketNewStatus, setTicketNewStatus] = useState<string>('open')
   const [tickets, setTickets] = useState(mockTickets)
-  const [createdProjectData, setCreatedProjectData] = useState<{ id: string; qrCode: string; clientName: string; clientEmail: string; clientPhone: string; vehicle: string } | null>(null)
+  const [createdProjectData, setCreatedProjectData] = useState<{ id: string; qrCode: string; clientName: string; clientEmail: string; clientPhone: string; vehicle: string; inviteToken: string; expiresAt: string } | null>(null)
+  const [qrCodeImageUrl, setQrCodeImageUrl] = useState<string | null>(null)
   const [laudoData, setLaudoData] = useState({
     level: 'IIIA',
     certification: 'ABNT NBR 15000',
@@ -318,6 +325,15 @@ export function ExecutorDashboard() {
       return
     }
 
+    if (!vehiclePhoto) {
+      addNotification({
+        type: 'warning',
+        title: 'Foto Obrigatória',
+        message: 'É obrigatório fazer upload de uma foto do veículo.',
+      })
+      return
+    }
+
     const newProject: Project = {
       id: `PRJ-${Date.now()}`,
       qrCode: `QR-${Date.now()}`,
@@ -328,7 +344,7 @@ export function ExecutorDashboard() {
         year: parseInt(newCarData.year) || new Date().getFullYear(),
         plate: newCarData.plate.toUpperCase(),
         color: newCarData.color || 'Não informado',
-        images: vehiclePhoto ? [vehiclePhoto] : ['https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400'],
+        images: [vehiclePhoto],
         blindingLevel: 'IIIA',
       },
       user: {
@@ -350,6 +366,24 @@ export function ExecutorDashboard() {
     setSelectedProject(newProject)
     setShowNewCarModal(false)
     
+    // Gerar token de convite único com expiração de 7 dias
+    const inviteToken = `INV-${Date.now()}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+    
+    // URL de registro com token
+    const registerUrl = `${window.location.origin}/register?token=${inviteToken}&project=${newProject.id}`
+    
+    // Gerar QR Code como imagem
+    QRCode.toDataURL(registerUrl, {
+      width: 300,
+      margin: 2,
+      color: { dark: '#000000', light: '#FFFFFF' }
+    }).then((url: string) => {
+      setQrCodeImageUrl(url)
+    }).catch((err: Error) => {
+      console.error('Erro ao gerar QR Code:', err)
+    })
+    
     // Salvar dados para compartilhamento
     setCreatedProjectData({
       id: newProject.id,
@@ -358,6 +392,8 @@ export function ExecutorDashboard() {
       clientEmail: newCarData.clientEmail,
       clientPhone: newCarData.clientPhone,
       vehicle: `${newCarData.brand} ${newCarData.model}`,
+      inviteToken,
+      expiresAt,
     })
     setShowShareModal(true)
     
@@ -374,18 +410,138 @@ export function ExecutorDashboard() {
     })
   }
 
+  // Função para baixar QR Code como imagem
+  const downloadQRCode = () => {
+    if (!qrCodeImageUrl || !createdProjectData) return
+    
+    const link = document.createElement('a')
+    link.href = qrCodeImageUrl
+    link.download = `QRCode-${createdProjectData.id}.png`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    addNotification({
+      type: 'success',
+      title: 'QR Code Baixado',
+      message: 'Imagem do QR Code salva com sucesso!',
+    })
+  }
+
   const shareViaWhatsApp = () => {
     if (!createdProjectData) return
-    const message = `🚗 *EliteTrack - Acompanhamento de Blindagem*\n\nOlá ${createdProjectData.clientName}!\n\nSeu veículo ${createdProjectData.vehicle} foi cadastrado em nosso sistema.\n\n📋 *Código do Projeto:* ${createdProjectData.id}\n🔑 *QR Code:* ${createdProjectData.qrCode}\n\nAcesse o sistema para acompanhar o progresso:\n${window.location.origin}/login\n\nUse seu e-mail para fazer login.`
+    
+    // URL de registro com token único
+    const registerUrl = `${window.location.origin}/register?token=${createdProjectData.inviteToken}&project=${createdProjectData.id}`
+    const expirationDate = new Date(createdProjectData.expiresAt).toLocaleDateString('pt-BR')
+    
+    // Mensagem limpa sem emojis problemáticos
+    const message = `*ELITETRACK - CADASTRO DE CLIENTE*
+
+Ola ${createdProjectData.clientName}!
+
+Seu veiculo ${createdProjectData.vehicle} foi cadastrado em nosso sistema de acompanhamento de blindagem.
+
+COMO SE CADASTRAR:
+1. Escaneie o QR Code anexado OU
+2. Acesse o link: ${registerUrl}
+3. Complete seu cadastro com seus dados
+
+IMPORTANTE:
+- Este link e EXCLUSIVO para voce
+- Valido ate: ${expirationDate} (7 dias)
+- Apenas 1 pessoa pode usar este convite
+
+DADOS DO PROJETO:
+- Codigo: ${createdProjectData.id}
+- Veiculo: ${createdProjectData.vehicle}
+
+Apos o cadastro voce tera acesso a:
+- Acompanhamento em tempo real
+- Fotos e atualizacoes da equipe
+- Laudo tecnico e Elite Card
+
+Equipe Elite Blindagens
+Telefone: (11) 3456-7890
+
+*BAIXE A IMAGEM DO QR CODE ANTES DE ENVIAR*`
+
     const phone = createdProjectData.clientPhone.replace(/\D/g, '')
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank')
+    const fullPhone = phone.startsWith('55') ? phone : `55${phone}`
+    window.open(`https://wa.me/${fullPhone}?text=${encodeURIComponent(message)}`, '_blank')
+    
+    addNotification({
+      type: 'info',
+      title: 'Lembre-se!',
+      message: 'Baixe o QR Code e envie junto com a mensagem do WhatsApp.',
+    })
   }
 
   const shareViaEmail = () => {
     if (!createdProjectData) return
-    const subject = `EliteTrack - Acompanhamento do seu veículo ${createdProjectData.vehicle}`
-    const body = `Olá ${createdProjectData.clientName}!\n\nSeu veículo ${createdProjectData.vehicle} foi cadastrado em nosso sistema de acompanhamento de blindagem.\n\nCódigo do Projeto: ${createdProjectData.id}\nQR Code: ${createdProjectData.qrCode}\n\nAcesse o sistema para acompanhar o progresso:\n${window.location.origin}/login\n\nUse seu e-mail (${createdProjectData.clientEmail}) para fazer login.\n\nAtenciosamente,\nEquipe Elite Blindagens`
+    
+    // URL de registro com token único
+    const registerUrl = `${window.location.origin}/register?token=${createdProjectData.inviteToken}&project=${createdProjectData.id}`
+    const expirationDate = new Date(createdProjectData.expiresAt).toLocaleDateString('pt-BR')
+    
+    const subject = `EliteTrack - Cadastre-se para acompanhar seu ${createdProjectData.vehicle}!`
+    
+    const body = `Olá ${createdProjectData.clientName}!
+
+Seu veículo ${createdProjectData.vehicle} foi cadastrado em nosso sistema de acompanhamento de blindagem EliteTrack.
+
+═══════════════════════════════════════
+COMO SE CADASTRAR
+═══════════════════════════════════════
+
+1. Escaneie o QR Code em anexo OU
+2. Acesse o link abaixo:
+${registerUrl}
+
+IMPORTANTE:
+- Este link é EXCLUSIVO para você
+- Válido até: ${expirationDate} (7 dias)
+- Apenas 1 pessoa pode usar este convite
+
+═══════════════════════════════════════
+INFORMAÇÕES DO SEU PROJETO
+═══════════════════════════════════════
+
+Código do Projeto: ${createdProjectData.id}
+Veículo: ${createdProjectData.vehicle}
+Cliente: ${createdProjectData.clientName}
+
+═══════════════════════════════════════
+APÓS O CADASTRO VOCÊ TERÁ ACESSO A:
+═══════════════════════════════════════
+
+✓ Acompanhamento em tempo real da blindagem
+✓ Fotos e atualizações da equipe
+✓ Timeline detalhada com fotos
+✓ Laudo técnico de blindagem
+✓ Elite Card (cartão digital de benefícios)
+✓ Chat direto com a equipe
+✓ Histórico completo do veículo
+
+═══════════════════════════════════════
+
+LEMBRE-SE: Baixe a imagem do QR Code e anexe a este e-mail!
+
+Qualquer dúvida, estamos à disposição!
+
+Atenciosamente,
+Equipe Elite Blindagens
+Telefone: (11) 3456-7890
+E-mail: contato@eliteblindagens.com.br
+Site: www.eliteblindagens.com.br`
+
     window.open(`mailto:${createdProjectData.clientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank')
+    
+    addNotification({
+      type: 'info',
+      title: 'Lembre-se!',
+      message: 'Baixe o QR Code e anexe ao e-mail antes de enviar.',
+    })
   }
 
   const projectSuggestions = allProjects.slice(0, 4).map(p => ({
@@ -629,40 +785,68 @@ export function ExecutorDashboard() {
                 </div>
               </div>
 
-              {/* Search & Filter */}
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+              {/* Search & Filter - Melhorado */}
+              <div className="space-y-4">
+                {/* Barra de Busca Principal */}
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
                   <input
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Buscar por placa, modelo, cliente ou código..."
-                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder-gray-500"
+                    placeholder="Digite: nome do cliente, placa, modelo ou código do projeto..."
+                    className="w-full bg-white/5 border-2 border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder-gray-400 focus:border-primary focus:outline-none transition-colors"
                     aria-label="Buscar projetos"
                   />
-                </div>
-                <div className="flex space-x-2 overflow-x-auto pb-2 md:pb-0">
-                  {[
-                    { value: 'all', label: 'Todos' },
-                    { value: 'in_progress', label: 'Em Andamento' },
-                    { value: 'pending', label: 'Pendentes' },
-                    { value: 'completed', label: 'Concluídos' },
-                  ].map((filter) => (
+                  {searchTerm && (
                     <button
-                      key={filter.value}
-                      onClick={() => setFilterStatus(filter.value)}
-                      className={cn(
-                        "px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors",
-                        filterStatus === filter.value
-                          ? "bg-primary text-black"
-                          : "bg-white/5 text-gray-400 hover:bg-white/10"
-                      )}
+                      onClick={() => setSearchTerm('')}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                      aria-label="Limpar busca"
                     >
-                      {filter.label}
+                      <X className="w-5 h-5" />
                     </button>
-                  ))}
+                  )}
                 </div>
+
+                {/* Filtros por Status */}
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-gray-400 font-medium">Filtrar por status:</span>
+                  <div className="flex space-x-2 overflow-x-auto pb-2 md:pb-0">
+                    {[
+                      { value: 'all', label: 'Todos', count: stats.total, color: 'bg-white/10' },
+                      { value: 'in_progress', label: 'Em Andamento', count: stats.inProgress, color: 'bg-primary/20 text-primary border-primary/50' },
+                      { value: 'pending', label: 'Pendentes', count: stats.pending, color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50' },
+                      { value: 'completed', label: 'Concluídos', count: stats.completed, color: 'bg-green-500/20 text-green-400 border-green-500/50' },
+                    ].map((filter) => (
+                      <button
+                        key={filter.value}
+                        onClick={() => setFilterStatus(filter.value)}
+                        className={cn(
+                          "px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all border-2",
+                          filterStatus === filter.value
+                            ? `${filter.color} scale-105`
+                            : "bg-white/5 text-gray-400 hover:bg-white/10 border-white/10"
+                        )}
+                      >
+                        {filter.label} ({filter.count})
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Resultado da Busca */}
+                {searchTerm && (
+                  <div className="bg-primary/10 border border-primary/30 rounded-xl p-3">
+                    <p className="text-sm text-primary">
+                      <strong>{filteredProjects.length}</strong> projeto(s) encontrado(s) para "{searchTerm}"
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Botão Novo Projeto */}
+              <div className="flex justify-end">
                 <button
                   onClick={() => setShowNewCarModal(true)}
                   className="flex items-center space-x-2 bg-primary text-black px-4 py-2 rounded-xl font-semibold hover:bg-primary/90 transition-colors"
@@ -698,10 +882,10 @@ export function ExecutorDashboard() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between">
                             <div>
-                              <h3 className="font-semibold truncate">
-                                {project.vehicle.brand} {project.vehicle.model}
+                              <h3 className="font-semibold truncate text-primary">
+                                {project.user.name}
                               </h3>
-                              <p className="text-sm text-gray-400">{project.user.name}</p>
+                              <p className="text-sm text-gray-400">{project.vehicle.brand} {project.vehicle.model}</p>
                             </div>
                             <span className={cn("w-3 h-3 rounded-full flex-shrink-0", config.color)} />
                           </div>
@@ -1297,13 +1481,14 @@ export function ExecutorDashboard() {
                     </div>
                   </div>
 
-                  {/* Documents Section - Melhorada para público operacional */}
+                  {/* Documents Section - Simplificada */}
                   <div className="mt-6">
                     <h4 className="font-semibold text-primary flex items-center gap-2 mb-4">
                       <FileText className="w-4 h-4" />
-                      Documentos do Cliente
+                      Documentos Essenciais
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* CNH - Dinâmico baseado nos dados do projeto */}
                       <div className="bg-white/5 border border-white/10 rounded-xl p-4">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-3">
@@ -1315,32 +1500,44 @@ export function ExecutorDashboard() {
                               <p className="text-xs text-gray-400">Carteira de Habilitação</p>
                             </div>
                           </div>
-                          <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">Enviado</span>
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            selectedProject.status === 'pending' 
+                              ? 'bg-yellow-500/20 text-yellow-400' 
+                              : 'bg-green-500/20 text-green-400'
+                          }`}>
+                            {selectedProject.status === 'pending' ? 'Pendente' : 'Enviado'}
+                          </span>
                         </div>
                         <div className="flex gap-2">
-                          <button 
-                            onClick={() => addNotification({ type: 'info', title: 'CNH', message: 'Abrindo documento CNH do cliente...' })}
-                            className="flex-1 bg-primary/20 hover:bg-primary/30 text-primary py-2 rounded-lg text-sm font-medium transition-colors"
-                          >
-                            <i className="ri-eye-line mr-1"></i> Visualizar
-                          </button>
-                          <button 
-                            onClick={() => {
-                              const link = document.createElement('a')
-                              link.href = '/documents/cnh-exemplo.pdf'
-                              link.download = `CNH_${selectedProject?.user.name.replace(/\s/g, '_')}.pdf`
-                              link.click()
-                              addNotification({ type: 'success', title: 'Download', message: 'CNH baixado com sucesso!' })
-                            }}
-                            className="px-3 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg text-sm transition-colors"
-                            title="Baixar CNH"
-                            aria-label="Baixar CNH"
-                          >
-                            <i className="ri-download-line"></i>
-                          </button>
+                          {selectedProject.status === 'pending' ? (
+                            <button 
+                              onClick={() => addNotification({ type: 'warning', title: 'Pendente', message: 'Solicite ao cliente o envio da CNH' })}
+                              className="flex-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 py-2 rounded-lg text-sm font-medium transition-colors"
+                            >
+                              <i className="ri-alert-line mr-1"></i> Solicitar
+                            </button>
+                          ) : (
+                            <>
+                              <button 
+                                onClick={() => addNotification({ type: 'info', title: 'CNH', message: 'Documento disponível para visualização' })}
+                                className="flex-1 bg-primary/20 hover:bg-primary/30 text-primary py-2 rounded-lg text-sm font-medium transition-colors"
+                              >
+                                <i className="ri-eye-line mr-1"></i> Visualizar
+                              </button>
+                              <button 
+                                onClick={() => addNotification({ type: 'success', title: 'Download', message: 'CNH baixado com sucesso!' })}
+                                className="px-3 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg text-sm transition-colors"
+                                title="Baixar CNH"
+                                aria-label="Baixar CNH"
+                              >
+                                <i className="ri-download-line"></i>
+                              </button>
+                            </>
+                          )}
                         </div>
                       </div>
 
+                      {/* CRLV - Dinâmico baseado nos dados do projeto */}
                       <div className="bg-white/5 border border-white/10 rounded-xl p-4">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-3">
@@ -1352,89 +1549,40 @@ export function ExecutorDashboard() {
                               <p className="text-xs text-gray-400">Documento do Veículo</p>
                             </div>
                           </div>
-                          <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">Enviado</span>
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            selectedProject.status === 'pending' 
+                              ? 'bg-yellow-500/20 text-yellow-400' 
+                              : 'bg-green-500/20 text-green-400'
+                          }`}>
+                            {selectedProject.status === 'pending' ? 'Pendente' : 'Enviado'}
+                          </span>
                         </div>
                         <div className="flex gap-2">
-                          <button 
-                            onClick={() => addNotification({ type: 'info', title: 'CRLV', message: 'Abrindo documento CRLV do veículo...' })}
-                            className="flex-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 py-2 rounded-lg text-sm font-medium transition-colors"
-                          >
-                            <i className="ri-eye-line mr-1"></i> Visualizar
-                          </button>
-                          <button 
-                            onClick={() => {
-                              const link = document.createElement('a')
-                              link.href = '/documents/crlv-exemplo.pdf'
-                              link.download = `CRLV_${selectedProject?.vehicle.plate}.pdf`
-                              link.click()
-                              addNotification({ type: 'success', title: 'Download', message: 'CRLV baixado com sucesso!' })
-                            }}
-                            className="px-3 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg text-sm transition-colors"
-                            title="Baixar CRLV"
-                            aria-label="Baixar CRLV"
-                          >
-                            <i className="ri-download-line"></i>
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
-                              <i className="ri-home-line text-green-400 text-xl"></i>
-                            </div>
-                            <div>
-                              <h5 className="font-semibold">Comprovante Residência</h5>
-                              <p className="text-xs text-gray-400">Endereço do Cliente</p>
-                            </div>
-                          </div>
-                          <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-xs">Pendente</span>
-                        </div>
-                        <div className="flex gap-2">
-                          <button 
-                            onClick={() => addNotification({ type: 'warning', title: 'Pendente', message: 'Documento de comprovante de residência ainda não enviado pelo cliente' })}
-                            className="flex-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 py-2 rounded-lg text-sm font-medium transition-colors"
-                          >
-                            <i className="ri-alert-line mr-1"></i> Solicitar
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
-                              <i className="ri-file-text-line text-purple-400 text-xl"></i>
-                            </div>
-                            <div>
-                              <h5 className="font-semibold">Contrato de Serviço</h5>
-                              <p className="text-xs text-gray-400">Contrato Assinado</p>
-                            </div>
-                          </div>
-                          <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">Assinado</span>
-                        </div>
-                        <div className="flex gap-2">
-                          <button 
-                            onClick={() => addNotification({ type: 'info', title: 'Contrato', message: 'Abrindo contrato de serviço...' })}
-                            className="flex-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 py-2 rounded-lg text-sm font-medium transition-colors"
-                          >
-                            <i className="ri-eye-line mr-1"></i> Visualizar
-                          </button>
-                          <button 
-                            onClick={() => {
-                              const link = document.createElement('a')
-                              link.href = '/documents/contrato-exemplo.pdf'
-                              link.download = `Contrato_${selectedProject?.user.name.replace(/\s/g, '_')}.pdf`
-                              link.click()
-                              addNotification({ type: 'success', title: 'Download', message: 'Contrato baixado com sucesso!' })
-                            }}
-                            className="px-3 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg text-sm transition-colors"
-                            title="Baixar Contrato"
-                            aria-label="Baixar Contrato"
-                          >
-                            <i className="ri-download-line"></i>
-                          </button>
+                          {selectedProject.status === 'pending' ? (
+                            <button 
+                              onClick={() => addNotification({ type: 'warning', title: 'Pendente', message: 'Solicite ao cliente o envio do CRLV' })}
+                              className="flex-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 py-2 rounded-lg text-sm font-medium transition-colors"
+                            >
+                              <i className="ri-alert-line mr-1"></i> Solicitar
+                            </button>
+                          ) : (
+                            <>
+                              <button 
+                                onClick={() => addNotification({ type: 'info', title: 'CRLV', message: 'Documento disponível para visualização' })}
+                                className="flex-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 py-2 rounded-lg text-sm font-medium transition-colors"
+                              >
+                                <i className="ri-eye-line mr-1"></i> Visualizar
+                              </button>
+                              <button 
+                                onClick={() => addNotification({ type: 'success', title: 'Download', message: 'CRLV baixado com sucesso!' })}
+                                className="px-3 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg text-sm transition-colors"
+                                title="Baixar CRLV"
+                                aria-label="Baixar CRLV"
+                              >
+                                <i className="ri-download-line"></i>
+                              </button>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -2058,10 +2206,19 @@ export function ExecutorDashboard() {
           {createdProjectData && (
             <div className="bg-white/5 rounded-xl p-4 mb-6">
               <div className="text-center mb-4">
-                <div className="bg-white p-4 rounded-xl inline-block mb-3">
-                  <QrCode className="w-24 h-24 text-black" />
-                </div>
-                <p className="font-mono text-sm text-primary">{createdProjectData.qrCode}</p>
+                {qrCodeImageUrl ? (
+                  <div className="bg-white p-3 rounded-xl inline-block mb-3">
+                    <img src={qrCodeImageUrl} alt="QR Code de Cadastro" className="w-48 h-48" />
+                  </div>
+                ) : (
+                  <div className="bg-white p-4 rounded-xl inline-block mb-3">
+                    <QrCode className="w-24 h-24 text-black" />
+                  </div>
+                )}
+                <p className="font-mono text-sm text-primary mb-1">{createdProjectData.id}</p>
+                <p className="text-xs text-gray-500">
+                  Válido até: {new Date(createdProjectData.expiresAt).toLocaleDateString('pt-BR')}
+                </p>
               </div>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
@@ -2073,10 +2230,23 @@ export function ExecutorDashboard() {
                   <span>{createdProjectData.vehicle}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Código:</span>
-                  <span className="font-mono">{createdProjectData.id}</span>
+                  <span className="text-gray-400">Token:</span>
+                  <span className="font-mono text-xs">{createdProjectData.inviteToken}</span>
                 </div>
               </div>
+              
+              {/* Botão de Download do QR Code */}
+              <button
+                onClick={downloadQRCode}
+                disabled={!qrCodeImageUrl}
+                className="w-full mt-4 flex items-center justify-center space-x-2 bg-primary hover:bg-primary/90 text-black py-2 rounded-lg font-semibold transition-colors disabled:opacity-50"
+              >
+                <Save className="w-4 h-4" />
+                <span>Baixar QR Code (PNG)</span>
+              </button>
+              <p className="text-xs text-center text-yellow-500 mt-2">
+                * Baixe o QR Code antes de compartilhar via WhatsApp ou E-mail
+              </p>
             </div>
           )}
 
@@ -2085,14 +2255,14 @@ export function ExecutorDashboard() {
               onClick={shareViaWhatsApp}
               className="w-full flex items-center justify-center space-x-3 bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold transition-colors"
             >
-              <i className="ri-whatsapp-fill text-xl"></i>
+              <MessageCircle className="w-5 h-5" />
               <span>Enviar via WhatsApp</span>
             </button>
             <button
               onClick={shareViaEmail}
               className="w-full flex items-center justify-center space-x-3 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition-colors"
             >
-              <i className="ri-mail-fill text-xl"></i>
+              <FileText className="w-5 h-5" />
               <span>Enviar via E-mail</span>
             </button>
             <button

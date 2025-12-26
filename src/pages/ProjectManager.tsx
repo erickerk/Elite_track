@@ -9,7 +9,7 @@ import {
 import { Modal } from '../components/ui/Modal'
 import { useAuth } from '../contexts/AuthContext'
 import { useNotifications } from '../contexts/NotificationContext'
-import { mockProjects } from '../data/mockData'
+import { useProjects } from '../contexts/ProjectContext'
 import { cn } from '../lib/utils'
 import type { Project, TimelineStep, BlindingSpecs } from '../types'
 
@@ -18,6 +18,7 @@ export function ProjectManager() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { addNotification } = useNotifications()
+  const { getProjectById } = useProjects()
 
   const [project, setProject] = useState<Project | null>(null)
   const [loading, setLoading] = useState(true)
@@ -60,16 +61,12 @@ export function ProjectManager() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      const found = mockProjects.find(p => 
-        p.id === projectId || 
-        p.qrCode === projectId ||
-        p.id.replace('PRJ-', '') === projectId
-      )
+      const found = getProjectById(projectId || '')
       setProject(found || null)
       setLoading(false)
     }, 500)
     return () => clearTimeout(timer)
-  }, [projectId])
+  }, [projectId, getProjectById])
 
   if (!user || (user.role !== 'executor' && user.role !== 'admin')) {
     return (

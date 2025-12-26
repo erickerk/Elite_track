@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { 
   Shield, CheckCircle, AlertCircle, Car, User, Mail, Phone, 
@@ -7,11 +7,17 @@ import {
 } from 'lucide-react'
 import { useInvite } from '../contexts/InviteContext'
 import { useAuth } from '../contexts/AuthContext'
+import { useProjects } from '../contexts/ProjectContext'
 import type { RegistrationInvite } from '../types'
 
 export function Register() {
-  const { token } = useParams<{ token: string }>()
+  const { token: paramToken } = useParams<{ token: string }>()
+  const [searchParams] = useSearchParams()
+  const queryToken = searchParams.get('token')
+  const projectId = searchParams.get('project')
+  const token = paramToken || queryToken
   const navigate = useNavigate()
+  const { getProjectById } = useProjects()
   const { validateToken, useInvite: consumeInvite } = useInvite()
   const { login } = useAuth()
   
@@ -42,6 +48,58 @@ export function Register() {
 
     // Simula validação do token
     const timer = setTimeout(() => {
+      // Verificar se é um token dinâmico (INV-...) gerado pelo ExecutorDashboard
+      if (token.startsWith('INV-')) {
+        // Validar token dinâmico
+        const tokenParts = token.split('-')
+        if (tokenParts.length >= 2) {
+          const tokenTimestamp = parseInt(tokenParts[1])
+          const expirationTime = tokenTimestamp + (7 * 24 * 60 * 60 * 1000) // 7 dias
+          const now = Date.now()
+          
+          if (now > expirationTime) {
+            setError('Este convite expirou. Solicite um novo convite ao executor.')
+            setStep('error')
+            setLoading(false)
+            return
+          }
+          
+          // Buscar informações do projeto se disponível
+          let projectInfo = null
+          if (projectId) {
+            projectInfo = getProjectById(projectId)
+          }
+          
+          // Criar invite virtual para tokens dinâmicos
+          const dynamicInvite: RegistrationInvite = {
+            id: token,
+            token: token,
+            projectId: projectId || 'PRJ-UNKNOWN',
+            vehicleInfo: projectInfo ? `${projectInfo.vehicle.brand} ${projectInfo.vehicle.model}` : 'Veículo em processo de blindagem',
+            vehiclePlate: projectInfo?.vehicle.plate || 'N/A',
+            ownerName: projectInfo?.user.name || '',
+            ownerEmail: projectInfo?.user.email || '',
+            ownerPhone: projectInfo?.user.phone || '',
+            createdAt: new Date(tokenTimestamp).toISOString(),
+            expiresAt: new Date(expirationTime).toISOString(),
+            status: 'pending',
+            createdBy: 'executor',
+          }
+          
+          setInvite(dynamicInvite)
+          setFormData(prev => ({
+            ...prev,
+            name: dynamicInvite.ownerName || '',
+            email: dynamicInvite.ownerEmail || '',
+            phone: dynamicInvite.ownerPhone || '',
+          }))
+          setStep('form')
+          setLoading(false)
+          return
+        }
+      }
+      
+      // Validação padrão para tokens do InviteContext
       const validation = validateToken(token)
       
       if (validation.valid && validation.invite) {
@@ -62,7 +120,7 @@ export function Register() {
     }, 1500)
 
     return () => clearTimeout(timer)
-  }, [token, validateToken])
+  }, [token, validateToken, projectId, getProjectById])
 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {}
