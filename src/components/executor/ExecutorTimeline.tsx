@@ -346,23 +346,34 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     
-    if (selectedDate < today) {
-      setDateError('A data de previsão não pode ser no passado!')
+    // A data de previsão deve ser posterior à data de conclusão da etapa atual
+    const completionDate = new Date()
+    completionDate.setHours(0, 0, 0, 0)
+    
+    if (selectedDate < completionDate) {
+      setDateError('A data de previsão deve ser posterior à data de hoje!')
       return
     }
 
-    // Atualizar a etapa atual como concluída
+    const nextStep = getNextStep(pendingCompletionStep.id)
+
+    // Atualizar a etapa atual como concluída E a próxima com a data de previsão
+    // Fazemos em sequência para garantir a atualização correta
     onUpdateStep(pendingCompletionStep.id, { 
       status: 'completed',
       date: new Date().toISOString()
     })
 
     // Atualizar a data de previsão da próxima etapa
-    const nextStep = getNextStep(pendingCompletionStep.id)
     if (nextStep) {
-      onUpdateStep(nextStep.id, { 
-        estimatedDate: new Date(nextStepDate).toISOString()
-      })
+      // Pequeno delay para garantir que o estado seja atualizado
+      setTimeout(() => {
+        onUpdateStep(nextStep.id, { 
+          estimatedDate: new Date(nextStepDate).toISOString()
+        })
+        // Expandir automaticamente a próxima etapa
+        setExpandedStep(nextStep.id)
+      }, 100)
     }
 
     // Limpar estados

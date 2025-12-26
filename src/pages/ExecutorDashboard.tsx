@@ -1004,6 +1004,52 @@ contato@eliteblindagens.com.br`
                 </button>
               </div>
 
+              {/* Destaque do Veículo Selecionado */}
+              {selectedProject && (
+                <div className="bg-primary/10 border-2 border-primary rounded-2xl p-4 mb-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 rounded-xl overflow-hidden bg-carbon-900 flex-shrink-0 ring-2 ring-primary">
+                        {selectedProject.vehicle.images?.[0] ? (
+                          <img src={selectedProject.vehicle.images[0]} alt={selectedProject.vehicle.model} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center"><Car className="w-8 h-8 text-gray-500" /></div>
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="bg-primary text-black px-2 py-0.5 rounded-full text-xs font-bold">📍 SELECIONADO</span>
+                          <span className={cn("px-2 py-0.5 rounded-full text-xs font-bold", statusConfig[selectedProject.status]?.color, "text-white")}>
+                            {statusConfig[selectedProject.status]?.label}
+                          </span>
+                        </div>
+                        <h3 className="text-lg font-bold text-white">{selectedProject.user.name}</h3>
+                        <p className="text-sm text-gray-300">
+                          {selectedProject.vehicle.brand} {selectedProject.vehicle.model} • 
+                          <span className="font-mono font-bold text-primary ml-1">{selectedProject.vehicle.plate}</span>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <button
+                        onClick={() => { setFoundProject(selectedProject); setShowQRLookup(true); }}
+                        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl font-semibold text-sm transition-colors"
+                      >
+                        <QrCode className="w-4 h-4" />
+                        Enviar QR Codes
+                      </button>
+                      <button
+                        onClick={() => setActiveTab('timeline')}
+                        className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-black px-4 py-2 rounded-xl font-semibold text-sm transition-colors"
+                      >
+                        <Clock className="w-4 h-4" />
+                        Ver Timeline
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Projects Grid */}
               <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {filteredProjects.map((project) => {
@@ -1016,28 +1062,42 @@ contato@eliteblindagens.com.br`
                       onClick={() => setSelectedProject(project)}
                       className={cn(
                         "bg-white/5 rounded-2xl p-4 border cursor-pointer transition-all hover:border-primary/50",
-                        isSelected ? "border-primary ring-1 ring-primary/30" : "border-white/10"
+                        isSelected ? "border-primary ring-2 ring-primary/50 bg-primary/5" : "border-white/10"
                       )}
                     >
+                      {/* Indicador de Selecionado */}
+                      {isSelected && (
+                        <div className="flex items-center gap-2 mb-3 pb-3 border-b border-primary/30">
+                          <span className="bg-primary text-black px-2 py-0.5 rounded-full text-xs font-bold animate-pulse">
+                            ✓ SELECIONADO
+                          </span>
+                        </div>
+                      )}
                       <div className="flex items-start space-x-4">
-                        <div className="w-20 h-16 rounded-xl overflow-hidden bg-carbon-900 flex-shrink-0">
-                          <img
-                            src={project.vehicle.images[0]}
-                            alt={project.vehicle.model}
-                            className="w-full h-full object-cover"
-                          />
+                        <div className={cn(
+                          "w-20 h-16 rounded-xl overflow-hidden bg-carbon-900 flex-shrink-0",
+                          isSelected && "ring-2 ring-primary"
+                        )}>
+                          {project.vehicle.images?.[0] ? (
+                            <img src={project.vehicle.images[0]} alt={project.vehicle.model} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center"><Car className="w-8 h-8 text-gray-500" /></div>
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between">
                             <div>
-                              <h3 className="font-semibold truncate text-primary">
+                              <h3 className={cn("font-semibold truncate", isSelected ? "text-primary text-lg" : "text-white")}>
                                 {project.user.name}
                               </h3>
                               <p className="text-sm text-gray-400">{project.vehicle.brand} {project.vehicle.model}</p>
                             </div>
                             <span className={cn("w-3 h-3 rounded-full flex-shrink-0", config.color)} />
                           </div>
-                          <p className="text-xs text-gray-500 mt-1">{project.vehicle.plate} • {project.id}</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            <span className={cn("font-mono font-bold", isSelected ? "text-primary" : "text-gray-400")}>{project.vehicle.plate}</span>
+                            {" • "}{project.id}
+                          </p>
                         </div>
                       </div>
 
