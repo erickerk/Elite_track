@@ -474,7 +474,7 @@ export function Quotes() {
                       type="text"
                       value={vehicleYear}
                       onChange={(e) => setVehicleYear(e.target.value)}
-                      placeholder="Ex: 2024"
+                      placeholder="Ex: 2025"
                       className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
                       title="Ano do veículo"
                     />

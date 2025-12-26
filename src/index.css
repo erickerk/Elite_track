@@ -330,3 +330,138 @@
   transform: translateX(100%);
   background-color: #000;
 }
+
+/* ============================================
+   PRINT STYLES - Impressão Otimizada
+   ============================================ */
+@media print {
+  /* Reset básico para impressão */
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+
+  /* Ocultar elementos não necessários */
+  header,
+  footer,
+  nav,
+  .no-print,
+  button:not(.print-btn),
+  .glass-effect::before,
+  .glass-effect::after {
+    display: none !important;
+  }
+
+  /* Ajustar cards para impressão */
+  .glass-effect,
+  [class*="bg-carbon"],
+  [class*="bg-gray"] {
+    background: white !important;
+    border: 1px solid #ddd !important;
+    box-shadow: none !important;
+  }
+
+  /* Texto legível */
+  * {
+    color: black !important;
+    text-shadow: none !important;
+  }
+
+  /* Cores específicas mantidas */
+  .text-primary,
+  .text-gold {
+    color: #B8860B !important;
+  }
+
+  .text-status-success {
+    color: #16a34a !important;
+  }
+
+  .text-status-error {
+    color: #dc2626 !important;
+  }
+
+  .text-status-warning {
+    color: #ca8a04 !important;
+  }
+
+  /* Badges visíveis */
+  .badge,
+  [class*="Badge"] {
+    border: 1px solid currentColor !important;
+    background: transparent !important;
+  }
+
+  /* Links com URL */
+  a[href]:after {
+    content: " (" attr(href) ")";
+    font-size: 10pt;
+    color: #666;
+  }
+
+  /* Evitar quebra de página em elementos importantes */
+  .card,
+  .timeline-step,
+  table {
+    page-break-inside: avoid;
+  }
+
+  /* Forçar quebra de página antes de seções */
+  .page-break-before {
+    page-break-before: always;
+  }
+
+  /* Margens para impressão */
+  @page {
+    margin: 2cm;
+    size: A4;
+  }
+
+  /* Cabeçalho de impressão */
+  .print-header {
+    display: block !important;
+    text-align: center;
+    margin-bottom: 20pt;
+    padding-bottom: 10pt;
+    border-bottom: 2pt solid #B8860B;
+  }
+
+  /* Rodapé de impressão */
+  .print-footer {
+    display: block !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 10pt;
+    color: #666;
+    padding-top: 10pt;
+    border-top: 1pt solid #ddd;
+  }
+
+  /* Imagens */
+  img {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+
+  /* Tabelas */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8pt;
+    text-align: left;
+  }
+
+  th {
+    background: #f5f5f5 !important;
+    font-weight: bold;
+  }
+}

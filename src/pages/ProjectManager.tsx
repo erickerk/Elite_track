@@ -783,7 +783,7 @@ export function ProjectManager() {
                 type="text"
                 value={laudoData.certificationNumber}
                 onChange={(e) => setLaudoData({ ...laudoData, certificationNumber: e.target.value })}
-                placeholder="Ex: CERT-2024-001"
+                placeholder="Ex: CERT-2025-001"
                 className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white placeholder-gray-500"
               />
             </div>

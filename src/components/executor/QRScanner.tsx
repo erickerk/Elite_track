@@ -192,7 +192,7 @@ export function QRScanner({ isOpen, onClose, onScan, projectSuggestions = [] }: 
               value={manualInput}
               onChange={(e) => setManualInput(e.target.value.toUpperCase())}
               onKeyDown={(e) => e.key === 'Enter' && handleManualSearch()}
-              placeholder="PRJ-2024-001 ou ABC-1D23"
+              placeholder="PRJ-2025-001 ou ABC-1D23"
               className="w-full bg-white/5 border border-white/10 rounded-xl pl-4 pr-12 py-4 text-white placeholder-gray-500 text-center text-lg font-mono uppercase"
               aria-label="Código do projeto ou placa"
             />

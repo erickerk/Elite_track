@@ -16,7 +16,7 @@ Deploy automático configurado com Vercel + GitHub
 ### Paleta de Cores Luxury-Gold
 
 | Cor | Hex | Uso |
-|-----|-----|-----|
+| --- | --- | --- |
 | Gold Metálico | `#D4AF37` | Elementos premium, destaques |
 | Gold Escuro | `#B8860B` | Hover/pressed states |
 | Gold Brilhante | `#FFD700` | Elementos ativos |
@@ -156,7 +156,7 @@ O design é mobile-first, otimizado para dispositivos móveis com suporte a tabl
 ## 🎨 Componentes UI
 
 | Componente | Descrição |
-|------------|-----------|
+| --- | --- |
 | `Button` | Botões com variantes gold, outline, ghost, danger |
 | `Card` | Cards com variantes default, elevated, bordered |
 | `Input` | Inputs com label flutuante e validação |
@@ -168,7 +168,7 @@ O design é mobile-first, otimizado para dispositivos móveis com suporte a tabl
 
 ## 📄 Licença
 
-© 2024 Elite Blindagens. Todos os direitos reservados.
+© 2025 Elite Blindagens. Todos os direitos reservados.
 
 ---
 

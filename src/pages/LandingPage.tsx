@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLeads } from '../contexts/LeadsContext'
 import { useNotifications } from '../contexts/NotificationContext'
@@ -17,6 +17,54 @@ export function LandingPage() {
     wantsSpecialist: false
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showConsultaModal, setShowConsultaModal] = useState(false)
+  const [consultaInput, setConsultaInput] = useState('')
+  const [showQRScanner, setShowQRScanner] = useState(false)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop())
+      streamRef.current = null
+    }
+    setShowQRScanner(false)
+  }, [])
+
+  const startCamera = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
+      })
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        streamRef.current = stream
+        setShowQRScanner(true)
+      }
+    } catch (err) {
+      console.error('Erro ao acessar câmera:', err)
+      addNotification({
+        type: 'error',
+        title: 'Câmera indisponível',
+        message: 'Não foi possível acessar a câmera. Use o código manualmente.'
+      })
+    }
+  }, [addNotification])
+
+  const handleConsulta = () => {
+    if (consultaInput.trim()) {
+      stopCamera()
+      setShowConsultaModal(false)
+      navigate(`/verify/${consultaInput.trim()}`)
+      setConsultaInput('')
+    }
+  }
+
+  const closeModal = () => {
+    stopCamera()
+    setShowConsultaModal(false)
+    setConsultaInput('')
+  }
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -234,7 +282,7 @@ export function LandingPage() {
         </header>
 
         {/* Hero Content */}
-        <div className="relative z-20 px-6 flex items-center min-h-[85vh]">
+        <div className="relative z-20 px-6 flex items-center min-h-[85vh] pt-24">
           <div className="max-w-7xl mx-auto w-full">
             <div className="max-w-5xl">
               <div className="glass-effect cinematic-blur p-8 rounded-3xl premium-shadow mb-8">
@@ -262,24 +310,20 @@ export function LandingPage() {
                   </a>
                 </div>
                 
-                {/* Consulta Pública via QR Code */}
-                <div className="glass-effect cinematic-blur p-6 rounded-2xl border border-primary/30 mb-4">
-                  <div className="flex items-center space-x-3 mb-3">
+                {/* Consultar Histórico - Simplificado */}
+                <button
+                  onClick={() => setShowConsultaModal(true)}
+                  className="w-full glass-effect cinematic-blur p-4 rounded-xl border border-primary/30 hover:border-primary/60 transition-all duration-300 group flex items-center justify-between"
+                >
+                  <div className="flex items-center space-x-3">
                     <i className="ri-qr-code-line text-2xl text-primary"></i>
-                    <h3 className="text-lg font-semibold">Consulta Pública de Histórico</h3>
+                    <div className="text-left">
+                      <span className="font-semibold block">Consultar Histórico</span>
+                      <span className="text-xs text-gray-400">QR Code ou código do projeto</span>
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-400 mb-4">Tem um veículo blindado? Consulte o histórico completo de blindagem e manutenções via QR Code ou código do projeto.</p>
-                  <button
-                    onClick={() => {
-                      const projectId = prompt('Digite o código do projeto (ex: PRJ-2025-003):');
-                      if (projectId) navigate(`/verify/${projectId}`);
-                    }}
-                    className="w-full bg-white/10 border border-white/20 text-white font-medium px-6 py-2.5 rounded-lg hover:bg-white/20 transition-all duration-300 text-sm"
-                  >
-                    <i className="ri-search-line mr-2"></i>
-                    Consultar Histórico do Veículo
-                  </button>
-                </div>
+                  <i className="ri-arrow-right-line text-xl text-primary group-hover:translate-x-1 transition-transform"></i>
+                </button>
                 <p className="text-xs text-gray-500 uppercase tracking-widest font-light">Experiência premium • Máxima discrição</p>
               </div>
             </div>
@@ -647,7 +691,6 @@ export function LandingPage() {
               <h4 className="font-semibold mb-4">Empresa</h4>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li><a href="https://elite-blindagens.vercel.app/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Sobre Nós</a></li>
-                <li><a href="https://elite-blindagens.vercel.app/#servicos" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Serviços</a></li>
                 <li><a href="https://wa.me/5511913123071?text=Olá!%20Gostaria%20de%20falar%20com%20o%20contato%20da%20Elite%20Blindagens." target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Contato</a></li>
               </ul>
             </div>
@@ -655,17 +698,13 @@ export function LandingPage() {
               <h4 className="font-semibold mb-4">Suporte</h4>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li><a href="https://wa.me/5511913123071?text=Olá!%20Preciso%20de%20ajuda%20com%20o%20sistema%20EliteTrack." target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Central de Ajuda</a></li>
-                <li><a href="#contato" className="hover:text-primary transition-colors">Solicitar Contato</a></li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold mb-4">EliteTrack</h4>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li><button onClick={() => navigate('/login')} className="hover:text-primary transition-colors">Acessar Sistema</button></li>
-                <li><button onClick={() => {
-                  const projectId = prompt('Digite o código do projeto:');
-                  if (projectId) navigate(`/verify/${projectId}`);
-                }} className="hover:text-primary transition-colors">Consulta Pública</button></li>
+                <li><button onClick={() => setShowConsultaModal(true)} className="hover:text-primary transition-colors">Consultar Histórico</button></li>
               </ul>
             </div>
           </div>
@@ -679,6 +718,79 @@ export function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Modal de Consulta de Histórico */}
+      {showConsultaModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-gray-900 border border-white/10 rounded-3xl p-8 max-w-md w-full shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold">Consultar Histórico</h3>
+              <button onClick={closeModal} className="text-gray-400 hover:text-white transition-colors" title="Fechar" aria-label="Fechar modal">
+                <i className="ri-close-line text-2xl"></i>
+              </button>
+            </div>
+            
+            <p className="text-gray-400 mb-6">
+              Consulte o histórico completo de blindagem, materiais, certificações e laudos do seu veículo.
+            </p>
+
+            {/* QR Scanner */}
+            {showQRScanner ? (
+              <div className="mb-6">
+                <div className="relative rounded-xl overflow-hidden bg-black aspect-square mb-4">
+                  <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 border-2 border-primary/50 rounded-xl pointer-events-none">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-2 border-primary rounded-lg"></div>
+                  </div>
+                </div>
+                <button onClick={stopCamera} className="w-full py-3 bg-white/10 rounded-xl text-sm hover:bg-white/20 transition-colors">
+                  <i className="ri-keyboard-line mr-2"></i>
+                  Digitar código manualmente
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Código do projeto ou placa</label>
+                  <input
+                    type="text"
+                    value={consultaInput}
+                    onChange={(e) => setConsultaInput(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => e.key === 'Enter' && handleConsulta()}
+                    placeholder="PRJ-2025-003 ou ABC-1234"
+                    className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-primary focus:outline-none transition-colors text-center font-mono uppercase"
+                    autoFocus
+                  />
+                </div>
+                <button
+                  onClick={startCamera}
+                  className="w-full py-3 bg-white/10 border border-white/20 rounded-xl text-sm hover:bg-white/20 transition-colors flex items-center justify-center gap-2"
+                >
+                  <i className="ri-qr-scan-2-line text-primary"></i>
+                  Escanear QR Code
+                </button>
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button onClick={closeModal} className="flex-1 py-3 bg-white/10 rounded-xl font-semibold hover:bg-white/20 transition-colors">
+                Cancelar
+              </button>
+              <button
+                onClick={handleConsulta}
+                disabled={!consultaInput.trim()}
+                className="flex-1 py-3 gradient-gold text-black rounded-xl font-semibold hover:shadow-lg hover:shadow-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Consultar
+              </button>
+            </div>
+
+            <p className="text-center text-xs text-gray-500 mt-4">
+              Exemplo: PRJ-2025-003 • Consulta gratuita
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

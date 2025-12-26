@@ -709,7 +709,7 @@ export function EliteCard() {
                 type="text"
                 value={qrCode}
                 onChange={(e) => setQrCode(e.target.value)}
-                placeholder="Ex: PRJ-2024-001 ou QR-12345"
+                placeholder="Ex: PRJ-2025-001 ou QR-12345"
                 className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-primary/50"
               />
               <div className="flex space-x-3">

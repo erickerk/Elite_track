@@ -128,6 +128,8 @@ export interface Project {
   deliveryMedia?: DeliveryMedia
   eliteCard?: EliteCard
   tickets?: SupportTicket[]
+  owners?: VehicleOwner[]
+  maintenanceHistory?: MaintenanceService[]
 }
 
 export interface Notification {
@@ -183,6 +185,35 @@ export interface RegistrationInvite {
   notes?: string
 }
 
+export interface VehicleOwner {
+  id: string
+  name: string
+  cpf?: string
+  phone?: string
+  email?: string
+  ownershipStart: string
+  ownershipEnd?: string
+  isCurrent: boolean
+}
+
+export interface MaintenanceService {
+  id: string
+  date: string
+  type: 'maintenance' | 'repair' | 'part_replacement' | 'inspection'
+  description: string
+  partsReplaced?: {
+    name: string
+    partNumber?: string
+    quantity: number
+    reason: string
+  }[]
+  technician: string
+  cost?: number
+  warrantyService: boolean
+  notes?: string
+  photos?: string[]
+}
+
 export interface PublicVehicleHistory {
   projectId: string
   vehicleInfo: {
@@ -191,6 +222,7 @@ export interface PublicVehicleHistory {
     year: number
     color: string
     plate: string
+    chassis?: string
     blindingLevel: string
     images: string[]
   }
@@ -203,4 +235,6 @@ export interface PublicVehicleHistory {
   actualDelivery?: string
   isAuthentic: boolean
   verificationDate: string
+  owners?: VehicleOwner[]
+  maintenanceHistory?: MaintenanceService[]
 }

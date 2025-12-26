@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import '../styles/Login.css'
 
 export function Login() {
   const navigate = useNavigate()
@@ -60,13 +61,6 @@ export function Login() {
 
   return (
     <div className="bg-black text-white font-['Inter'] overflow-x-hidden">
-      <style>{`
-        .login-bg { background: radial-gradient(ellipse at center, rgba(212, 175, 55, 0.12) 0%, rgba(26, 26, 26, 0.95) 30%, #0A0A0A 100%); position: relative; min-height: 100vh; }
-        .login-bg::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, transparent 40%, rgba(212, 175, 55, 0.03) 100%); }
-        .input-focus { transition: all 0.3s ease; }
-        .input-focus:focus { border-color: #D4AF37; box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1); background: rgba(255, 255, 255, 0.08); }
-        .login-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(30px); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1); }
-      `}</style>
 
       {/* Notification */}
       {notification && (
@@ -85,10 +79,10 @@ export function Login() {
         {/* Floating particles */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-1/4 left-1/4 w-3 h-3 bg-primary rounded-full floating-animation opacity-60 luxury-glow"></div>
-          <div className="absolute top-3/4 right-1/4 w-2 h-2 bg-primary rounded-full floating-animation opacity-40 luxury-glow" style={{ animationDelay: '2s' }}></div>
-          <div className="absolute top-1/2 left-3/4 w-2.5 h-2.5 bg-primary rounded-full floating-animation opacity-50 luxury-glow" style={{ animationDelay: '4s' }}></div>
-          <div className="absolute top-1/3 right-1/3 w-1.5 h-1.5 bg-primary rounded-full floating-animation opacity-30 luxury-glow" style={{ animationDelay: '3s' }}></div>
-          <div className="absolute bottom-1/3 left-[16.67%] w-2 h-2 bg-primary rounded-full floating-animation opacity-45 luxury-glow" style={{ animationDelay: '5s' }}></div>
+          <div className="absolute top-3/4 right-1/4 w-2 h-2 bg-primary rounded-full floating-animation opacity-40 luxury-glow floating-particle-delay-2s"></div>
+          <div className="absolute top-1/2 left-3/4 w-2.5 h-2.5 bg-primary rounded-full floating-animation opacity-50 luxury-glow floating-particle-delay-4s"></div>
+          <div className="absolute top-1/3 right-1/3 w-1.5 h-1.5 bg-primary rounded-full floating-animation opacity-30 luxury-glow floating-particle-delay-3s"></div>
+          <div className="absolute bottom-1/3 left-[16.67%] w-2 h-2 bg-primary rounded-full floating-animation opacity-45 luxury-glow floating-particle-delay-5s"></div>
         </div>
 
         {/* Login Card */}

@@ -1,0 +1,46 @@
+.login-bg {
+  background: radial-gradient(ellipse at center, rgba(212, 175, 55, 0.12) 0%, rgba(26, 26, 26, 0.95) 30%, #0A0A0A 100%);
+  position: relative;
+  min-height: 100vh;
+}
+
+.login-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, transparent 40%, rgba(212, 175, 55, 0.03) 100%);
+}
+
+.input-focus {
+  transition: all 0.3s ease;
+}
+
+.input-focus:focus {
+  border-color: #D4AF37;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.login-card {
+  background: rgba(255, 255, 255, 0.05);
+  -webkit-backdrop-filter: blur(30px);
+  backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.floating-particle-delay-2s {
+  animation-delay: 2s;
+}
+
+.floating-particle-delay-3s {
+  animation-delay: 3s;
+}
+
+.floating-particle-delay-4s {
+  animation-delay: 4s;
+}
+
+.floating-particle-delay-5s {
+  animation-delay: 5s;
+}
