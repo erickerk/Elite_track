@@ -13,12 +13,22 @@ import {
   Dashboard, Timeline, Gallery, Chat, Profile, Login, QRCodePage,
   ExecutorDashboard, AdminDashboard, PublicVerification, EliteShield, Revisions,
   LandingPage, EliteCard, Delivery, ProjectManager, SplashScreen,
-  Quotes, ClientDocuments, Achievements, Register, InviteManagement
+  Quotes, ClientDocuments, Achievements, Register, InviteManagement, ChangePassword
 } from './pages'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth()
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />
+  const { isAuthenticated, requiresPasswordChange } = useAuth()
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />
+  }
+  
+  // Redirecionar para alteração de senha se necessário
+  if (requiresPasswordChange) {
+    return <Navigate to="/change-password" replace />
+  }
+  
+  return <>{children}</>
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
@@ -89,6 +99,10 @@ function AppRoutes() {
             <Login />
           </PublicRoute>
         }
+      />
+      <Route
+        path="/change-password"
+        element={<ChangePassword />}
       />
       <Route
         path="/dashboard"

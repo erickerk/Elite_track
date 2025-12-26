@@ -20,10 +20,44 @@ interface ProjectContextType {
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined)
 
+// Chave para persistência no localStorage
+const PROJECTS_STORAGE_KEY = 'elitetrack_projects'
+
+// Função para carregar projetos do localStorage
+const loadProjectsFromStorage = (): Project[] => {
+  try {
+    const stored = localStorage.getItem(PROJECTS_STORAGE_KEY)
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      // Mesclar com mockProjects, evitando duplicatas
+      const storedIds = new Set(parsed.map((p: Project) => p.id))
+      const uniqueMocks = mockProjects.filter(m => !storedIds.has(m.id))
+      return [...parsed, ...uniqueMocks]
+    }
+  } catch (e) {
+    console.error('Erro ao carregar projetos:', e)
+  }
+  return mockProjects
+}
+
+// Função para salvar projetos no localStorage
+const saveProjectsToStorage = (projects: Project[]) => {
+  try {
+    localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(projects))
+  } catch (e) {
+    console.error('Erro ao salvar projetos:', e)
+  }
+}
+
 export function ProjectProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
-  const [projects, setProjects] = useState<Project[]>(mockProjects)
+  const [projects, setProjects] = useState<Project[]>(() => loadProjectsFromStorage())
   const [selectedProject, setSelectedProjectState] = useState<Project | null>(null)
+  
+  // Salvar projetos no localStorage sempre que mudar
+  useEffect(() => {
+    saveProjectsToStorage(projects)
+  }, [projects])
 
   const userProjects = projects.filter(p => 
     p.user.id === user?.id || p.user.email === user?.email

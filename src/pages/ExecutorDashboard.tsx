@@ -11,6 +11,7 @@ import { Modal } from '../components/ui/Modal'
 import { NotificationPanel } from '../components/ui/NotificationPanel'
 import { QRScanner, ExecutorChat, ExecutorTimeline, ExecutorPhotos } from '../components/executor'
 import { useAuth } from '../contexts/AuthContext'
+// Nota: registerTempPassword é usado para registrar senhas temporárias para novos clientes
 import { useNotifications } from '../contexts/NotificationContext'
 import { useChat } from '../contexts/ChatContext'
 import { useProjects } from '../contexts/ProjectContext'
@@ -105,7 +106,7 @@ const navItems = [
 
 export function ExecutorDashboard() {
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user, logout, registerTempPassword } = useAuth()
   const { unreadCount, addNotification } = useNotifications()
   const { totalUnreadCount: chatUnreadCount } = useChat()
   const { projects: globalProjects, addProject: addGlobalProject } = useProjects()
@@ -155,8 +156,20 @@ export function ExecutorDashboard() {
   const [ticketResponse, setTicketResponse] = useState('')
   const [ticketNewStatus, setTicketNewStatus] = useState<string>('open')
   const [tickets, setTickets] = useState(mockTickets)
-  const [createdProjectData, setCreatedProjectData] = useState<{ id: string; qrCode: string; clientName: string; clientEmail: string; clientPhone: string; vehicle: string; inviteToken: string; expiresAt: string } | null>(null)
-  const [qrCodeImageUrl, setQrCodeImageUrl] = useState<string | null>(null)
+  const [createdProjectData, setCreatedProjectData] = useState<{ 
+    id: string; 
+    qrCode: string; 
+    clientName: string; 
+    clientEmail: string; 
+    clientPhone: string; 
+    vehicle: string; 
+    inviteToken: string; 
+    expiresAt: string;
+    tempPassword: string;
+  } | null>(null)
+  const [qrCodeImageUrl, setQrCodeImageUrl] = useState<string | null>(null) // QR Code de cadastro (temporário)
+  const [projectQrCodeUrl, setProjectQrCodeUrl] = useState<string | null>(null) // QR Code do projeto (permanente)
+  const [focusedProjectId, setFocusedProjectId] = useState<string | null>(null) // Modo foco: mostra apenas 1 veículo
   const [laudoData, setLaudoData] = useState({
     level: 'IIIA',
     certification: 'ABNT NBR 15000',
@@ -192,7 +205,19 @@ export function ExecutorDashboard() {
   }
 
   const allProjects = projects
+  
+  // Função para gerar senha temporária simples (4 dígitos)
+  const generateTempPassword = () => {
+    return Math.floor(1000 + Math.random() * 9000).toString()
+  }
+  
+  // Filtro de projetos com modo foco
   const filteredProjects = allProjects.filter(p => {
+    // Modo foco: mostra apenas o projeto selecionado
+    if (focusedProjectId) {
+      return p.id === focusedProjectId
+    }
+    
     const searchLower = searchTerm.toLowerCase()
     const matchesSearch = 
       p.vehicle.model.toLowerCase().includes(searchLower) ||
@@ -334,9 +359,69 @@ export function ExecutorDashboard() {
       return
     }
 
+    // Etapas padrão do processo de blindagem
+    const defaultTimeline = [
+      {
+        id: `STEP-${Date.now()}-1`,
+        title: 'Recebimento do Veículo',
+        description: 'Inspeção inicial e documentação do estado do veículo',
+        status: 'pending' as const,
+        photos: [],
+        estimatedDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: `STEP-${Date.now()}-2`,
+        title: 'Desmontagem',
+        description: 'Remoção de peças e preparação para blindagem',
+        status: 'pending' as const,
+        photos: [],
+        estimatedDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: `STEP-${Date.now()}-3`,
+        title: 'Instalação de Blindagem',
+        description: 'Aplicação dos materiais de proteção balística',
+        status: 'pending' as const,
+        photos: [],
+        estimatedDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: `STEP-${Date.now()}-4`,
+        title: 'Vidros Blindados',
+        description: 'Instalação dos vidros laminados multi-camadas',
+        status: 'pending' as const,
+        photos: [],
+        estimatedDate: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: `STEP-${Date.now()}-5`,
+        title: 'Montagem Final',
+        description: 'Remontagem e ajustes finais do veículo',
+        status: 'pending' as const,
+        photos: [],
+        estimatedDate: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: `STEP-${Date.now()}-6`,
+        title: 'Testes e Qualidade',
+        description: 'Verificação de funcionamento e controle de qualidade',
+        status: 'pending' as const,
+        photos: [],
+        estimatedDate: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: `STEP-${Date.now()}-7`,
+        title: 'Entrega',
+        description: 'Entrega do veículo blindado ao cliente',
+        status: 'pending' as const,
+        photos: [],
+        estimatedDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+    ]
+
     const newProject: Project = {
       id: `PRJ-${Date.now()}`,
-      qrCode: `QR-${Date.now()}`,
+      qrCode: `QR-${Date.now()}-PERMANENT`,
       vehicle: {
         id: `VH-${Date.now()}`,
         brand: newCarData.brand,
@@ -356,7 +441,7 @@ export function ExecutorDashboard() {
       },
       status: 'pending',
       progress: 0,
-      timeline: [],
+      timeline: defaultTimeline,
       startDate: new Date().toISOString(),
       estimatedDelivery: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     }
@@ -369,31 +454,53 @@ export function ExecutorDashboard() {
     // Gerar token de convite único com expiração de 7 dias
     const inviteToken = `INV-${Date.now()}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+    const tempPassword = generateTempPassword()
     
-    // URL de registro com token
+    // URL de registro com token (temporário - expira em 7 dias)
     const registerUrl = `${window.location.origin}/register?token=${inviteToken}&project=${newProject.id}`
     
-    // Gerar QR Code como imagem
+    // URL de verificação do projeto (permanente - vitalício)
+    const verifyUrl = `${window.location.origin}/verify/${newProject.id}`
+    
+    // Gerar QR Code de CADASTRO (temporário)
     QRCode.toDataURL(registerUrl, {
-      width: 300,
-      margin: 2,
-      color: { dark: '#000000', light: '#FFFFFF' }
+      width: 400,
+      margin: 3,
+      color: { dark: '#000000', light: '#FFFFFF' },
+      errorCorrectionLevel: 'H'
     }).then((url: string) => {
       setQrCodeImageUrl(url)
     }).catch((err: Error) => {
-      console.error('Erro ao gerar QR Code:', err)
+      console.error('Erro ao gerar QR Code de cadastro:', err)
     })
+    
+    // Gerar QR Code do PROJETO (permanente)
+    QRCode.toDataURL(verifyUrl, {
+      width: 400,
+      margin: 3,
+      color: { dark: '#D4AF37', light: '#FFFFFF' }, // Cor dourada para diferenciar
+      errorCorrectionLevel: 'H'
+    }).then((url: string) => {
+      setProjectQrCodeUrl(url)
+    }).catch((err: Error) => {
+      console.error('Erro ao gerar QR Code do projeto:', err)
+    })
+    
+    // Registrar senha temporária no sistema de autenticação
+    const clientEmail = newCarData.clientEmail || 'nao-informado@email.com'
+    registerTempPassword(clientEmail, tempPassword, newProject.id)
     
     // Salvar dados para compartilhamento
     setCreatedProjectData({
       id: newProject.id,
       qrCode: newProject.qrCode,
       clientName: newCarData.clientName,
-      clientEmail: newCarData.clientEmail,
+      clientEmail: clientEmail,
       clientPhone: newCarData.clientPhone,
       vehicle: `${newCarData.brand} ${newCarData.model}`,
       inviteToken,
       expiresAt,
+      tempPassword,
     })
     setShowShareModal(true)
     
@@ -435,45 +542,40 @@ export function ExecutorDashboard() {
     const registerUrl = `${window.location.origin}/register?token=${createdProjectData.inviteToken}&project=${createdProjectData.id}`
     const expirationDate = new Date(createdProjectData.expiresAt).toLocaleDateString('pt-BR')
     
-    // Mensagem limpa sem emojis problemáticos
-    const message = `*ELITETRACK - CADASTRO DE CLIENTE*
+    // Mensagem clara e objetiva para público operacional
+    const message = `*ELITE BLINDAGENS - CADASTRO*
 
 Ola ${createdProjectData.clientName}!
 
-Seu veiculo ${createdProjectData.vehicle} foi cadastrado em nosso sistema de acompanhamento de blindagem.
+Seu veiculo *${createdProjectData.vehicle}* esta em nosso sistema.
 
-COMO SE CADASTRAR:
-1. Escaneie o QR Code anexado OU
-2. Acesse o link: ${registerUrl}
-3. Complete seu cadastro com seus dados
+*PARA SE CADASTRAR:*
+1. Baixe a IMAGEM do QR Code que vou enviar
+2. Escaneie com a camera do celular OU
+3. Acesse: ${registerUrl}
 
-IMPORTANTE:
-- Este link e EXCLUSIVO para voce
-- Valido ate: ${expirationDate} (7 dias)
-- Apenas 1 pessoa pode usar este convite
+*SEUS DADOS DE ACESSO:*
+E-mail: ${createdProjectData.clientEmail}
+Senha temporaria: *${createdProjectData.tempPassword}*
+Codigo do Projeto: ${createdProjectData.id}
 
-DADOS DO PROJETO:
-- Codigo: ${createdProjectData.id}
-- Veiculo: ${createdProjectData.vehicle}
+*ATENCAO:*
+- Link EXCLUSIVO para voce
+- Valido ate ${expirationDate}
+- Use apenas 1 vez
 
-Apos o cadastro voce tera acesso a:
-- Acompanhamento em tempo real
-- Fotos e atualizacoes da equipe
-- Laudo tecnico e Elite Card
+Duvidas? Ligue: (11) 93456-7890
 
-Equipe Elite Blindagens
-Telefone: (11) 3456-7890
-
-*BAIXE A IMAGEM DO QR CODE ANTES DE ENVIAR*`
+Elite Blindagens`
 
     const phone = createdProjectData.clientPhone.replace(/\D/g, '')
     const fullPhone = phone.startsWith('55') ? phone : `55${phone}`
     window.open(`https://wa.me/${fullPhone}?text=${encodeURIComponent(message)}`, '_blank')
     
     addNotification({
-      type: 'info',
-      title: 'Lembre-se!',
-      message: 'Baixe o QR Code e envie junto com a mensagem do WhatsApp.',
+      type: 'warning',
+      title: 'IMPORTANTE!',
+      message: 'Baixe o QR Code e envie como IMAGEM junto com a mensagem.',
     })
   }
 
@@ -484,63 +586,59 @@ Telefone: (11) 3456-7890
     const registerUrl = `${window.location.origin}/register?token=${createdProjectData.inviteToken}&project=${createdProjectData.id}`
     const expirationDate = new Date(createdProjectData.expiresAt).toLocaleDateString('pt-BR')
     
-    const subject = `EliteTrack - Cadastre-se para acompanhar seu ${createdProjectData.vehicle}!`
+    const subject = `Elite Blindagens - Cadastro do seu ${createdProjectData.vehicle}`
     
     const body = `Olá ${createdProjectData.clientName}!
 
-Seu veículo ${createdProjectData.vehicle} foi cadastrado em nosso sistema de acompanhamento de blindagem EliteTrack.
+Seu veículo ${createdProjectData.vehicle} está em nosso sistema.
 
-═══════════════════════════════════════
+========================================
 COMO SE CADASTRAR
-═══════════════════════════════════════
+========================================
 
 1. Escaneie o QR Code em anexo OU
-2. Acesse o link abaixo:
-${registerUrl}
+2. Acesse o link: ${registerUrl}
 
-IMPORTANTE:
-- Este link é EXCLUSIVO para você
-- Válido até: ${expirationDate} (7 dias)
-- Apenas 1 pessoa pode usar este convite
+========================================
+SEUS DADOS DE ACESSO
+========================================
 
-═══════════════════════════════════════
-INFORMAÇÕES DO SEU PROJETO
-═══════════════════════════════════════
-
+E-mail: ${createdProjectData.clientEmail}
+Senha temporária: ${createdProjectData.tempPassword}
 Código do Projeto: ${createdProjectData.id}
-Veículo: ${createdProjectData.vehicle}
-Cliente: ${createdProjectData.clientName}
 
-═══════════════════════════════════════
-APÓS O CADASTRO VOCÊ TERÁ ACESSO A:
-═══════════════════════════════════════
+========================================
+IMPORTANTE
+========================================
 
-✓ Acompanhamento em tempo real da blindagem
-✓ Fotos e atualizações da equipe
-✓ Timeline detalhada com fotos
-✓ Laudo técnico de blindagem
-✓ Elite Card (cartão digital de benefícios)
-✓ Chat direto com a equipe
-✓ Histórico completo do veículo
+- Link EXCLUSIVO para você
+- Válido até: ${expirationDate}
+- Use apenas 1 vez
 
-═══════════════════════════════════════
+========================================
+APÓS O CADASTRO VOCÊ TERÁ ACESSO A
+========================================
 
-LEMBRE-SE: Baixe a imagem do QR Code e anexe a este e-mail!
+- Acompanhamento em tempo real
+- Fotos e atualizações da equipe
+- Laudo técnico de blindagem
+- Elite Card (cartão de benefícios)
 
-Qualquer dúvida, estamos à disposição!
+========================================
 
-Atenciosamente,
+ATENÇÃO: Anexe a imagem do QR Code a este e-mail!
+
+Dúvidas? Ligue: (11) 93456-7890
+
 Equipe Elite Blindagens
-Telefone: (11) 3456-7890
-E-mail: contato@eliteblindagens.com.br
-Site: www.eliteblindagens.com.br`
+contato@eliteblindagens.com.br`
 
     window.open(`mailto:${createdProjectData.clientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank')
     
     addNotification({
-      type: 'info',
-      title: 'Lembre-se!',
-      message: 'Baixe o QR Code e anexe ao e-mail antes de enviar.',
+      type: 'warning',
+      title: 'IMPORTANTE!',
+      message: 'Baixe o QR Code e ANEXE ao e-mail antes de enviar.',
     })
   }
 
@@ -843,6 +941,25 @@ Site: www.eliteblindagens.com.br`
                     </p>
                   </div>
                 )}
+                
+                {/* Modo Foco Ativo */}
+                {focusedProjectId && (
+                  <div className="bg-blue-500/20 border-2 border-blue-500 rounded-xl p-4 flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <Eye className="w-6 h-6 text-blue-400" />
+                      <div>
+                        <p className="font-bold text-blue-400">MODO FOCO ATIVO</p>
+                        <p className="text-sm text-gray-300">Mostrando apenas 1 veículo. Clique em "Ver Todos" para voltar.</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setFocusedProjectId(null)}
+                      className="bg-blue-500 text-white px-4 py-2 rounded-xl font-bold hover:bg-blue-600 transition-colors"
+                    >
+                      Ver Todos
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Botão Novo Projeto */}
@@ -905,6 +1022,24 @@ Site: www.eliteblindagens.com.br`
                       {/* Quick Actions */}
                       <div className="mt-4 flex items-center justify-between">
                         <div className="flex space-x-2">
+                          {/* Botão Focar - destaca apenas este veículo */}
+                          <button
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              setFocusedProjectId(focusedProjectId === project.id ? null : project.id);
+                              setSelectedProject(project);
+                            }}
+                            className={cn(
+                              "p-2 rounded-lg transition-colors",
+                              focusedProjectId === project.id 
+                                ? "bg-blue-500 text-white" 
+                                : "bg-white/5 hover:bg-blue-500/20"
+                            )}
+                            title={focusedProjectId === project.id ? "Mostrar todos" : "Focar neste veículo"}
+                            aria-label={focusedProjectId === project.id ? "Mostrar todos" : "Focar neste veículo"}
+                          >
+                            <Eye className={cn("w-4 h-4", focusedProjectId === project.id ? "text-white" : "text-blue-400")} />
+                          </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); navigate(`/manage/${project.id}`); }}
                             className="p-2 bg-white/5 rounded-lg hover:bg-primary/20 transition-colors"
@@ -920,14 +1055,6 @@ Site: www.eliteblindagens.com.br`
                             aria-label="Ver fotos"
                           >
                             <Image className="w-4 h-4 text-blue-400" />
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); navigate(`/manage/${project.id}`); }}
-                            className="p-2 bg-white/5 rounded-lg hover:bg-green-500/20 transition-colors"
-                            title="Ver laudo"
-                            aria-label="Ver laudo"
-                          >
-                            <FileText className="w-4 h-4 text-green-400" />
                           </button>
                         </div>
                         <button
@@ -2192,86 +2319,135 @@ Site: www.eliteblindagens.com.br`
         </div>
       </Modal>
 
-      {/* Modal Compartilhar QR Code */}
+      {/* Modal Compartilhar QR Code - UI simplificada para executor */}
       <Modal isOpen={showShareModal} onClose={() => setShowShareModal(false)} size="md">
         <div className="p-6">
-          <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-green-500" />
+          {/* Header com sucesso */}
+          <div className="text-center mb-4">
+            <div className="w-14 h-14 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+              <CheckCircle className="w-7 h-7 text-green-500" />
             </div>
-            <h2 className="text-xl font-bold">Projeto Criado com Sucesso!</h2>
-            <p className="text-gray-400 mt-2">Compartilhe o acesso com o cliente</p>
+            <h2 className="text-xl font-bold text-green-400">PROJETO CRIADO!</h2>
           </div>
 
           {createdProjectData && (
-            <div className="bg-white/5 rounded-xl p-4 mb-6">
-              <div className="text-center mb-4">
-                {qrCodeImageUrl ? (
-                  <div className="bg-white p-3 rounded-xl inline-block mb-3">
-                    <img src={qrCodeImageUrl} alt="QR Code de Cadastro" className="w-48 h-48" />
-                  </div>
-                ) : (
-                  <div className="bg-white p-4 rounded-xl inline-block mb-3">
-                    <QrCode className="w-24 h-24 text-black" />
-                  </div>
-                )}
-                <p className="font-mono text-sm text-primary mb-1">{createdProjectData.id}</p>
-                <p className="text-xs text-gray-500">
-                  Válido até: {new Date(createdProjectData.expiresAt).toLocaleDateString('pt-BR')}
-                </p>
+            <>
+              {/* SEÇÃO 1: QR Code de CADASTRO (Temporário) */}
+              <div className="bg-blue-500/10 border-2 border-blue-500 rounded-xl p-4 mb-4">
+                <div className="text-center mb-3">
+                  <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold">CADASTRO DO CLIENTE</span>
+                  <p className="text-xs text-gray-400 mt-1">Expira em 7 dias • Uso único</p>
+                </div>
+                <div className="bg-white rounded-xl p-3 flex justify-center mb-3">
+                  {qrCodeImageUrl ? (
+                    <img src={qrCodeImageUrl} alt="QR Code Cadastro" className="w-40 h-40" />
+                  ) : (
+                    <QrCode className="w-32 h-32 text-black" />
+                  )}
+                </div>
+                <button
+                  onClick={downloadQRCode}
+                  disabled={!qrCodeImageUrl}
+                  className="w-full flex items-center justify-center space-x-2 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg font-bold transition-colors disabled:opacity-50 text-sm"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>BAIXAR QR CADASTRO</span>
+                </button>
               </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Cliente:</span>
-                  <span>{createdProjectData.clientName}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Veículo:</span>
-                  <span>{createdProjectData.vehicle}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Token:</span>
-                  <span className="font-mono text-xs">{createdProjectData.inviteToken}</span>
-                </div>
-              </div>
-              
-              {/* Botão de Download do QR Code */}
-              <button
-                onClick={downloadQRCode}
-                disabled={!qrCodeImageUrl}
-                className="w-full mt-4 flex items-center justify-center space-x-2 bg-primary hover:bg-primary/90 text-black py-2 rounded-lg font-semibold transition-colors disabled:opacity-50"
-              >
-                <Save className="w-4 h-4" />
-                <span>Baixar QR Code (PNG)</span>
-              </button>
-              <p className="text-xs text-center text-yellow-500 mt-2">
-                * Baixe o QR Code antes de compartilhar via WhatsApp ou E-mail
-              </p>
-            </div>
-          )}
 
-          <div className="space-y-3">
-            <button
-              onClick={shareViaWhatsApp}
-              className="w-full flex items-center justify-center space-x-3 bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold transition-colors"
-            >
-              <MessageCircle className="w-5 h-5" />
-              <span>Enviar via WhatsApp</span>
-            </button>
-            <button
-              onClick={shareViaEmail}
-              className="w-full flex items-center justify-center space-x-3 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition-colors"
-            >
-              <FileText className="w-5 h-5" />
-              <span>Enviar via E-mail</span>
-            </button>
-            <button
-              onClick={() => setShowShareModal(false)}
-              className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors"
-            >
-              Fechar
-            </button>
-          </div>
+              {/* SEÇÃO 2: QR Code do PROJETO (Permanente) */}
+              <div className="bg-primary/10 border-2 border-primary rounded-xl p-4 mb-4">
+                <div className="text-center mb-3">
+                  <span className="bg-primary text-black px-3 py-1 rounded-full text-xs font-bold">QR CODE DO PROJETO</span>
+                  <p className="text-xs text-gray-400 mt-1">Permanente • Vitalício</p>
+                </div>
+                <div className="bg-white rounded-xl p-3 flex justify-center mb-3">
+                  {projectQrCodeUrl ? (
+                    <img src={projectQrCodeUrl} alt="QR Code Projeto" className="w-40 h-40" />
+                  ) : (
+                    <QrCode className="w-32 h-32 text-primary" />
+                  )}
+                </div>
+                <button
+                  onClick={() => {
+                    if (!projectQrCodeUrl || !createdProjectData) return
+                    const link = document.createElement('a')
+                    link.href = projectQrCodeUrl
+                    link.download = `QRCode-Projeto-${createdProjectData.id}.png`
+                    document.body.appendChild(link)
+                    link.click()
+                    document.body.removeChild(link)
+                  }}
+                  disabled={!projectQrCodeUrl}
+                  className="w-full flex items-center justify-center space-x-2 bg-primary hover:bg-primary/90 text-black py-2 rounded-lg font-bold transition-colors disabled:opacity-50 text-sm"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>BAIXAR QR PROJETO</span>
+                </button>
+              </div>
+
+              {/* Dados do cliente */}
+              <div className="bg-white/5 rounded-xl p-4 mb-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Cliente:</span>
+                  <span className="font-semibold">{createdProjectData.clientName}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Veículo:</span>
+                  <span className="font-semibold">{createdProjectData.vehicle}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">E-mail:</span>
+                  <span className="font-mono text-xs">{createdProjectData.clientEmail}</span>
+                </div>
+                <div className="flex justify-between text-sm border-t border-white/10 pt-2 mt-2">
+                  <span className="text-gray-400">Senha temporária:</span>
+                  <span className="font-mono font-bold text-primary text-lg">{createdProjectData.tempPassword}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Válido até:</span>
+                  <span className="text-yellow-400">{new Date(createdProjectData.expiresAt).toLocaleDateString('pt-BR')}</span>
+                </div>
+              </div>
+
+              {/* Passo 2: Enviar */}
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2 mb-2">
+                  <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">2</span>
+                  </div>
+                  <span className="font-semibold">DEPOIS: ENVIE PARA O CLIENTE</span>
+                </div>
+                
+                <button
+                  onClick={shareViaWhatsApp}
+                  className="w-full flex items-center justify-center space-x-3 bg-green-600 hover:bg-green-700 text-white py-4 rounded-xl font-bold transition-colors text-lg"
+                >
+                  <MessageCircle className="w-6 h-6" />
+                  <span>ENVIAR WHATSAPP</span>
+                </button>
+                <p className="text-xs text-center text-gray-400">
+                  Após abrir o WhatsApp, envie também a imagem do QR Code que você baixou
+                </p>
+                
+                <button
+                  onClick={shareViaEmail}
+                  className="w-full flex items-center justify-center space-x-3 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition-colors"
+                >
+                  <FileText className="w-5 h-5" />
+                  <span>ENVIAR E-MAIL</span>
+                </button>
+              </div>
+
+              {/* Fechar */}
+              <button
+                onClick={() => setShowShareModal(false)}
+                className="w-full mt-4 py-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-gray-400"
+              >
+                Fechar
+              </button>
+            </>
+          )}
         </div>
       </Modal>
 

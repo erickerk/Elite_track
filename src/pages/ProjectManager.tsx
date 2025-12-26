@@ -18,7 +18,7 @@ export function ProjectManager() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { addNotification } = useNotifications()
-  const { getProjectById } = useProjects()
+  const { getProjectById, updateProject } = useProjects()
 
   const [project, setProject] = useState<Project | null>(null)
   const [loading, setLoading] = useState(true)
@@ -141,14 +141,22 @@ export function ProjectManager() {
       stepId: step.id,
     })
     
-    // Update the project timeline locally
+    // Update the project timeline locally and globally
     const updatedTimeline = project.timeline.map(s => {
       if (s.id === step.id) {
-        return { ...s, status, notes: stepNotes || s.notes }
+        return { ...s, status, notes: stepNotes || s.notes, date: status === 'completed' ? new Date().toISOString() : s.date }
       }
       return s
     })
-    setProject({ ...project, timeline: updatedTimeline })
+    const completedCount = updatedTimeline.filter(s => s.status === 'completed').length
+    const newProgress = Math.round((completedCount / updatedTimeline.length) * 100)
+    const newStatus: 'pending' | 'in_progress' | 'completed' = completedCount === updatedTimeline.length ? 'completed' : completedCount > 0 ? 'in_progress' : 'pending'
+    
+    const updatedProject: Project = { ...project, timeline: updatedTimeline, progress: newProgress, status: newStatus }
+    setProject(updatedProject)
+    
+    // Persistir no contexto global
+    updateProject(project.id, { timeline: updatedTimeline, progress: newProgress, status: newStatus })
     
     setShowStepModal(false)
     setStepNotes('')
@@ -181,7 +189,21 @@ export function ProjectManager() {
   }
 
   const handleUploadPhotos = () => {
-    if (selectedStep && uploadedPhotos.length > 0) {
+    if (selectedStep && uploadedPhotos.length > 0 && project) {
+      // Atualizar fotos da etapa
+      const updatedTimeline = project.timeline.map(s => {
+        if (s.id === selectedStep.id) {
+          return { ...s, photos: [...s.photos, ...uploadedPhotos] }
+        }
+        return s
+      })
+      
+      const updatedProject = { ...project, timeline: updatedTimeline }
+      setProject(updatedProject)
+      
+      // Persistir no contexto global
+      updateProject(project.id, { timeline: updatedTimeline })
+      
       addNotification({
         type: 'success',
         title: 'Fotos Adicionadas',
