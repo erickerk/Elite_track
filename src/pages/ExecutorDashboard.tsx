@@ -1983,6 +1983,8 @@ contato@eliteblindagens.com.br`
                       value={ticketFilterStatus}
                       onChange={(e) => setTicketFilterStatus(e.target.value)}
                       className="w-full bg-white/10 border border-white/10 rounded-xl px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                      title="Filtrar por status do ticket"
+                      aria-label="Status do ticket"
                     >
                       <option value="all">Todos</option>
                       <option value="open">Abertos</option>
@@ -1998,6 +2000,8 @@ contato@eliteblindagens.com.br`
                       value={ticketFilterMonth}
                       onChange={(e) => setTicketFilterMonth(e.target.value)}
                       className="w-full bg-white/10 border border-white/10 rounded-xl px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                      title="Filtrar por mês de criação"
+                      aria-label="Mês do ticket"
                     >
                       <option value="all">Todos os meses</option>
                       <option value="1">Janeiro</option>
@@ -2022,6 +2026,8 @@ contato@eliteblindagens.com.br`
                       value={ticketFilterClient}
                       onChange={(e) => setTicketFilterClient(e.target.value)}
                       className="w-full bg-white/10 border border-white/10 rounded-xl px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                      title="Filtrar por cliente"
+                      aria-label="Cliente do ticket"
                     >
                       <option value="all">Todos os clientes</option>
                       {[...new Set(tickets.map(t => t.clientName))].map(client => (
@@ -3515,8 +3521,28 @@ contato@eliteblindagens.com.br`
                   </div>
                   <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden">
                     <div 
-                      className="bg-primary h-3 rounded-full transition-all"
-                      style={{ width: `${selectedProject.progress}%` }}
+                      className={cn(
+                        "bg-primary h-3 rounded-full transition-all",
+                        selectedProject.progress === 0 ? "w-0" :
+                        selectedProject.progress <= 5 ? "w-[5%]" :
+                        selectedProject.progress <= 9 ? "w-[9%]" :
+                        selectedProject.progress <= 10 ? "w-[10%]" :
+                        selectedProject.progress <= 18 ? "w-[18%]" :
+                        selectedProject.progress <= 20 ? "w-1/5" :
+                        selectedProject.progress <= 25 ? "w-1/4" :
+                        selectedProject.progress <= 30 ? "w-[30%]" :
+                        selectedProject.progress <= 33 ? "w-1/3" :
+                        selectedProject.progress <= 36 ? "w-[36%]" :
+                        selectedProject.progress <= 40 ? "w-2/5" :
+                        selectedProject.progress <= 50 ? "w-1/2" :
+                        selectedProject.progress <= 60 ? "w-3/5" :
+                        selectedProject.progress <= 66 ? "w-2/3" :
+                        selectedProject.progress <= 70 ? "w-[70%]" :
+                        selectedProject.progress <= 75 ? "w-3/4" :
+                        selectedProject.progress <= 80 ? "w-4/5" :
+                        selectedProject.progress <= 90 ? "w-[90%]" :
+                        "w-full"
+                      )}
                     />
                   </div>
                 </div>
