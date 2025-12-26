@@ -3,7 +3,7 @@
 // Implementação usando Supabase como backend
 // =====================================================
 
-import { supabase, isSupabaseConfigured } from '../../lib/supabase'
+import { supabase as supabaseClient, isSupabaseConfigured } from '../../lib/supabase'
 import type { 
   IProjectStorage, 
   IUserStorage, 
@@ -13,6 +13,9 @@ import type {
   StorageType 
 } from './StorageAdapter'
 import type { Project, User, Notification, RegistrationInvite, Vehicle, TimelineStep } from '../../types'
+
+// Garantir tipagem correta do cliente
+const supabase = supabaseClient as any
 
 // =====================================================
 // HELPERS PARA CONVERSÃO DE DADOS
@@ -82,7 +85,7 @@ export class SupabaseProjectStorage implements IProjectStorage {
 
     if (error) throw error
 
-    return (projects || []).map(p => {
+    return (projects || []).map((p: any) => {
       const vehicle: Vehicle = {
         id: p.vehicles.id,
         brand: p.vehicles.brand,
@@ -175,7 +178,7 @@ export class SupabaseProjectStorage implements IProjectStorage {
 
     if (error) throw error
 
-    return (projects || []).map(p => {
+    return (projects || []).map((p: any) => {
       const vehicle: Vehicle = {
         id: p.vehicles.id,
         brand: p.vehicles.brand,
@@ -465,7 +468,7 @@ export class SupabaseNotificationStorage implements INotificationStorage {
 
     if (error) throw error
 
-    return (data || []).map(n => ({
+    return (data || []).map((n: any) => ({
       id: n.id,
       title: n.title,
       message: n.message,
@@ -552,7 +555,7 @@ export class SupabaseInviteStorage implements IInviteStorage {
 
     if (error) throw error
 
-    return (data || []).map(i => ({
+    return (data || []).map((i: any) => ({
       id: i.id,
       token: i.token,
       projectId: i.project_id,

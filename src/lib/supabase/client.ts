@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from './types'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -26,4 +26,5 @@ export const isSupabaseConfigured = (): boolean => {
   return supabaseUrl !== undefined && supabaseAnonKey !== undefined && supabase !== null
 }
 
-export type SupabaseClient = typeof supabase
+export type TypedSupabaseClient = SupabaseClient<Database>
+

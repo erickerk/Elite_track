@@ -170,7 +170,7 @@ export class LocalNotificationStorage implements INotificationStorage {
     }
   }
 
-  async markAllAsRead(userId: string): Promise<void> {
+  async markAllAsRead(_userId: string): Promise<void> {
     const data = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS)
     const all: Notification[] = data ? JSON.parse(data) : []
     const updated = all.map(n => ({ ...n, read: true }))
