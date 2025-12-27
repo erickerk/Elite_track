@@ -5,7 +5,7 @@
 // =====================================================
 
 import { isSupabaseConfigured } from '../../lib/supabase'
-import type { Project, User, Notification, RegistrationInvite } from '../../types'
+import type { Project, User, Notification, RegistrationInvite, SupportTicket } from '../../types'
 
 export type StorageType = 'localStorage' | 'supabase'
 
@@ -59,6 +59,17 @@ export interface ITempPasswordStorage extends IStorageAdapter {
   setTempPassword(email: string, password: string, projectId?: string): Promise<void>
   validateTempPassword(email: string, password: string): Promise<boolean>
   clearTempPassword(email: string): Promise<void>
+}
+
+// Interface para operações de tickets de suporte
+export interface ISupportTicketStorage extends IStorageAdapter {
+  getTickets(): Promise<SupportTicket[]>
+  getTicketsByProjectId(projectId: string): Promise<SupportTicket[]>
+  getTicketsByUserId(userId: string): Promise<SupportTicket[]>
+  getTicketById(id: string): Promise<SupportTicket | null>
+  createTicket(ticket: Omit<SupportTicket, 'id' | 'createdAt' | 'updatedAt'>): Promise<SupportTicket>
+  updateTicket(id: string, data: Partial<SupportTicket>): Promise<SupportTicket>
+  deleteTicket(id: string): Promise<void>
 }
 
 // =====================================================

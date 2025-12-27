@@ -3,23 +3,24 @@ import { useNavigate } from 'react-router-dom'
 import { cn } from '../lib/utils'
 import { useAuth } from '../contexts/AuthContext'
 import { useNotifications } from '../contexts/NotificationContext'
-import { mockProjects } from '../data/mockData'
+import { useProjects } from '../contexts/ProjectContext'
 import jsPDF from 'jspdf'
 
 export function EliteCard() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { unreadCount, addNotification } = useNotifications()
+  const { projects: allProjects } = useProjects()
 
-  const userProjects = mockProjects.filter(p => p.user.id === user?.id || p.user.email === user?.email)
+  const userProjects = allProjects.filter(p => p.user.id === user?.id || p.user.email === user?.email)
   const completedProjects = userProjects.filter(p => p.status === 'completed' && p.eliteCard)
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
   const [showQRScanner, setShowQRScanner] = useState(false)
   const [qrCode, setQrCode] = useState('')
   
   const project = selectedProjectId 
-    ? (userProjects.find(p => p.id === selectedProjectId) || completedProjects[0] || userProjects[0] || mockProjects[0])
-    : (completedProjects[0] || userProjects[0] || mockProjects[0])
+    ? (userProjects.find(p => p.id === selectedProjectId) || completedProjects[0] || userProjects[0] || allProjects[0])
+    : (completedProjects[0] || userProjects[0] || allProjects[0])
   const eliteCard = project?.eliteCard
 
   const [showRescueModal, setShowRescueModal] = useState(false)
@@ -38,7 +39,7 @@ export function EliteCard() {
       addNotification({ type: 'error', title: 'Erro', message: 'Digite ou escaneie um código QR válido.' })
       return
     }
-    const foundProject = mockProjects.find(p => p.id === qrCode || p.qrCode === qrCode)
+    const foundProject = allProjects.find(p => p.id === qrCode || p.qrCode === qrCode)
     if (foundProject) {
       setSelectedProjectId(foundProject.id)
       setShowQRScanner(false)
@@ -103,8 +104,16 @@ export function EliteCard() {
     doc.setTextColor(255, 255, 255)
     doc.text(eliteCard?.cardNumber || 'ELITE-XXXX-XXXX', 5, 28)
     
-    doc.setFontSize(9)
-    doc.text(user?.name || '', 5, 34)
+    // Nome do titular - ajustar tamanho para caber dentro da área útil
+    const name = user?.name || ''
+    const maxTextWidth = 85.6 - 10 /* margens esquerda/direita de 5mm */
+    let fontSize = 9
+    doc.setFontSize(fontSize)
+    while (doc.getTextWidth(name) > maxTextWidth && fontSize > 6) {
+      fontSize -= 0.5
+      doc.setFontSize(fontSize)
+    }
+    doc.text(name, 5, 34)
     
     doc.setFontSize(7)
     doc.setTextColor(150, 150, 150)

@@ -3,16 +3,17 @@ import { useNavigate } from 'react-router-dom'
 import { cn } from '../lib/utils'
 import { useAuth } from '../contexts/AuthContext'
 import { useNotifications } from '../contexts/NotificationContext'
-import { mockProjects } from '../data/mockData'
+import { useProjects } from '../contexts/ProjectContext'
 
 export function Delivery() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { unreadCount, addNotification } = useNotifications()
 
-  const userProjects = mockProjects.filter(p => p.user.id === user?.id || p.user.email === user?.email)
-  const completedProject = userProjects.find(p => p.status === 'completed') || mockProjects.find(p => p.status === 'completed')
-  const project = completedProject || userProjects[0] || mockProjects[0]
+  const { projects: allProjects } = useProjects()
+  const userProjects = allProjects.filter(p => p.user.id === user?.id || p.user.email === user?.email)
+  const completedProject = userProjects.find(p => p.status === 'completed') || allProjects.find(p => p.status === 'completed')
+  const project = completedProject || userProjects[0] || allProjects[0]
 
   const [activeTab, setActiveTab] = useState<'video' | 'photos' | 'checklist' | 'schedule'>('video')
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null)

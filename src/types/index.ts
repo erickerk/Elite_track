@@ -96,6 +96,8 @@ export interface DeliveryMedia {
 
 export interface SupportTicket {
   id: string
+  projectId?: string
+  userId?: string
   title: string
   description: string
   status: 'open' | 'in_progress' | 'resolved' | 'closed'

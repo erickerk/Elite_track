@@ -77,15 +77,24 @@ export class SupabaseProjectStorage implements IProjectStorage {
       .from('projects')
       .select(`
         *,
-        vehicles (*),
+        vehicles (
+          *,
+          vehicle_images (*)
+        ),
         users (*),
-        timeline_steps (*)
+        timeline_steps (
+          *,
+          step_photos (*)
+        )
       `)
       .order('created_at', { ascending: false })
 
     if (error) throw error
 
     return (projects || []).map((p: any) => {
+      const vehicleImages = (p.vehicles?.vehicle_images || []) as any[]
+      const images = vehicleImages.map(img => img.image_url)
+
       const vehicle: Vehicle = {
         id: p.vehicles.id,
         brand: p.vehicles.brand,
@@ -93,23 +102,26 @@ export class SupabaseProjectStorage implements IProjectStorage {
         year: p.vehicles.year,
         color: p.vehicles.color,
         plate: p.vehicles.plate,
-        images: [],
+        images,
         blindingLevel: p.vehicles.blinding_level || '',
       }
 
       const user = dbUserToUser(p.users)
 
-      const timeline: TimelineStep[] = (p.timeline_steps || []).map((s: any) => ({
-        id: s.id,
-        title: s.title,
-        description: s.description || '',
-        status: s.status,
-        date: s.date || undefined,
-        estimatedDate: s.estimated_date || undefined,
-        technician: s.technician || undefined,
-        photos: [],
-        notes: s.notes || undefined,
-      }))
+      const timeline: TimelineStep[] = (p.timeline_steps || []).map((s: any) => {
+        const stepPhotos = (s.step_photos || []) as any[]
+        return {
+          id: s.id,
+          title: s.title,
+          description: s.description || '',
+          status: s.status,
+          date: s.date || undefined,
+          estimatedDate: s.estimated_date || undefined,
+          technician: s.technician || undefined,
+          photos: stepPhotos.map((sp: any) => sp.photo_url),
+          notes: s.notes || undefined,
+        }
+      })
 
       return dbProjectToProject(p, vehicle, user, timeline)
     })
@@ -122,9 +134,15 @@ export class SupabaseProjectStorage implements IProjectStorage {
       .from('projects')
       .select(`
         *,
-        vehicles (*),
+        vehicles (
+          *,
+          vehicle_images (*)
+        ),
         users (*),
-        timeline_steps (*)
+        timeline_steps (
+          *,
+          step_photos (*)
+        )
       `)
       .eq('id', id)
       .single()
@@ -134,6 +152,9 @@ export class SupabaseProjectStorage implements IProjectStorage {
       throw error
     }
 
+    const vehicleImages = (p.vehicles?.vehicle_images || []) as any[]
+    const images = vehicleImages.map(img => img.image_url)
+
     const vehicle: Vehicle = {
       id: p.vehicles.id,
       brand: p.vehicles.brand,
@@ -141,23 +162,26 @@ export class SupabaseProjectStorage implements IProjectStorage {
       year: p.vehicles.year,
       color: p.vehicles.color,
       plate: p.vehicles.plate,
-      images: [],
+      images,
       blindingLevel: p.vehicles.blinding_level || '',
     }
 
     const user = dbUserToUser(p.users)
 
-    const timeline: TimelineStep[] = (p.timeline_steps || []).map((s: any) => ({
-      id: s.id,
-      title: s.title,
-      description: s.description || '',
-      status: s.status,
-      date: s.date || undefined,
-      estimatedDate: s.estimated_date || undefined,
-      technician: s.technician || undefined,
-      photos: [],
-      notes: s.notes || undefined,
-    }))
+    const timeline: TimelineStep[] = (p.timeline_steps || []).map((s: any) => {
+      const stepPhotos = (s.step_photos || []) as any[]
+      return {
+        id: s.id,
+        title: s.title,
+        description: s.description || '',
+        status: s.status,
+        date: s.date || undefined,
+        estimatedDate: s.estimated_date || undefined,
+        technician: s.technician || undefined,
+        photos: stepPhotos.map((sp: any) => sp.photo_url),
+        notes: s.notes || undefined,
+      }
+    })
 
     return dbProjectToProject(p, vehicle, user, timeline)
   }
@@ -169,9 +193,15 @@ export class SupabaseProjectStorage implements IProjectStorage {
       .from('projects')
       .select(`
         *,
-        vehicles (*),
+        vehicles (
+          *,
+          vehicle_images (*)
+        ),
         users (*),
-        timeline_steps (*)
+        timeline_steps (
+          *,
+          step_photos (*)
+        )
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
@@ -179,6 +209,9 @@ export class SupabaseProjectStorage implements IProjectStorage {
     if (error) throw error
 
     return (projects || []).map((p: any) => {
+      const vehicleImages = (p.vehicles?.vehicle_images || []) as any[]
+      const images = vehicleImages.map(img => img.image_url)
+
       const vehicle: Vehicle = {
         id: p.vehicles.id,
         brand: p.vehicles.brand,
@@ -186,23 +219,26 @@ export class SupabaseProjectStorage implements IProjectStorage {
         year: p.vehicles.year,
         color: p.vehicles.color,
         plate: p.vehicles.plate,
-        images: [],
+        images,
         blindingLevel: p.vehicles.blinding_level || '',
       }
 
       const user = dbUserToUser(p.users)
 
-      const timeline: TimelineStep[] = (p.timeline_steps || []).map((s: any) => ({
-        id: s.id,
-        title: s.title,
-        description: s.description || '',
-        status: s.status,
-        date: s.date || undefined,
-        estimatedDate: s.estimated_date || undefined,
-        technician: s.technician || undefined,
-        photos: [],
-        notes: s.notes || undefined,
-      }))
+      const timeline: TimelineStep[] = (p.timeline_steps || []).map((s: any) => {
+        const stepPhotos = (s.step_photos || []) as any[]
+        return {
+          id: s.id,
+          title: s.title,
+          description: s.description || '',
+          status: s.status,
+          date: s.date || undefined,
+          estimatedDate: s.estimated_date || undefined,
+          technician: s.technician || undefined,
+          photos: stepPhotos.map((sp: any) => sp.photo_url),
+          notes: s.notes || undefined,
+        }
+      })
 
       return dbProjectToProject(p, vehicle, user, timeline)
     })
@@ -211,14 +247,72 @@ export class SupabaseProjectStorage implements IProjectStorage {
   async createProject(project: Project): Promise<Project> {
     if (!supabase) throw new Error('Supabase não configurado')
 
-    // 1. Criar ou buscar veículo
-    const { data: existingVehicle } = await supabase
-      .from('vehicles')
-      .select('id')
-      .eq('plate', project.vehicle.plate)
-      .single()
+    // 1. Criar ou buscar usuário (cliente) por e-mail
+    const email = project.user.email.toLowerCase()
+    let userId: string | undefined
 
-    let vehicleId = existingVehicle?.id
+    try {
+      const { data: existingUser, error: userSelectError } = await supabase
+        .from('users')
+        .select('id')
+        .ilike('email', email)
+        .single()
+
+      if (userSelectError && userSelectError.code !== 'PGRST116') {
+        throw userSelectError
+      }
+
+      if (existingUser) {
+        userId = existingUser.id
+      }
+    } catch (error) {
+      console.error('Erro ao buscar usuário por e-mail:', error)
+      throw error
+    }
+
+    if (!userId) {
+      const { data: newUser, error: userError } = await supabase
+        .from('users')
+        .insert({
+          name: project.user.name,
+          email,
+          phone: project.user.phone || null,
+          role: project.user.role || 'client',
+          vip_level: project.user.vipLevel || 'standard',
+        })
+        .select('id')
+        .single()
+
+      if (userError) {
+        console.error('Erro ao criar usuário:', userError)
+        throw userError
+      }
+
+      userId = newUser.id
+    }
+
+    // 2. Criar ou buscar veículo pela placa
+    const plate = project.vehicle.plate.toUpperCase()
+    let vehicleId: string | undefined
+
+    try {
+      const { data: existingVehicle, error: vehicleSelectError } = await supabase
+        .from('vehicles')
+        .select('id')
+        .eq('plate', plate)
+        .single()
+
+      if (vehicleSelectError && vehicleSelectError.code !== 'PGRST116') {
+        throw vehicleSelectError
+      }
+
+      if (existingVehicle) {
+        vehicleId = existingVehicle.id
+      }
+    } catch (error) {
+      console.error('Erro ao buscar veículo por placa:', error)
+      throw error
+    }
 
     if (!vehicleId) {
       const { data: newVehicle, error: vehicleError } = await supabase
@@ -228,23 +322,26 @@ export class SupabaseProjectStorage implements IProjectStorage {
           model: project.vehicle.model,
           year: project.vehicle.year,
           color: project.vehicle.color,
-          plate: project.vehicle.plate,
+          plate,
           blinding_level: project.vehicle.blindingLevel,
         })
         .select('id')
         .single()
 
-      if (vehicleError) throw vehicleError
+      if (vehicleError) {
+        console.error('Erro ao criar veículo:', vehicleError)
+        throw vehicleError
+      }
+
       vehicleId = newVehicle.id
     }
 
-    // 2. Criar projeto
+    // 3. Criar projeto (deixa o banco gerar o ID UUID)
     const { data: newProject, error: projectError } = await supabase
       .from('projects')
       .insert({
-        id: project.id,
         vehicle_id: vehicleId,
-        user_id: project.user.id,
+        user_id: userId,
         status: project.status,
         progress: project.progress,
         start_date: project.startDate,
@@ -256,15 +353,37 @@ export class SupabaseProjectStorage implements IProjectStorage {
         invite_token: project.inviteToken,
         invite_expires_at: project.inviteExpiresAt,
       })
-      .select()
+      .select('id')
       .single()
 
-    if (projectError) throw projectError
+    if (projectError) {
+      console.error('Erro ao criar projeto:', projectError)
+      throw projectError
+    }
 
-    // 3. Criar etapas da timeline
+    // 3.1. Salvar foto principal do veículo, se existir
+    if (project.vehicle.images && project.vehicle.images.length > 0 && vehicleId) {
+      const primaryImage = project.vehicle.images[0]
+      try {
+        const { error: imageError } = await supabase
+          .from('vehicle_images')
+          .insert({
+            vehicle_id: vehicleId,
+            image_url: primaryImage,
+            is_primary: true,
+          })
+
+        if (imageError) {
+          console.error('Erro ao salvar foto do veículo:', imageError)
+        }
+      } catch (error) {
+        console.error('Erro inesperado ao salvar foto do veículo:', error)
+      }
+    }
+
+    // 4. Criar etapas da timeline (sem definir ID explicitamente)
     if (project.timeline && project.timeline.length > 0) {
       const timelineData = project.timeline.map((step, index) => ({
-        id: step.id,
         project_id: newProject.id,
         title: step.title,
         description: step.description,
@@ -280,10 +399,20 @@ export class SupabaseProjectStorage implements IProjectStorage {
         .from('timeline_steps')
         .insert(timelineData)
 
-      if (timelineError) throw timelineError
+      if (timelineError) {
+        console.error('Erro ao criar timeline_steps:', timelineError)
+        throw timelineError
+      }
     }
 
-    return project
+    // 5. Recarregar projeto completo do banco para garantir consistência de IDs e relacionamentos
+    const fullProject = await this.getProjectById(newProject.id)
+
+    if (!fullProject) {
+      throw new Error('Projeto não encontrado após criação')
+    }
+
+    return fullProject
   }
 
   async updateProject(id: string, data: Partial<Project>): Promise<Project> {
@@ -737,6 +866,151 @@ export class SupabaseTempPasswordStorage implements ITempPasswordStorage {
 }
 
 // =====================================================
+// SUPPORT TICKET STORAGE (Supabase)
+// =====================================================
+
+import type { SupportTicket } from '../../types'
+import type { ISupportTicketStorage } from './StorageAdapter'
+
+export class SupabaseSupportTicketStorage implements ISupportTicketStorage {
+  getType(): StorageType {
+    return 'supabase'
+  }
+
+  isAvailable(): boolean {
+    return isSupabaseConfigured()
+  }
+
+  async getTickets(): Promise<SupportTicket[]> {
+    if (!supabase) throw new Error('Supabase não configurado')
+
+    const { data, error } = await supabase
+      .from('support_tickets')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+
+    return (data || []).map(this.mapTicket)
+  }
+
+  async getTicketsByProjectId(projectId: string): Promise<SupportTicket[]> {
+    if (!supabase) throw new Error('Supabase não configurado')
+
+    const { data, error } = await supabase
+      .from('support_tickets')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+
+    return (data || []).map(this.mapTicket)
+  }
+
+  async getTicketsByUserId(userId: string): Promise<SupportTicket[]> {
+    if (!supabase) throw new Error('Supabase não configurado')
+
+    const { data, error } = await supabase
+      .from('support_tickets')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+
+    return (data || []).map(this.mapTicket)
+  }
+
+  async getTicketById(id: string): Promise<SupportTicket | null> {
+    if (!supabase) throw new Error('Supabase não configurado')
+
+    const { data, error } = await supabase
+      .from('support_tickets')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') return null
+      throw error
+    }
+
+    return this.mapTicket(data)
+  }
+
+  async createTicket(ticket: Omit<SupportTicket, 'id' | 'createdAt' | 'updatedAt'>): Promise<SupportTicket> {
+    if (!supabase) throw new Error('Supabase não configurado')
+
+    const { data, error } = await supabase
+      .from('support_tickets')
+      .insert({
+        project_id: ticket.projectId,
+        user_id: ticket.userId,
+        title: ticket.title,
+        description: ticket.description,
+        status: ticket.status || 'open',
+        priority: ticket.priority || 'medium',
+        category: ticket.category || 'general',
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+
+    return this.mapTicket(data)
+  }
+
+  async updateTicket(id: string, updates: Partial<SupportTicket>): Promise<SupportTicket> {
+    if (!supabase) throw new Error('Supabase não configurado')
+
+    const updateData: any = {}
+    if (updates.status) updateData.status = updates.status
+    if (updates.priority) updateData.priority = updates.priority
+    if (updates.title) updateData.title = updates.title
+    if (updates.description) updateData.description = updates.description
+
+    const { data, error } = await supabase
+      .from('support_tickets')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw error
+
+    return this.mapTicket(data)
+  }
+
+  async deleteTicket(id: string): Promise<void> {
+    if (!supabase) throw new Error('Supabase não configurado')
+
+    const { error } = await supabase
+      .from('support_tickets')
+      .delete()
+      .eq('id', id)
+
+    if (error) throw error
+  }
+
+  private mapTicket(data: any): SupportTicket {
+    return {
+      id: data.id,
+      projectId: data.project_id,
+      userId: data.user_id,
+      title: data.title,
+      description: data.description,
+      status: data.status,
+      priority: data.priority,
+      category: data.category,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+      messages: [],
+    }
+  }
+}
+
+// =====================================================
 // EXPORTS
 // =====================================================
 
@@ -745,3 +1019,4 @@ export const supabaseUserStorage = new SupabaseUserStorage()
 export const supabaseNotificationStorage = new SupabaseNotificationStorage()
 export const supabaseInviteStorage = new SupabaseInviteStorage()
 export const supabaseTempPasswordStorage = new SupabaseTempPasswordStorage()
+export const supabaseSupportTicketStorage = new SupabaseSupportTicketStorage()

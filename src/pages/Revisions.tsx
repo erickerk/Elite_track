@@ -11,7 +11,7 @@ import { Badge } from '../components/ui/Badge'
 import { Modal } from '../components/ui/Modal'
 import { cn } from '../lib/utils'
 import { useTheme } from '../contexts/ThemeContext'
-import { mockProject } from '../data/mockData'
+import { useProjects } from '../contexts/ProjectContext'
 
 interface Revision {
   id: string
@@ -79,6 +79,8 @@ const statusConfig = {
 
 export function Revisions() {
   const { theme } = useTheme()
+  const { projects } = useProjects()
+  const project = projects[0]
   const isDark = theme === 'dark'
   const [selectedRevision, setSelectedRevision] = useState<Revision | null>(null)
   const [showScheduleModal, setShowScheduleModal] = useState(false)
@@ -342,13 +344,13 @@ export function Revisions() {
           )}>
             <div className="flex items-center gap-3 mb-3">
               <img
-                src={mockProject.vehicle.images[0]}
-                alt={mockProject.vehicle.model}
+                src={project.vehicle.images[0]}
+                alt={project.vehicle.model}
                 className="w-16 h-12 rounded-lg object-cover"
               />
               <div>
-                <p className="font-semibold">{mockProject.vehicle.brand} {mockProject.vehicle.model}</p>
-                <p className="text-caption text-gray-400">{mockProject.vehicle.plate}</p>
+                <p className="font-semibold">{project.vehicle.brand} {project.vehicle.model}</p>
+                <p className="text-caption text-gray-400">{project.vehicle.plate}</p>
               </div>
             </div>
           </div>
@@ -422,7 +424,7 @@ export function Revisions() {
             </a>
 
             <a 
-              href={getWhatsAppLink(`Olá! Gostaria de agendar uma revisão para meu veículo ${mockProject.vehicle.brand} ${mockProject.vehicle.model} - Placa ${mockProject.vehicle.plate}`)}
+              href={getWhatsAppLink(`Olá! Gostaria de agendar uma revisão para meu veículo ${project.vehicle.brand} ${project.vehicle.model} - Placa ${project.vehicle.plate}`)}
               target="_blank"
               rel="noopener noreferrer"
               className={cn(

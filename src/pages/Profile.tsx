@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { cn } from '../lib/utils'
 import { useAuth } from '../contexts/AuthContext'
 import { useNotifications } from '../contexts/NotificationContext'
-import { mockProjects } from '../data/mockData'
+import { useProjects } from '../contexts/ProjectContext'
 
 type TabType = 'personal' | 'security' | 'notifications' | 'vehicle' | 'support' | 'privacy'
 
@@ -21,8 +21,9 @@ export function Profile() {
   const { unreadCount, addNotification } = useNotifications()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const userProjects = mockProjects.filter(p => p.user.id === user?.id || p.user.email === user?.email)
-  const project = userProjects[0] || mockProjects[0]
+  const { projects: allProjects } = useProjects()
+  const userProjects = allProjects.filter(p => p.user.id === user?.id || p.user.email === user?.email)
+  const project = userProjects[0] || allProjects[0]
   const availableTabs = getTabsForRole(user?.role)
   const isExecutor = user?.role === 'executor'
 

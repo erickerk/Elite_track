@@ -11,10 +11,12 @@ import { Badge } from '../components/ui/Badge'
 import { Modal } from '../components/ui/Modal'
 import { cn } from '../lib/utils'
 import { useTheme } from '../contexts/ThemeContext'
-import { mockProject } from '../data/mockData'
+import { useProjects } from '../contexts/ProjectContext'
 
 export function EliteShield() {
   const { theme } = useTheme()
+  const { projects } = useProjects()
+  const project = projects[0]
   const isDark = theme === 'dark'
   const [showPreview, setShowPreview] = useState(false)
   const [stampImage, setStampImage] = useState<string | null>(null)
@@ -22,8 +24,8 @@ export function EliteShield() {
   const stampInputRef = useRef<HTMLInputElement>(null)
 
   const laudoData = {
-    numero: `LAUDO-${mockProject.id}-${new Date().getFullYear()}`,
-    dataEmissao: mockProject.actualDelivery || new Date().toISOString().split('T')[0],
+    numero: `LAUDO-${project?.id || 'XXX'}-${new Date().getFullYear()}`,
+    dataEmissao: project?.actualDelivery || new Date().toISOString().split('T')[0],
     validade: '5 anos',
     tecnicoResponsavel: 'Eng. Carlos Roberto Silva',
     crea: 'CREA 123456/SP',
@@ -48,7 +50,7 @@ export function EliteShield() {
       <html lang="pt-BR">
       <head>
         <meta charset="UTF-8">
-        <title>Laudo EliteShield™ - ${mockProject.vehicle.brand} ${mockProject.vehicle.model}</title>
+        <title>Laudo EliteShield™ - ${project.vehicle.brand} ${project.vehicle.model}</title>
         <style>
           body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
           .header { text-align: center; border-bottom: 2px solid #D4AF37; padding-bottom: 20px; margin-bottom: 20px; }
@@ -80,28 +82,28 @@ export function EliteShield() {
         <div class="grid">
           <div class="section">
             <h3>🚗 Dados do Veículo</h3>
-            <div class="item"><label>Marca:</label><p>${mockProject.vehicle.brand}</p></div>
-            <div class="item"><label>Modelo:</label><p>${mockProject.vehicle.model}</p></div>
-            <div class="item"><label>Ano:</label><p>${mockProject.vehicle.year}</p></div>
-            <div class="item"><label>Cor:</label><p>${mockProject.vehicle.color}</p></div>
-            <div class="item"><label>Placa:</label><p>${mockProject.vehicle.plate}</p></div>
+            <div class="item"><label>Marca:</label><p>${project.vehicle.brand}</p></div>
+            <div class="item"><label>Modelo:</label><p>${project.vehicle.model}</p></div>
+            <div class="item"><label>Ano:</label><p>${project.vehicle.year}</p></div>
+            <div class="item"><label>Cor:</label><p>${project.vehicle.color}</p></div>
+            <div class="item"><label>Placa:</label><p>${project.vehicle.plate}</p></div>
           </div>
           
           <div class="section">
             <h3>👤 Dados do Cliente</h3>
-            <div class="item"><label>Nome:</label><p>${mockProject.user.name}</p></div>
-            <div class="item"><label>E-mail:</label><p>${mockProject.user.email}</p></div>
-            <div class="item"><label>Telefone:</label><p>${mockProject.user.phone}</p></div>
+            <div class="item"><label>Nome:</label><p>${project.user.name}</p></div>
+            <div class="item"><label>E-mail:</label><p>${project.user.email}</p></div>
+            <div class="item"><label>Telefone:</label><p>${project.user.phone}</p></div>
           </div>
         </div>
         
         <div class="section">
           <h3>🛡️ Especificações da Blindagem</h3>
           <div class="grid">
-            <div class="item"><label>Nível de Proteção:</label><p>${mockProject.vehicle.blindingLevel}</p></div>
+            <div class="item"><label>Nível de Proteção:</label><p>${project.vehicle.blindingLevel}</p></div>
             <div class="item"><label>Certificação:</label><p>ABNT NBR 15000</p></div>
-            <div class="item"><label>Data de Instalação:</label><p>${new Date(mockProject.startDate).toLocaleDateString('pt-BR')}</p></div>
-            <div class="item"><label>Data de Conclusão:</label><p>${mockProject.actualDelivery ? new Date(mockProject.actualDelivery).toLocaleDateString('pt-BR') : 'Em andamento'}</p></div>
+            <div class="item"><label>Data de Instalação:</label><p>${new Date(project.startDate).toLocaleDateString('pt-BR')}</p></div>
+            <div class="item"><label>Data de Conclusão:</label><p>${project.actualDelivery ? new Date(project.actualDelivery).toLocaleDateString('pt-BR') : 'Em andamento'}</p></div>
             <div class="item"><label>Validade:</label><p>${laudoData.validade}</p></div>
           </div>
         </div>
@@ -125,7 +127,7 @@ export function EliteShield() {
             ${stampImage ? `<img src="${stampImage}" alt="Carimbo" />` : '<span style="color: #999; font-size: 10px; text-align: center;">Carimbo<br/>Elite</span>'}
           </div>
           <div class="qr">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(`${window.location.origin}/verify/${mockProject.id}`)}&color=D4AF37" alt="QR Code" />
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(`${window.location.origin}/verify/${project.id}`)}&color=D4AF37" alt="QR Code" />
             <p style="font-size: 10px; color: #666;">Verifique a autenticidade</p>
           </div>
         </div>
@@ -145,7 +147,7 @@ export function EliteShield() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `Laudo_EliteShield_${mockProject.vehicle.plate}.html`
+    a.download = `Laudo_EliteShield_${project.vehicle.plate}.html`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -157,9 +159,9 @@ export function EliteShield() {
     const laudoText = `
 🛡️ LAUDO ELITESHIELD™
 
-Veículo: ${mockProject.vehicle.brand} ${mockProject.vehicle.model}
-Placa: ${mockProject.vehicle.plate}
-Nível: ${mockProject.vehicle.blindingLevel}
+Veículo: ${project.vehicle.brand} ${project.vehicle.model}
+Placa: ${project.vehicle.plate}
+Nível: ${project.vehicle.blindingLevel}
 Nº Laudo: ${laudoData.numero}
 Validade: ${laudoData.validade}
 
@@ -236,20 +238,20 @@ ${COMPANY_INFO.websiteDisplay}
             <div className="flex items-center gap-4">
               <div className="w-20 h-16 rounded-xl overflow-hidden bg-carbon-700">
                 <img
-                  src={mockProject.vehicle.images[0]}
-                  alt={mockProject.vehicle.model}
+                  src={project.vehicle.images[0]}
+                  alt={project.vehicle.model}
                   className="w-full h-full object-cover"
                 />
               </div>
               <div>
                 <p className="font-semibold">
-                  {mockProject.vehicle.brand} {mockProject.vehicle.model}
+                  {project.vehicle.brand} {project.vehicle.model}
                 </p>
                 <p className="text-caption text-gray-400">
-                  {mockProject.vehicle.year} • {mockProject.vehicle.color}
+                  {project.vehicle.year} • {project.vehicle.color}
                 </p>
                 <p className="text-caption text-gray-400">
-                  Placa: {mockProject.vehicle.plate}
+                  Placa: {project.vehicle.plate}
                 </p>
               </div>
             </div>
@@ -271,7 +273,7 @@ ${COMPANY_INFO.websiteDisplay}
             )}>
               <Award className="w-5 h-5 mx-auto mb-1 text-gold" />
               <p className="text-micro text-gray-400">Nível</p>
-              <p className="font-semibold">{mockProject.vehicle.blindingLevel}</p>
+              <p className="font-semibold">{project.vehicle.blindingLevel}</p>
             </div>
             
             <div className={cn(
@@ -331,7 +333,7 @@ ${COMPANY_INFO.websiteDisplay}
               <div className="p-2 bg-white rounded-xl">
                 <img
                   src={`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(
-                    `${window.location.origin}/verify/${mockProject.id}`
+                    `${window.location.origin}/verify/${project.id}`
                   )}&color=D4AF37`}
                   alt="QR Code"
                   className="w-20 h-20"
@@ -342,7 +344,7 @@ ${COMPANY_INFO.websiteDisplay}
                   Escaneie para verificar autenticidade
                 </p>
                 <p className="font-mono text-micro text-gold">
-                  {mockProject.qrCode}
+                  {project.qrCode}
                 </p>
               </div>
             </div>
@@ -395,11 +397,11 @@ ${COMPANY_INFO.websiteDisplay}
                 'p-3 rounded-xl space-y-1',
                 isDark ? 'bg-carbon-700/50' : 'bg-gray-50'
               )}>
-                <p><span className="text-gray-400">Marca:</span> {mockProject.vehicle.brand}</p>
-                <p><span className="text-gray-400">Modelo:</span> {mockProject.vehicle.model}</p>
-                <p><span className="text-gray-400">Ano:</span> {mockProject.vehicle.year}</p>
-                <p><span className="text-gray-400">Cor:</span> {mockProject.vehicle.color}</p>
-                <p><span className="text-gray-400">Placa:</span> {mockProject.vehicle.plate}</p>
+                <p><span className="text-gray-400">Marca:</span> {project.vehicle.brand}</p>
+                <p><span className="text-gray-400">Modelo:</span> {project.vehicle.model}</p>
+                <p><span className="text-gray-400">Ano:</span> {project.vehicle.year}</p>
+                <p><span className="text-gray-400">Cor:</span> {project.vehicle.color}</p>
+                <p><span className="text-gray-400">Placa:</span> {project.vehicle.plate}</p>
               </div>
             </div>
             
@@ -412,9 +414,9 @@ ${COMPANY_INFO.websiteDisplay}
                 'p-3 rounded-xl space-y-1',
                 isDark ? 'bg-carbon-700/50' : 'bg-gray-50'
               )}>
-                <p><span className="text-gray-400">Nome:</span> {mockProject.user.name}</p>
-                <p><span className="text-gray-400">E-mail:</span> {mockProject.user.email}</p>
-                <p><span className="text-gray-400">Telefone:</span> {mockProject.user.phone}</p>
+                <p><span className="text-gray-400">Nome:</span> {project.user.name}</p>
+                <p><span className="text-gray-400">E-mail:</span> {project.user.email}</p>
+                <p><span className="text-gray-400">Telefone:</span> {project.user.phone}</p>
               </div>
             </div>
           </div>
@@ -431,7 +433,7 @@ ${COMPANY_INFO.websiteDisplay}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <p className="text-micro text-gray-400">Nível de Proteção</p>
-                  <p className="font-semibold">{mockProject.vehicle.blindingLevel}</p>
+                  <p className="font-semibold">{project.vehicle.blindingLevel}</p>
                 </div>
                 <div>
                   <p className="text-micro text-gray-400">Certificação</p>
@@ -439,11 +441,11 @@ ${COMPANY_INFO.websiteDisplay}
                 </div>
                 <div>
                   <p className="text-micro text-gray-400">Data de Instalação</p>
-                  <p className="font-semibold">{new Date(mockProject.startDate).toLocaleDateString('pt-BR')}</p>
+                  <p className="font-semibold">{new Date(project.startDate).toLocaleDateString('pt-BR')}</p>
                 </div>
                 <div>
                   <p className="text-micro text-gray-400">Data de Conclusão</p>
-                  <p className="font-semibold">{mockProject.actualDelivery ? new Date(mockProject.actualDelivery).toLocaleDateString('pt-BR') : 'Em andamento'}</p>
+                  <p className="font-semibold">{project.actualDelivery ? new Date(project.actualDelivery).toLocaleDateString('pt-BR') : 'Em andamento'}</p>
                 </div>
               </div>
             </div>

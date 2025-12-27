@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
 import QRCode from 'qrcode'
 import { useNavigate } from 'react-router-dom'
-import * as XLSX from 'xlsx'
+ 
 import { 
   CheckCircle, Clock, AlertCircle, Car, QrCode, Bell,
   FileText, CreditCard, MessageCircle, Settings, Search, 
   Users, Home, Image, LogOut, ChevronRight, Plus, X, Save, Edit3, Calendar,
-  DollarSign, Paperclip, Send, Eye, Download, Filter, ExternalLink
+  DollarSign, Paperclip, Send, Eye, Download, Filter, ExternalLink, Camera
 } from 'lucide-react'
 import { Modal } from '../components/ui/Modal'
 import { NotificationPanel } from '../components/ui/NotificationPanel'
@@ -18,7 +18,8 @@ import { useChat } from '../contexts/ChatContext'
 import { useProjects } from '../contexts/ProjectContext'
 import { useQuotes } from '../contexts/QuoteContext'
 import { cn } from '../lib/utils'
-import type { Project } from '../types'
+import type { Project, SupportTicket } from '../types'
+import { supportTicketStorage } from '../services/storage'
 
 // Componente ProgressBar sem inline style
 function ProgressBar({ progress }: { progress: number }) {
@@ -70,14 +71,14 @@ const mockRevisionReminders = [
   { id: 'R5', clientName: 'Fernando Oliveira', vehicle: 'Land Rover Defender', blindingDate: '2025-01-18', nextRevisionDate: '2025-01-18', daysUntil: -3, phone: '11911111111', email: 'fernando@email.com' },
 ]
 
-// Mock de tickets de suporte
-const mockTickets = [
-  { id: 'TKT-001', clientName: 'Ricardo Mendes', clientEmail: 'ricardo@email.com', subject: 'Dúvida sobre garantia', message: 'Gostaria de saber mais sobre a garantia da blindagem.', status: 'open', priority: 'medium', createdAt: '2025-01-14T10:30:00', vehicle: 'Audi Q7' },
-  { id: 'TKT-002', clientName: 'Fernanda Costa', clientEmail: 'fernanda@email.com', subject: 'Problema com vidro', message: 'O vidro traseiro está com barulho estranho.', status: 'in_progress', priority: 'high', createdAt: '2025-01-13T14:20:00', vehicle: 'BMW X5' },
-  { id: 'TKT-003', clientName: 'João Paulo Santos', clientEmail: 'joao@email.com', subject: 'Agendamento de revisão', message: 'Preciso agendar a revisão anual do meu veículo.', status: 'open', priority: 'low', createdAt: '2025-01-12T09:15:00', vehicle: 'Mercedes GLE' },
-  { id: 'TKT-004', clientName: 'Maria Silva', clientEmail: 'maria@email.com', subject: 'Orçamento para troca de vidro', message: 'Preciso de orçamento para trocar o vidro da porta dianteira.', status: 'resolved', priority: 'medium', createdAt: '2025-01-10T16:45:00', vehicle: 'Range Rover' },
-  { id: 'TKT-005', clientName: 'Carlos Alberto', clientEmail: 'carlos@email.com', subject: 'Certificado de blindagem', message: 'Preciso de uma segunda via do certificado.', status: 'open', priority: 'low', createdAt: '2025-01-09T11:00:00', vehicle: 'Toyota Hilux' },
-]
+// Tipo estendido para tickets com dados do projeto/cliente
+interface TicketWithDetails extends SupportTicket {
+  clientName?: string
+  clientEmail?: string
+  vehicle?: string
+  subject?: string
+  message?: string
+}
 
 const ticketStatusConfig = {
   open: { label: 'Aberto', color: 'bg-yellow-500', textColor: 'text-yellow-400' },
@@ -110,7 +111,7 @@ export function ExecutorDashboard() {
   const { user, logout, registerTempPassword } = useAuth()
   const { unreadCount, addNotification } = useNotifications()
   const { totalUnreadCount: chatUnreadCount } = useChat()
-  const { projects: globalProjects, addProject: addGlobalProject } = useProjects()
+  const { projects: globalProjects, addProject: addGlobalProject, updateProject: updateGlobalProject } = useProjects()
   const { quotes, updateQuoteStatus, getPendingQuotes, createQuoteFromExecutor } = useQuotes()
 
   const [activeTab, setActiveTab] = useState<TabType>('dashboard')
@@ -143,20 +144,16 @@ export function ExecutorDashboard() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState<string>('all')
-  const [projects, setProjects] = useState<Project[]>(globalProjects)
-
-  // Sincronizar com projetos globais
-  useEffect(() => {
-    setProjects(globalProjects)
-  }, [globalProjects])
+  // Usar projetos globais diretamente (já vem do contexto/Supabase)
+  const projects = globalProjects
   const [showLaudoModal, setShowLaudoModal] = useState(false)
   const [showNewCarModal, setShowNewCarModal] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
   const [showTicketModal, setShowTicketModal] = useState(false)
-  const [selectedTicket, setSelectedTicket] = useState<typeof mockTickets[0] | null>(null)
+  const [selectedTicket, setSelectedTicket] = useState<TicketWithDetails | null>(null)
   const [ticketResponse, setTicketResponse] = useState('')
   const [ticketNewStatus, setTicketNewStatus] = useState<string>('open')
-  const [tickets, setTickets] = useState(mockTickets)
+  const [tickets, setTickets] = useState<TicketWithDetails[]>([])
   const [ticketFilterStatus, setTicketFilterStatus] = useState<string>('all')
   const [ticketFilterMonth, setTicketFilterMonth] = useState<string>('all')
   const [ticketFilterClient, setTicketFilterClient] = useState<string>('all')
@@ -205,16 +202,43 @@ export function ExecutorDashboard() {
   const [foundProject, setFoundProject] = useState<Project | null>(null)
   const [vehiclePhoto, setVehiclePhoto] = useState<string | null>(null)
   const vehiclePhotoInputRef = useRef<HTMLInputElement>(null)
+  const vehicleCameraInputRef = useRef<HTMLInputElement>(null)
 
   const handleVehiclePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setVehiclePhoto(reader.result as string)
-      }
-      reader.readAsDataURL(file)
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      addNotification({
+        type: 'warning',
+        title: 'Arquivo inválido',
+        message: 'Selecione uma imagem (JPG ou PNG).',
+      })
+      return
     }
+
+    const maxSizeBytes = 5 * 1024 * 1024
+    if (file.size > maxSizeBytes) {
+      addNotification({
+        type: 'warning',
+        title: 'Arquivo muito grande',
+        message: 'A foto deve ter no máximo 5MB.',
+      })
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setVehiclePhoto(reader.result as string)
+    }
+    reader.onerror = () => {
+      addNotification({
+        type: 'error',
+        title: 'Erro ao ler foto',
+        message: 'Não foi possível carregar a foto. Tente novamente.',
+      })
+    }
+    reader.readAsDataURL(file)
   }
 
   const allProjects = projects
@@ -254,6 +278,31 @@ export function ExecutorDashboard() {
       setSelectedProject(filteredProjects[0])
     }
   }, [filteredProjects, selectedProject])
+
+  // Carregar tickets do Supabase e enriquecer com dados do projeto
+  useEffect(() => {
+    const loadTickets = async () => {
+      try {
+        const supabaseTickets = await supportTicketStorage.getTickets()
+        // Mapear tickets para incluir dados do cliente/veículo do projeto
+        const enrichedTickets: TicketWithDetails[] = supabaseTickets.map(ticket => {
+          const project = projects.find(p => p.id === ticket.projectId)
+          return {
+            ...ticket,
+            clientName: project?.user.name || 'Cliente',
+            clientEmail: project?.user.email || '',
+            vehicle: project ? `${project.vehicle.brand} ${project.vehicle.model}` : '',
+            subject: ticket.title,
+            message: ticket.description,
+          }
+        })
+        setTickets(enrichedTickets)
+      } catch (error) {
+        console.error('[ExecutorDashboard] Erro ao carregar tickets:', error)
+      }
+    }
+    loadTickets()
+  }, [projects])
 
   const handleQRScan = (code: string) => {
     const project = allProjects.find(p => 
@@ -331,8 +380,8 @@ export function ExecutorDashboard() {
       completedDate: newProgress === 100 ? new Date().toISOString() : selectedProject.completedDate
     }
 
-    // Atualizar lista de projetos (sincronização imediata)
-    setProjects(prev => prev.map(p => p.id === updatedProject.id ? updatedProject : p))
+    // Atualizar projeto no contexto global (sincroniza com Supabase)
+    updateGlobalProject(updatedProject.id, updatedProject)
     setSelectedProject(updatedProject)
 
     // Notificação de sucesso
@@ -385,7 +434,7 @@ export function ExecutorDashboard() {
     setShowLaudoModal(false)
   }
 
-  const handleCreateNewCar = () => {
+  const handleCreateNewCar = async () => {
     if (!newCarData.clientName || !newCarData.brand || !newCarData.model || !newCarData.plate) {
       addNotification({
         type: 'warning',
@@ -500,9 +549,15 @@ export function ExecutorDashboard() {
         : undefined,
     }
 
-    setProjects(prev => [newProject, ...prev])
-    addGlobalProject(newProject) // Sincronizar com contexto global
-    setSelectedProject(newProject)
+    let savedProject = newProject
+    try {
+      savedProject = await addGlobalProject(newProject) // Sincronizar com contexto global e salvar no Supabase
+    } catch (error) {
+      console.error('Erro ao salvar projeto no Supabase:', error)
+      // Continua com o projeto local mesmo em caso de erro
+    }
+
+    setSelectedProject(savedProject)
     setShowNewCarModal(false)
     
     // Gerar token de convite único com expiração de 7 dias
@@ -511,10 +566,10 @@ export function ExecutorDashboard() {
     const tempPassword = generateTempPassword()
     
     // URL de registro com token (temporário - expira em 7 dias)
-    const registerUrl = `${window.location.origin}/register?token=${inviteToken}&project=${newProject.id}`
+    const registerUrl = `${window.location.origin}/register?token=${inviteToken}&project=${savedProject.id}`
     
     // URL de verificação do projeto (permanente - vitalício)
-    const verifyUrl = `${window.location.origin}/verify/${newProject.id}`
+    const verifyUrl = `${window.location.origin}/verify/${savedProject.id}`
     
     // Gerar QR Code de CADASTRO (temporário)
     QRCode.toDataURL(registerUrl, {
@@ -542,12 +597,12 @@ export function ExecutorDashboard() {
     
     // Registrar senha temporária no sistema de autenticação
     const clientEmail = newCarData.clientEmail || 'nao-informado@email.com'
-    registerTempPassword(clientEmail, tempPassword, newProject.id)
+    registerTempPassword(clientEmail, tempPassword, savedProject.id)
     
     // Salvar dados para compartilhamento
     setCreatedProjectData({
-      id: newProject.id,
-      qrCode: newProject.qrCode,
+      id: savedProject.id,
+      qrCode: savedProject.qrCode,
       clientName: newCarData.clientName,
       clientEmail: clientEmail,
       clientPhone: newCarData.clientPhone,
@@ -1949,21 +2004,39 @@ contato@eliteblindagens.com.br`
                       }))
                       
                       // Criar workbook e exportar
-                      const ws = XLSX.utils.json_to_sheet(excelData)
-                      const wb = XLSX.utils.book_new()
-                      XLSX.utils.book_append_sheet(wb, ws, 'Tickets')
-                      XLSX.writeFile(wb, `tickets_${new Date().toISOString().split('T')[0]}.xlsx`)
+                      const headers = Object.keys(excelData[0] || {})
+                      const rows: string[] = []
+                      if (headers.length) {
+                        rows.push(headers.join(';'))
+                        excelData.forEach((row) => {
+                          const line = headers
+                            .map((h) => String((row as any)[h] ?? '').replace(/"/g, '""'))
+                            .map((v) => `"${v}` + `"`)
+                            .join(';')
+                          rows.push(line)
+                        })
+                      }
+                      const csv = '\uFEFF' + rows.join('\r\n')
+                      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+                      const url = URL.createObjectURL(blob)
+                      const a = document.createElement('a')
+                      a.href = url
+                      a.download = `tickets_${new Date().toISOString().split('T')[0]}.csv`
+                      document.body.appendChild(a)
+                      a.click()
+                      document.body.removeChild(a)
+                      URL.revokeObjectURL(url)
                       
                       addNotification({
                         type: 'success',
                         title: 'Relatório Exportado',
-                        message: `${filteredData.length} tickets exportados para Excel com sucesso!`
+                        message: `${filteredData.length} tickets exportados para CSV com sucesso!`
                       })
                     }}
                     className="flex items-center gap-2 px-4 py-2 bg-green-500/20 text-green-400 hover:bg-green-500/30 rounded-xl text-sm font-medium transition-colors"
                   >
                     <Download className="w-4 h-4" />
-                    Exportar Excel
+                    Exportar CSV
                   </button>
                 </div>
               </div>
@@ -2577,6 +2650,7 @@ contato@eliteblindagens.com.br`
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
                   <label className="block text-sm text-gray-400 mb-2">Foto Inicial</label>
+                  {/* Input para galeria (sem capture) */}
                   <input 
                     ref={vehiclePhotoInputRef}
                     type="file" 
@@ -2585,29 +2659,54 @@ contato@eliteblindagens.com.br`
                     className="hidden"
                     title="Selecionar foto do veículo"
                   />
-                  <div 
-                    onClick={() => vehiclePhotoInputRef.current?.click()}
-                    className="border-2 border-dashed border-white/20 rounded-xl p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
-                  >
-                    {vehiclePhoto ? (
-                      <div className="relative">
-                        <img src={vehiclePhoto} alt="Foto do veículo" className="w-full h-32 object-cover rounded-lg" />
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); setVehiclePhoto(null); }}
-                          className="absolute top-2 right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center"
-                          title="Remover foto"
-                        >
-                          <X className="w-4 h-4 text-white" />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="py-4">
-                        <Image className="w-10 h-10 mx-auto text-gray-500 mb-2" />
-                        <p className="text-sm text-gray-400">Clique para adicionar foto</p>
-                        <p className="text-xs text-gray-500">JPG, PNG até 5MB</p>
-                      </div>
-                    )}
-                  </div>
+                  {/* Input para câmera - capture funciona apenas em mobile, ignorado em desktop */}
+                  {/* eslint-disable-next-line react/no-unknown-property */}
+                  <input 
+                    ref={vehicleCameraInputRef}
+                    type="file" 
+                    accept="image/*"
+                    {...({ capture: 'environment' } as React.InputHTMLAttributes<HTMLInputElement>)}
+                    onChange={handleVehiclePhotoSelect}
+                    className="hidden"
+                    title="Tirar foto do veículo"
+                  />
+                  
+                  {vehiclePhoto ? (
+                    <div className="relative border-2 border-primary/30 rounded-xl p-2">
+                      <img src={vehiclePhoto} alt="Foto do veículo" className="w-full h-40 object-cover rounded-lg" />
+                      <button 
+                        onClick={() => setVehiclePhoto(null)}
+                        className="absolute top-4 right-4 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center shadow-lg"
+                        title="Remover foto"
+                      >
+                        <X className="w-5 h-5 text-white" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Botão Tirar Foto */}
+                      <button
+                        type="button"
+                        onClick={() => vehicleCameraInputRef.current?.click()}
+                        className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-white/20 rounded-xl hover:border-primary/50 hover:bg-primary/5 transition-all"
+                      >
+                        <Camera className="w-10 h-10 text-primary mb-2" />
+                        <span className="text-sm font-medium text-white">Tirar Foto</span>
+                        <span className="text-xs text-gray-500">Usar câmera</span>
+                      </button>
+                      
+                      {/* Botão Escolher da Galeria */}
+                      <button
+                        type="button"
+                        onClick={() => vehiclePhotoInputRef.current?.click()}
+                        className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-white/20 rounded-xl hover:border-primary/50 hover:bg-primary/5 transition-all"
+                      >
+                        <Image className="w-10 h-10 text-gray-400 mb-2" />
+                        <span className="text-sm font-medium text-white">Galeria</span>
+                        <span className="text-xs text-gray-500">JPG, PNG até 5MB</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -2878,7 +2977,7 @@ contato@eliteblindagens.com.br`
               </button>
               <button 
                 onClick={() => {
-                  setTickets(prev => prev.map(t => t.id === selectedTicket.id ? {...t, status: ticketNewStatus} : t))
+                  setTickets(prev => prev.map(t => t.id === selectedTicket.id ? {...t, status: ticketNewStatus as SupportTicket['status']} : t))
                   addNotification({ 
                     type: 'success', 
                     title: 'Ticket Atualizado', 

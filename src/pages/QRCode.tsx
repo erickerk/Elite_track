@@ -6,14 +6,16 @@ import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
 import { cn } from '../lib/utils'
 import { useTheme } from '../contexts/ThemeContext'
-import { mockProject } from '../data/mockData'
+import { useProjects } from '../contexts/ProjectContext'
 
 export function QRCodePage() {
   const { theme } = useTheme()
+  const { projects } = useProjects()
+  const project = projects[0]
   const isDark = theme === 'dark'
   const [copied, setCopied] = useState(false)
 
-  const verifyUrl = `${window.location.origin}/verify/${mockProject.id}`
+  const verifyUrl = `${window.location.origin}/verify/${project?.id || ''}`
   
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
     verifyUrl
@@ -72,11 +74,11 @@ export function QRCodePage() {
 
           <div className="mt-6 space-y-2">
             <p className="font-semibold text-body">
-              {mockProject.vehicle.brand} {mockProject.vehicle.model}
+              {project?.vehicle.brand} {project?.vehicle.model}
             </p>
-            <Badge variant="gold">{mockProject.vehicle.blindingLevel}</Badge>
+            <Badge variant="gold">{project?.vehicle.blindingLevel}</Badge>
             <p className="text-caption text-gray-400 font-mono">
-              {mockProject.qrCode}
+              {project?.qrCode}
             </p>
           </div>
         </Card>

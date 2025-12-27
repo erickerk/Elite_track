@@ -9,7 +9,8 @@ import type {
   IUserStorage, 
   INotificationStorage, 
   IInviteStorage,
-  ITempPasswordStorage 
+  ITempPasswordStorage,
+  ISupportTicketStorage 
 } from './StorageAdapter'
 
 import {
@@ -26,6 +27,7 @@ import {
   supabaseNotificationStorage,
   supabaseInviteStorage,
   supabaseTempPasswordStorage,
+  supabaseSupportTicketStorage,
 } from './SupabaseAdapter'
 
 // =====================================================
@@ -67,6 +69,11 @@ export function getTempPasswordStorage(): ITempPasswordStorage {
   return localTempPasswordStorage
 }
 
+export function getSupportTicketStorage(): ISupportTicketStorage {
+  // Por enquanto, sempre usa Supabase para tickets (não tem fallback local)
+  return supabaseSupportTicketStorage
+}
+
 // =====================================================
 // INSTÂNCIAS SINGLETON
 // =====================================================
@@ -76,6 +83,7 @@ export const userStorage = getUserStorage()
 export const notificationStorage = getNotificationStorage()
 export const inviteStorage = getInviteStorage()
 export const tempPasswordStorage = getTempPasswordStorage()
+export const supportTicketStorage = getSupportTicketStorage()
 
 // =====================================================
 // RE-EXPORTS
@@ -88,5 +96,6 @@ export type {
   INotificationStorage, 
   IInviteStorage,
   ITempPasswordStorage,
+  ISupportTicketStorage,
   StorageType 
 } from './StorageAdapter'

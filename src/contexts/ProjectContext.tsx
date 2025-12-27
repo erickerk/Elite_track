@@ -2,12 +2,14 @@ import { createContext, useContext, useState, useCallback, useEffect, ReactNode 
 import { mockProjects } from '../data/mockData'
 import type { Project } from '../types'
 import { useAuth } from './AuthContext'
+import { projectStorage, isSupabaseConfigured } from '../services/storage'
 
 interface ProjectContextType {
   projects: Project[]
   userProjects: Project[]
   selectedProject: Project | null
   completedProject: Project | null
+  isLoading: boolean
   setSelectedProject: (project: Project | null) => void
   getProjectsByUserId: (userId: string) => Project[]
   getProjectById: (projectId: string) => Project | undefined
@@ -17,23 +19,22 @@ interface ProjectContextType {
   getClientByEmailOrPhone: (email: string, phone: string) => { exists: boolean; projects: Project[] }
   getDelayedProjects: () => Project[]
   selectProjectByIndex: (index: number) => void
-  addProject: (project: Project) => void
-  updateProject: (projectId: string, updates: Partial<Project>) => void
-  refreshProjects: () => void
+  addProject: (project: Project) => Promise<Project>
+  updateProject: (projectId: string, updates: Partial<Project>) => Promise<void>
+  refreshProjects: () => Promise<void>
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined)
 
-// Chave para persistência no localStorage
+// Chave para persistência no localStorage (fallback)
 const PROJECTS_STORAGE_KEY = 'elitetrack_projects'
 
-// Função para carregar projetos do localStorage
-const loadProjectsFromStorage = (): Project[] => {
+// Função para carregar projetos do localStorage (fallback)
+const loadProjectsFromLocalStorage = (): Project[] => {
   try {
     const stored = localStorage.getItem(PROJECTS_STORAGE_KEY)
     if (stored) {
       const parsed = JSON.parse(stored)
-      // Mesclar com mockProjects, evitando duplicatas
       const storedIds = new Set(parsed.map((p: Project) => p.id))
       const uniqueMocks = mockProjects.filter(m => !storedIds.has(m.id))
       return [...parsed, ...uniqueMocks]
@@ -44,8 +45,8 @@ const loadProjectsFromStorage = (): Project[] => {
   return mockProjects
 }
 
-// Função para salvar projetos no localStorage
-const saveProjectsToStorage = (projects: Project[]) => {
+// Função para salvar projetos no localStorage (fallback)
+const saveProjectsToLocalStorage = (projects: Project[]) => {
   try {
     localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(projects))
   } catch (e) {
@@ -55,12 +56,47 @@ const saveProjectsToStorage = (projects: Project[]) => {
 
 export function ProjectProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
-  const [projects, setProjects] = useState<Project[]>(() => loadProjectsFromStorage())
+  const [projects, setProjects] = useState<Project[]>([])
   const [selectedProject, setSelectedProjectState] = useState<Project | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
   
-  // Salvar projetos no localStorage sempre que mudar
+  // Carregar projetos do Supabase ou localStorage
   useEffect(() => {
-    saveProjectsToStorage(projects)
+    const loadProjects = async () => {
+      setIsLoading(true)
+      try {
+        if (isSupabaseConfigured()) {
+          console.log('[ProjectContext] Carregando projetos do Supabase...')
+          const supabaseProjects = await projectStorage.getProjects()
+          // Mesclar com mocks se não houver projetos no Supabase
+          if (supabaseProjects.length === 0) {
+            console.log('[ProjectContext] Nenhum projeto no Supabase, usando mocks')
+            setProjects(mockProjects)
+          } else {
+            console.log(`[ProjectContext] ${supabaseProjects.length} projetos carregados do Supabase`)
+            setProjects(supabaseProjects)
+          }
+        } else {
+          console.log('[ProjectContext] Supabase não configurado, usando localStorage')
+          setProjects(loadProjectsFromLocalStorage())
+        }
+      } catch (error) {
+        console.error('[ProjectContext] Erro ao carregar projetos:', error)
+        // Fallback para localStorage em caso de erro
+        setProjects(loadProjectsFromLocalStorage())
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    loadProjects()
+  }, [])
+  
+  // Salvar no localStorage como backup (sempre)
+  useEffect(() => {
+    if (projects.length > 0) {
+      saveProjectsToLocalStorage(projects)
+    }
   }, [projects])
 
   const userProjects = projects.filter(p => 
@@ -132,18 +168,63 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     })
   }, [projects])
 
-  const addProject = useCallback((project: Project) => {
-    setProjects(prev => [project, ...prev])
+  const addProject = useCallback(async (project: Project): Promise<Project> => {
+    try {
+      if (isSupabaseConfigured()) {
+        console.log('[ProjectContext] Salvando projeto no Supabase...', project.id)
+        const saved = await projectStorage.createProject(project)
+        console.log('[ProjectContext] Projeto salvo com sucesso no Supabase', saved.id)
+        setProjects(prev => [saved, ...prev])
+        return saved
+      }
+
+      // Fallback: sem Supabase, usa apenas localStorage/mocks
+      setProjects(prev => [project, ...prev])
+      return project
+    } catch (error) {
+      console.error('[ProjectContext] Erro ao salvar projeto:', error)
+      // Ainda adiciona localmente para não perder dados de sessão
+      setProjects(prev => [project, ...prev])
+      throw error
+    }
   }, [])
 
-  const updateProject = useCallback((projectId: string, updates: Partial<Project>) => {
-    setProjects(prev => prev.map(p => 
-      p.id === projectId ? { ...p, ...updates } : p
-    ))
+  const updateProject = useCallback(async (projectId: string, updates: Partial<Project>) => {
+    try {
+      if (isSupabaseConfigured()) {
+        console.log('[ProjectContext] Atualizando projeto no Supabase...', projectId)
+        await projectStorage.updateProject(projectId, updates)
+        console.log('[ProjectContext] Projeto atualizado com sucesso no Supabase')
+      }
+      // Sempre atualizar estado local
+      setProjects(prev => prev.map(p => 
+        p.id === projectId ? { ...p, ...updates } : p
+      ))
+    } catch (error) {
+      console.error('[ProjectContext] Erro ao atualizar projeto:', error)
+      // Ainda atualiza localmente
+      setProjects(prev => prev.map(p => 
+        p.id === projectId ? { ...p, ...updates } : p
+      ))
+      throw error
+    }
   }, [])
 
-  const refreshProjects = useCallback(() => {
-    setProjects(loadProjectsFromStorage())
+  const refreshProjects = useCallback(async () => {
+    try {
+      if (isSupabaseConfigured()) {
+        console.log('[ProjectContext] Recarregando projetos do Supabase...')
+        const supabaseProjects = await projectStorage.getProjects()
+        if (supabaseProjects.length > 0) {
+          setProjects(supabaseProjects)
+          return
+        }
+      }
+      setProjects(loadProjectsFromLocalStorage())
+    } catch (error) {
+      console.error('[ProjectContext] Erro ao recarregar projetos:', error)
+      setProjects(loadProjectsFromLocalStorage())
+    }
   }, [])
 
   return (
@@ -153,6 +234,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         userProjects,
         selectedProject,
         completedProject,
+        isLoading,
         setSelectedProject,
         getProjectsByUserId,
         getProjectById,

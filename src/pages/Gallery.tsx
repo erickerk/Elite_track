@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useNotifications } from '../contexts/NotificationContext'
-import { mockProjects } from '../data/mockData'
+import { useProjects } from '../contexts/ProjectContext'
 import { cn } from '../lib/utils'
 
 interface GalleryImage {
@@ -36,9 +36,10 @@ export function Gallery() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { unreadCount } = useNotifications()
+  const { projects: allProjects } = useProjects()
 
-  const userProjects = mockProjects.filter(p => p.user.id === user?.id || p.user.email === user?.email)
-  const project = userProjects[0] || mockProjects[0]
+  const userProjects = allProjects.filter(p => p.user.id === user?.id || p.user.email === user?.email)
+  const project = userProjects[0] || allProjects[0]
 
   const [selectedFilter, setSelectedFilter] = useState<string>('all')
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null)

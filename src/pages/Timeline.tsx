@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Modal, NotificationPanel } from '../components/ui'
 import { useAuth } from '../contexts/AuthContext'
 import { useNotifications } from '../contexts/NotificationContext'
-import { mockProjects } from '../data/mockData'
+import { useProjects } from '../contexts/ProjectContext'
 import { cn } from '../lib/utils'
 import type { TimelineStep } from '../types'
 
@@ -27,12 +27,13 @@ export function Timeline() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { unreadCount } = useNotifications()
+  const { projects: allProjects } = useProjects()
   
-  const userProjects = mockProjects.filter(p => p.user.id === user?.id || p.user.email === user?.email)
+  const userProjects = allProjects.filter(p => p.user.id === user?.id || p.user.email === user?.email)
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
   const project = selectedProjectId 
-    ? userProjects.find(p => p.id === selectedProjectId) || userProjects[0] || mockProjects[0]
-    : userProjects[0] || mockProjects[0]
+    ? userProjects.find(p => p.id === selectedProjectId) || userProjects[0] || allProjects[0]
+    : userProjects[0] || allProjects[0]
   
   const [selectedStep, setSelectedStep] = useState<TimelineStep | null>(null)
   const [selectedPhotos, setSelectedPhotos] = useState<string[] | null>(null)

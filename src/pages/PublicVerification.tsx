@@ -16,6 +16,7 @@ import { cn } from '../lib/utils'
 import { useAuth } from '../contexts/AuthContext'
 import { useProjects } from '../contexts/ProjectContext'
 import type { Project } from '../types'
+import { COMPANY_INFO } from '../constants/companyInfo'
 
 const statusConfig = {
   pending: { label: 'Aguardando Início', variant: 'warning' as const, icon: AlertCircle, color: 'text-status-warning' },
@@ -79,6 +80,19 @@ export function PublicVerification() {
       pdf.text(`Documento gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`, margin, yPos)
       yPos += 10
 
+      // Informações da empresa
+      pdf.setDrawColor(...goldColor)
+      pdf.setLineWidth(0.4)
+      pdf.rect(margin, yPos, contentWidth, 18, 'S')
+      pdf.setFontSize(11)
+      pdf.setTextColor(...darkColor)
+      pdf.setFont('helvetica', 'bold')
+      pdf.text(COMPANY_INFO.name, margin + 3, yPos + 6)
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(9)
+      pdf.text(`${COMPANY_INFO.websiteDisplay}  •  WhatsApp: ${COMPANY_INFO.whatsappFormatted}`, margin + 3, yPos + 12)
+      yPos += 26
+
       // Selo de autenticidade
       pdf.setDrawColor(...goldColor)
       pdf.setLineWidth(1)
@@ -106,7 +120,7 @@ export function PublicVerification() {
       yPos += 6
       pdf.text(`Nível de Blindagem: ${project.vehicle.blindingLevel}`, margin, yPos)
       yPos += 6
-      pdf.text(`Código do Projeto: ${project.id}`, margin, yPos)
+      pdf.text(`Contato WhatsApp: ${COMPANY_INFO.whatsappFormatted}`, margin, yPos)
       yPos += 12
 
       // Certificação
@@ -124,6 +138,10 @@ export function PublicVerification() {
         yPos += 6
         pdf.text(`Válido até: ${project.blindingSpecs.validUntil ? new Date(project.blindingSpecs.validUntil).toLocaleDateString('pt-BR') : '-'}`, margin, yPos)
         yPos += 6
+        if (project.vehicleReceivedDate) {
+          pdf.text(`Recebido para blindagem em: ${new Date(project.vehicleReceivedDate).toLocaleDateString('pt-BR')}`, margin, yPos)
+          yPos += 6
+        }
         pdf.text(`Peso Adicional: ${project.blindingSpecs.totalWeight}`, margin, yPos)
         yPos += 6
         pdf.text(`Responsável Técnico: ${project.blindingSpecs.technicalResponsible}`, margin, yPos)
@@ -260,7 +278,7 @@ export function PublicVerification() {
         pdf.setFontSize(8)
         pdf.setTextColor(...grayColor)
         pdf.text(`Página ${i} de ${totalPages}`, pageWidth / 2, pageHeight - 10, { align: 'center' })
-        pdf.text('Elite Blindagens - Documento Oficial | www.eliteblindagens.com.br | (11) 3456-7890', pageWidth / 2, pageHeight - 5, { align: 'center' })
+        pdf.text(`${COMPANY_INFO.name} - Documento Oficial | ${COMPANY_INFO.websiteDisplay} | ${COMPANY_INFO.whatsappFormatted}`, pageWidth / 2, pageHeight - 5, { align: 'center' })
       }
 
       pdf.save(`EliteTrack-Laudo-${project.id}-${new Date().toISOString().split('T')[0]}.pdf`)

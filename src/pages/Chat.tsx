@@ -4,7 +4,7 @@ import { cn } from '../lib/utils'
 import { useAuth } from '../contexts/AuthContext'
 import { useChat } from '../contexts/ChatContext'
 import { useNotifications } from '../contexts/NotificationContext'
-import { mockProjects } from '../data/mockData'
+import { useProjects } from '../contexts/ProjectContext'
 import { COMPANY_INFO, getWhatsAppLink, getPhoneLink } from '../constants/companyInfo'
 
 interface ChatMessage {
@@ -34,9 +34,10 @@ export function Chat() {
   useChat()
   const { unreadCount, addNotification } = useNotifications()
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const { projects: allProjects } = useProjects()
 
-  const userProjects = mockProjects.filter(p => p.user.id === user?.id || p.user.email === user?.email)
-  const project = userProjects[0] || mockProjects[0]
+  const userProjects = allProjects.filter(p => p.user.id === user?.id || p.user.email === user?.email)
+  const project = userProjects[0] || allProjects[0]
 
   const [inputValue, setInputValue] = useState('')
   const [isTyping, setIsTyping] = useState(false)
