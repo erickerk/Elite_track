@@ -1,4 +1,4 @@
-const CACHE_NAME = 'elitetrack-v1';
+const CACHE_NAME = 'elitetrack-v2';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -35,20 +35,39 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', (event) => {
+  const req = event.request;
+
+  if (
+    req.mode === 'navigate' ||
+    req.destination === 'document' ||
+    (req.headers.get('accept') || '').includes('text/html')
+  ) {
+    event.respondWith(
+      fetch(req)
+        .then((response) => {
+          const resClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(req, resClone));
+          return response;
+        })
+        .catch(() => caches.match(req))
+    );
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request)
+    caches.match(req)
       .then((response) => {
         if (response) {
           return response;
         }
-        return fetch(event.request).then((response) => {
+        return fetch(req).then((response) => {
           if (!response || response.status !== 200 || response.type !== 'basic') {
             return response;
           }
           const responseToCache = response.clone();
           caches.open(CACHE_NAME)
             .then((cache) => {
-              cache.put(event.request, responseToCache);
+              cache.put(req, responseToCache);
             });
           return response;
         });
