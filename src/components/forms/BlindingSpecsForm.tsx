@@ -202,6 +202,8 @@ export function BlindingSpecsForm({
                   'w-full rounded-xl px-4 py-3 border outline-none',
                   isDark ? 'bg-carbon-800 border-carbon-700 text-white' : 'bg-white border-gray-300'
                 )}
+                title="Nível de Proteção"
+                aria-label="Nível de Proteção"
               >
                 <option>Nível I</option>
                 <option>Nível II</option>
@@ -221,6 +223,8 @@ export function BlindingSpecsForm({
                   'w-full rounded-xl px-4 py-3 border outline-none',
                   isDark ? 'bg-carbon-800 border-carbon-700 text-white' : 'bg-white border-gray-300'
                 )}
+                title="Certificação"
+                aria-label="Certificação"
               >
                 {certificationOptions.map(cert => (
                   <option key={cert}>{cert}</option>
@@ -246,6 +250,9 @@ export function BlindingSpecsForm({
                   'w-full rounded-xl px-4 py-3 border outline-none',
                   isDark ? 'bg-carbon-800 border-carbon-700 text-white' : 'bg-white border-gray-300'
                 )}
+                title="Data de Instalação"
+                aria-label="Data de Instalação"
+                placeholder="Selecione a data"
               />
             </div>
             
@@ -259,6 +266,9 @@ export function BlindingSpecsForm({
                   'w-full rounded-xl px-4 py-3 border outline-none',
                   isDark ? 'bg-carbon-800 border-carbon-700 text-white' : 'bg-white border-gray-300'
                 )}
+                title="Válido até"
+                aria-label="Válido até"
+                placeholder="Selecione a data"
               />
             </div>
           </div>
@@ -280,8 +290,11 @@ export function BlindingSpecsForm({
           {specs.materials.map((material, index) => (
             <Card key={index} variant="bordered" className="relative">
               <button
+                type="button"
                 onClick={() => removeMaterial(index)}
                 className="absolute top-2 right-2 p-1 rounded-lg hover:bg-status-error/20 text-status-error"
+                aria-label={`Remover material ${index + 1}`}
+                title={`Remover material ${index + 1}`}
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -305,6 +318,8 @@ export function BlindingSpecsForm({
                       'w-full rounded-xl px-4 py-3 border outline-none text-sm',
                       isDark ? 'bg-carbon-800 border-carbon-700 text-white' : 'bg-white border-gray-300'
                     )}
+                    title="Tipo de material"
+                    aria-label="Tipo de material"
                   >
                     <option value="">Tipo de material</option>
                     {materialTypes.map(type => (
@@ -327,6 +342,8 @@ export function BlindingSpecsForm({
                       'w-full rounded-xl px-4 py-3 border outline-none text-sm',
                       isDark ? 'bg-carbon-800 border-carbon-700 text-white' : 'bg-white border-gray-300'
                     )}
+                    title="Certificação do material"
+                    aria-label="Certificação do material"
                   >
                     <option value="">Certificação</option>
                     {certificationOptions.map(cert => (
