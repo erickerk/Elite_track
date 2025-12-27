@@ -33,7 +33,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - sempre buscar do network; fallback para cache apenas se offline
 self.addEventListener('fetch', (event) => {
   const req = event.request;
 
@@ -42,37 +42,29 @@ self.addEventListener('fetch', (event) => {
     req.destination === 'document' ||
     (req.headers.get('accept') || '').includes('text/html')
   ) {
-    event.respondWith(
-      fetch(req)
-        .then((response) => {
-          const resClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, resClone));
-          return response;
-        })
-        .catch(() => caches.match(req))
-    );
+    event.respondWith((async () => {
+      try {
+        const response = await fetch(req, { cache: 'no-store' });
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+        return response;
+      } catch (_) {
+        const cached = await caches.match(req) || await caches.match('/index.html');
+        return cached || new Response('Offline', { status: 503 });
+      }
+    })());
     return;
   }
 
-  event.respondWith(
-    caches.match(req)
-      .then((response) => {
-        if (response) {
-          return response;
-        }
-        return fetch(req).then((response) => {
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME)
-            .then((cache) => {
-              cache.put(req, responseToCache);
-            });
-          return response;
-        });
-      })
-  );
+  event.respondWith((async () => {
+    try {
+      return await fetch(req, { cache: 'no-store' });
+    } catch (_) {
+      const cached = await caches.match(req);
+      if (cached) return cached;
+      throw _;
+    }
+  })());
 });
 
 // Push notification event
