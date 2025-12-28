@@ -162,8 +162,9 @@ export interface Notification {
   message: string
   type: 'info' | 'success' | 'warning' | 'alert'
   read: boolean
-  createdAt: string
+  createdAt?: string
   projectId?: string
+  userId?: string
 }
 
 export type ThemeMode = 'dark' | 'light'
