@@ -429,12 +429,42 @@ export class SupabaseProjectStorage implements IProjectStorage {
     if (data.completedDate !== undefined) updateData.completed_date = data.completedDate
     if (data.qrCode !== undefined) updateData.qr_code = data.qrCode
 
-    const { error } = await supabase
-      .from('projects')
-      .update(updateData)
-      .eq('id', id)
+    // Atualizar projeto principal
+    if (Object.keys(updateData).length > 0) {
+      const { error } = await supabase
+        .from('projects')
+        .update(updateData)
+        .eq('id', id)
 
-    if (error) throw error
+      if (error) throw error
+    }
+
+    // Atualizar timeline_steps se fornecido
+    if (data.timeline && Array.isArray(data.timeline)) {
+      console.log('[SupabaseAdapter] Atualizando timeline_steps para projeto:', id)
+      
+      for (const step of data.timeline) {
+        const stepUpdateData: any = {
+          status: step.status,
+          updated_at: new Date().toISOString(),
+        }
+        
+        if (step.date) stepUpdateData.date = step.date
+        if (step.notes !== undefined) stepUpdateData.notes = step.notes
+        if (step.technician !== undefined) stepUpdateData.technician = step.technician
+
+        const { error: stepError } = await supabase
+          .from('timeline_steps')
+          .update(stepUpdateData)
+          .eq('id', step.id)
+
+        if (stepError) {
+          console.error('[SupabaseAdapter] Erro ao atualizar step:', step.id, stepError)
+        }
+      }
+      
+      console.log('[SupabaseAdapter] Timeline atualizada com sucesso')
+    }
 
     const updated = await this.getProjectById(id)
     if (!updated) throw new Error('Projeto não encontrado após atualização')
