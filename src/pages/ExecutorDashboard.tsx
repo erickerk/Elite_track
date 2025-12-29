@@ -330,70 +330,76 @@ export function ExecutorDashboard() {
   }
 
   const handleUpdateStep = (stepId: string, updates: Record<string, unknown>) => {
-    if (!selectedProject) return
+    // Usar função de atualização para garantir estado mais recente
+    setSelectedProject(currentProject => {
+      if (!currentProject) return currentProject
 
-    // Encontrar índice da etapa atual
-    const currentStepIndex = selectedProject.timeline.findIndex(s => s.id === stepId)
-    
-    // Atualizar a timeline do projeto com lógica de sincronização
-    const updatedTimeline = selectedProject.timeline.map((step, index) => {
-      if (step.id === stepId) {
-        const updatedStep = { ...step, ...updates }
-        
-        // Se a etapa foi concluída, garantir que tenha a data de conclusão
-        if (updates.status === 'completed' && !updatedStep.date) {
-          updatedStep.date = new Date().toISOString()
+      // Encontrar índice da etapa atual
+      const currentStepIndex = currentProject.timeline.findIndex(s => s.id === stepId)
+      
+      // Atualizar a timeline do projeto com lógica de sincronização
+      const updatedTimeline = currentProject.timeline.map((step, index) => {
+        if (step.id === stepId) {
+          const updatedStep = { ...step, ...updates }
+          
+          // Se a etapa foi concluída, garantir que tenha a data de conclusão
+          if (updates.status === 'completed' && !updatedStep.date) {
+            updatedStep.date = new Date().toISOString()
+          }
+          
+          return updatedStep
         }
         
-        return updatedStep
-      }
-      
-      // Se a etapa atual foi concluída, a próxima deve ficar como 'pending' (pronta para iniciar)
-      if (index === currentStepIndex + 1 && updates.status === 'completed') {
-        // Garantir que a próxima etapa esteja como pendente (não bloqueada)
-        if (step.status !== 'completed' && step.status !== 'in_progress') {
-          return { ...step, status: 'pending' as const }
+        // Se a etapa atual foi concluída, a próxima deve ficar como 'pending' (pronta para iniciar)
+        if (index === currentStepIndex + 1 && updates.status === 'completed') {
+          // Garantir que a próxima etapa esteja como pendente (não bloqueada)
+          if (step.status !== 'completed' && step.status !== 'in_progress') {
+            return { ...step, status: 'pending' as const }
+          }
         }
+        
+        return step
+      })
+
+      // Calcular novo progresso
+      const completedSteps = updatedTimeline.filter(s => s.status === 'completed').length
+      const newProgress = Math.round((completedSteps / updatedTimeline.length) * 100)
+
+      // Determinar status do projeto
+      let projectStatus: 'pending' | 'in_progress' | 'completed' | 'delivered' = 'pending'
+      if (newProgress === 100) {
+        projectStatus = 'completed'
+      } else if (newProgress > 0 || updatedTimeline.some(s => s.status === 'in_progress')) {
+        projectStatus = 'in_progress'
       }
-      
-      return step
-    })
 
-    // Calcular novo progresso
-    const completedSteps = updatedTimeline.filter(s => s.status === 'completed').length
-    const newProgress = Math.round((completedSteps / updatedTimeline.length) * 100)
+      // Criar projeto atualizado
+      const updatedProject: Project = {
+        ...currentProject,
+        timeline: updatedTimeline,
+        progress: newProgress,
+        status: projectStatus,
+        completedDate: newProgress === 100 ? new Date().toISOString() : currentProject.completedDate
+      }
 
-    // Determinar status do projeto
-    let projectStatus: 'pending' | 'in_progress' | 'completed' | 'delivered' = 'pending'
-    if (newProgress === 100) {
-      projectStatus = 'completed'
-    } else if (newProgress > 0 || updatedTimeline.some(s => s.status === 'in_progress')) {
-      projectStatus = 'in_progress'
-    }
+      // Sincronizar com Supabase (fora do setState para evitar problemas)
+      setTimeout(() => {
+        updateGlobalProject(updatedProject.id, updatedProject)
+        
+        // Notificação de sucesso
+        const stepName = updatedTimeline.find(s => s.id === stepId)?.title || 'Etapa'
+        addNotification({
+          type: 'success',
+          title: updates.status === 'completed' ? 'Etapa Concluída' : 'Etapa Atualizada',
+          message: updates.status === 'completed' 
+            ? `"${stepName}" foi concluída! Progresso: ${newProgress}%`
+            : `A etapa foi atualizada com sucesso. Progresso: ${newProgress}%`,
+          projectId: currentProject.id,
+          stepId,
+        })
+      }, 0)
 
-    // Atualizar o projeto
-    const updatedProject: Project = {
-      ...selectedProject,
-      timeline: updatedTimeline,
-      progress: newProgress,
-      status: projectStatus,
-      completedDate: newProgress === 100 ? new Date().toISOString() : selectedProject.completedDate
-    }
-
-    // Atualizar projeto no contexto global (sincroniza com Supabase)
-    updateGlobalProject(updatedProject.id, updatedProject)
-    setSelectedProject(updatedProject)
-
-    // Notificação de sucesso
-    const stepName = updatedTimeline.find(s => s.id === stepId)?.title || 'Etapa'
-    addNotification({
-      type: 'success',
-      title: updates.status === 'completed' ? 'Etapa Concluída' : 'Etapa Atualizada',
-      message: updates.status === 'completed' 
-        ? `"${stepName}" foi concluída! Progresso: ${newProgress}%`
-        : `A etapa foi atualizada com sucesso. Progresso: ${newProgress}%`,
-      projectId: selectedProject?.id,
-      stepId,
+      return updatedProject
     })
   }
 
