@@ -152,17 +152,22 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const addNotification = useCallback(async (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
+    // Gerar UUID válido para o ID da notificação
+    const notificationId = crypto.randomUUID()
+    
     const newNotification: Notification = {
       ...notification,
-      id: `notif-${Date.now()}`,
+      id: notificationId,
       timestamp: new Date(),
       read: false,
     }
     
     setNotifications(prev => [newNotification, ...prev])
     
-    // Salvar no Supabase se disponível
-    if (user?.id && notificationStorage.isAvailable()) {
+    // Salvar no Supabase se disponível e user.id é um UUID válido
+    const isValidUUID = user?.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id)
+    
+    if (isValidUUID && notificationStorage.isAvailable()) {
       try {
         await notificationStorage.createNotification({
           id: newNotification.id,

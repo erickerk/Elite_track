@@ -108,7 +108,12 @@ export class SupabaseProjectStorage implements IProjectStorage {
 
       const user = dbUserToUser(p.users)
 
-      const timeline: TimelineStep[] = (p.timeline_steps || []).map((s: any) => {
+      // Ordenar timeline_steps por sort_order
+      const sortedSteps = (p.timeline_steps || []).sort((a: any, b: any) => 
+        (a.sort_order ?? 0) - (b.sort_order ?? 0)
+      )
+
+      const timeline: TimelineStep[] = sortedSteps.map((s: any) => {
         const stepPhotos = (s.step_photos || []) as any[]
         return {
           id: s.id,
@@ -168,7 +173,12 @@ export class SupabaseProjectStorage implements IProjectStorage {
 
     const user = dbUserToUser(p.users)
 
-    const timeline: TimelineStep[] = (p.timeline_steps || []).map((s: any) => {
+    // Ordenar timeline_steps por sort_order antes de mapear
+    const sortedSteps = (p.timeline_steps || []).sort((a: any, b: any) => 
+      (a.sort_order ?? 0) - (b.sort_order ?? 0)
+    )
+    
+    const timeline: TimelineStep[] = sortedSteps.map((s: any) => {
       const stepPhotos = (s.step_photos || []) as any[]
       return {
         id: s.id,
@@ -225,7 +235,12 @@ export class SupabaseProjectStorage implements IProjectStorage {
 
       const user = dbUserToUser(p.users)
 
-      const timeline: TimelineStep[] = (p.timeline_steps || []).map((s: any) => {
+      // Ordenar timeline_steps por sort_order
+      const sortedSteps = (p.timeline_steps || []).sort((a: any, b: any) => 
+        (a.sort_order ?? 0) - (b.sort_order ?? 0)
+      )
+
+      const timeline: TimelineStep[] = sortedSteps.map((s: any) => {
         const stepPhotos = (s.step_photos || []) as any[]
         return {
           id: s.id,
