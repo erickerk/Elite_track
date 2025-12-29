@@ -550,11 +550,19 @@ export function ExecutorDashboard() {
     }
 
     let savedProject = newProject
+    let savedToSupabase = false
     try {
       savedProject = await addGlobalProject(newProject) // Sincronizar com contexto global e salvar no Supabase
+      savedToSupabase = true
+      console.log('[ExecutorDashboard] Projeto salvo com sucesso no Supabase:', savedProject.id)
     } catch (error) {
-      console.error('Erro ao salvar projeto no Supabase:', error)
-      // Continua com o projeto local mesmo em caso de erro
+      console.error('[ExecutorDashboard] ERRO ao salvar projeto no Supabase:', error)
+      // Notificar usuário sobre o erro - projeto NÃO foi sincronizado
+      addNotification({
+        type: 'error',
+        title: 'Erro de Sincronização',
+        message: 'O projeto foi criado localmente, mas NÃO foi salvo no servidor. Verifique sua conexão e tente novamente.',
+      })
     }
 
     setSelectedProject(savedProject)
@@ -623,9 +631,11 @@ export function ExecutorDashboard() {
     setVehiclePhoto(null)
     
     addNotification({
-      type: 'success',
-      title: 'Novo Projeto Criado',
-      message: `Projeto para ${newCarData.brand} ${newCarData.model} criado com sucesso.`,
+      type: savedToSupabase ? 'success' : 'warning',
+      title: savedToSupabase ? 'Projeto Criado e Sincronizado' : 'Projeto Criado (Apenas Local)',
+      message: savedToSupabase 
+        ? `Projeto para ${newCarData.brand} ${newCarData.model} criado e sincronizado com sucesso.`
+        : `Projeto para ${newCarData.brand} ${newCarData.model} criado localmente. Sincronização pendente.`,
     })
   }
 
