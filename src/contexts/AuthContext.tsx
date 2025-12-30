@@ -138,23 +138,71 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const changePassword = async (newPassword: string) => {
     if (!user) throw new Error('Usuário não autenticado')
-    
-    // Atualizar senha no Supabase
-    if (isSupabaseConfigured() && supabase) {
-      const { error } = await (supabase as any)
-        .from('users_elitetrack')
-        .update({ password_hash: newPassword, updated_at: new Date().toISOString() })
-        .eq('id', user.id)
-      
-      if (error) {
-        console.error('[Auth] Erro ao atualizar senha:', error)
-        throw new Error('Erro ao atualizar senha')
-      }
+
+    if (!isSupabaseConfigured() || !supabase) {
+      // Sem Supabase: apenas remove o flag de troca obrigatória
+      setRequiresPasswordChange(false)
+      localStorage.removeItem('elite-requires-password-change')
+      console.warn('[Auth] Supabase não configurado - senha alterada apenas em memória')
+      return
     }
-    
-    setRequiresPasswordChange(false)
-    localStorage.removeItem('elite-requires-password-change')
-    console.log('[Auth] Senha alterada com sucesso')
+
+    // Cliente em primeiro acesso (usuário TEMP-... vindo de senha temporária)
+    const isTempUser = user.id.startsWith('TEMP-')
+
+    try {
+      if (isTempUser) {
+        // Criar usuário definitivo na tabela users_elitetrack
+        const { data, error } = await (supabase as any)
+          .from('users_elitetrack')
+          .insert({
+            name: user.name,
+            email: user.email.toLowerCase().trim(),
+            phone: user.phone || null,
+            role: 'client',
+            password_hash: newPassword,
+            created_by: null,
+            is_active: true,
+          })
+          .select()
+          .single()
+
+        if (error) {
+          console.error('[Auth] Erro ao criar usuário definitivo para cliente:', error)
+          throw new Error('Erro ao salvar nova senha do cliente')
+        }
+
+        const persistedUser: User = {
+          id: (data as any).id,
+          name: (data as any).name,
+          email: (data as any).email,
+          phone: (data as any).phone || '',
+          role: (data as any).role === 'super_admin' ? 'admin' : (data as any).role,
+        }
+
+        setUser(persistedUser)
+        localStorage.setItem('elite-user', JSON.stringify(persistedUser))
+        console.log('[Auth] ✓ Cliente criado a partir de senha temporária:', persistedUser.email)
+      } else {
+        // Usuário já existente (executor, admin ou client já persistido)
+        const { error } = await (supabase as any)
+          .from('users_elitetrack')
+          .update({ password_hash: newPassword, updated_at: new Date().toISOString() })
+          .eq('id', user.id)
+
+        if (error) {
+          console.error('[Auth] Erro ao atualizar senha:', error)
+          throw new Error('Erro ao atualizar senha')
+        }
+      }
+
+      setRequiresPasswordChange(false)
+      localStorage.removeItem('elite-requires-password-change')
+      console.log('[Auth] Senha alterada com sucesso')
+    } catch (err) {
+      console.error('[Auth] Erro em changePassword:', err)
+      throw err
+    }
   }
 
   const createUser = async (userData: { name: string; email: string; phone?: string; role: 'executor' | 'client'; password: string }): Promise<User> => {

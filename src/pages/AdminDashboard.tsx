@@ -289,15 +289,46 @@ export function AdminDashboard() {
     })
   }
 
-  const handleResetPassword = () => {
+  const handleResetPassword = async () => {
+    if (!selectedExecutor) {
+      addNotification({ type: 'error', title: 'Erro', message: 'Nenhum executor selecionado.' })
+      return
+    }
+
     if (!newPassword || newPassword.length < 6) {
       addNotification({ type: 'warning', title: 'Senha Inválida', message: 'A senha deve ter pelo menos 6 caracteres.' })
       return
     }
-    addNotification({ type: 'success', title: 'Senha Alterada', message: `Senha de ${selectedExecutor?.name} foi alterada com sucesso.` })
-    setShowResetPasswordModal(false)
-    setNewPassword('')
-    setSelectedExecutor(null)
+
+    // Atualizar senha diretamente na tabela users_elitetrack
+    if (!isSupabaseConfigured() || !supabase) {
+      addNotification({ type: 'error', title: 'Supabase não configurado', message: 'Não foi possível atualizar a senha no banco de dados.' })
+      return
+    }
+
+    try {
+      const { error } = await (supabase as any)
+        .from('users_elitetrack')
+        .update({
+          password_hash: newPassword,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', selectedExecutor.id)
+
+      if (error) {
+        console.error('[AdminDashboard] Erro ao resetar senha do executor:', error)
+        addNotification({ type: 'error', title: 'Erro ao atualizar senha', message: 'Não foi possível salvar a nova senha no banco.' })
+        return
+      }
+
+      addNotification({ type: 'success', title: 'Senha Alterada', message: `Senha de ${selectedExecutor.name} foi alterada com sucesso.` })
+      setShowResetPasswordModal(false)
+      setNewPassword('')
+      setSelectedExecutor(null)
+    } catch (err) {
+      console.error('[AdminDashboard] Erro inesperado ao resetar senha:', err)
+      addNotification({ type: 'error', title: 'Erro inesperado', message: 'Ocorreu um erro ao tentar atualizar a senha.' })
+    }
   }
 
   const handleDeleteExecutor = (executor: ExecutorUser) => {
