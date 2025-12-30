@@ -19,6 +19,16 @@ export const supabase = supabaseUrl && supabaseAnonKey
         persistSession: true,
         detectSessionInUrl: true,
       },
+      realtime: {
+        params: {
+          eventsPerSecond: 10,
+        },
+      },
+      global: {
+        headers: {
+          'X-Client-Info': 'elite-track/1.0.0',
+        },
+      },
     })
   : null
 

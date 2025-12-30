@@ -1,9 +1,10 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { 
   Users, Car, BarChart3, Search, Shield, Key, Trash2,
   CheckCircle, Clock, TrendingUp, Settings, UserCheck,
   Eye, EyeOff, UserPlus, LogOut, Activity, Database,
-  DollarSign, Calendar, FileText, Download, X, ChevronRight, Mail, Send
+  DollarSign, Calendar, FileText, Download, X, ChevronRight, Mail, Send,
+  Filter, History, ArrowLeft, RefreshCw
 } from 'lucide-react'
 import { Modal } from '../components/ui/Modal'
 import { InviteManager } from '../components/admin/InviteManager'
@@ -13,6 +14,7 @@ import { useProjects } from '../contexts/ProjectContext'
 import { useQuotes } from '../contexts/QuoteContext'
 import { useLeads } from '../contexts/LeadsContext'
 import { cn } from '../lib/utils'
+import { supabase, isSupabaseConfigured } from '../lib/supabase'
 
 interface ExecutorUser {
   id: string
@@ -26,11 +28,29 @@ interface ExecutorUser {
   projectsCount: number
 }
 
-const initialExecutors: ExecutorUser[] = [
-  { id: 'EXE-001', name: 'Carlos Silva', email: 'carlos@eliteblindagens.com.br', phone: '(11) 99999-1111', role: 'executor', status: 'active', createdAt: '2025-01-15', lastLogin: '2025-12-14', projectsCount: 12 },
-  { id: 'EXE-002', name: 'Roberto Almeida', email: 'roberto@eliteblindagens.com.br', phone: '(11) 99999-2222', role: 'executor', status: 'active', createdAt: '2025-03-20', lastLogin: '2025-12-13', projectsCount: 8 },
-  { id: 'EXE-003', name: 'Fernando Santos', email: 'fernando@eliteblindagens.com.br', phone: '(11) 99999-3333', role: 'executor', status: 'inactive', createdAt: '2025-06-10', projectsCount: 5 },
-]
+interface ExecutorAction {
+  id: string
+  type: 'project_created' | 'project_updated' | 'client_created' | 'photo_uploaded' | 'timeline_updated' | 'login'
+  description: string
+  timestamp: string
+  projectId?: string
+  projectName?: string
+}
+
+const exportToExcelGeneric = (data: Record<string, unknown>[], filename: string) => {
+  const headers = Object.keys(data[0] || {})
+  const csvContent = [
+    headers.join(';'),
+    ...data.map(row => headers.map(h => String(row[h] ?? '')).join(';'))
+  ].join('\n')
+  
+  const BOM = '\uFEFF'
+  const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(blob)
+  link.download = `${filename}_${new Date().toISOString().split('T')[0]}.csv`
+  link.click()
+}
 
 type AdminTab = 'dashboard' | 'executors' | 'clients' | 'projects' | 'quotes' | 'schedule' | 'leads' | 'invites' | 'settings'
 
@@ -53,19 +73,83 @@ export function AdminDashboard() {
   const { leads, exportToExcel, removeLead, clearAllLeads } = useLeads()
   
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard')
-  const [executors, setExecutors] = useState<ExecutorUser[]>(initialExecutors)
+  const [executors, setExecutors] = useState<ExecutorUser[]>([])
+  const [loadingExecutors, setLoadingExecutors] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [showNewExecutorModal, setShowNewExecutorModal] = useState(false)
   const [showResetPasswordModal, setShowResetPasswordModal] = useState(false)
   const [selectedExecutor, setSelectedExecutor] = useState<ExecutorUser | null>(null)
+  const [showExecutorDetail, setShowExecutorDetail] = useState(false)
+  const [executorActions, setExecutorActions] = useState<ExecutorAction[]>([])
   const [showPassword, setShowPassword] = useState(false)
   
   const [selectedClient, setSelectedClient] = useState<ClientInfo | null>(null)
+  const [clientFilter, setClientFilter] = useState<'all' | 'accessed' | 'pending'>('all')
+  
+  const [quoteFilter, setQuoteFilter] = useState<'all' | 'pending' | 'sent' | 'approved' | 'rejected'>('all')
+  const [scheduleFilter, setScheduleFilter] = useState<'all' | 'revisao' | 'entrega' | 'confirmed' | 'pending'>('all')
   
   const [newExecutorData, setNewExecutorData] = useState({
     name: '', email: '', phone: '', password: '',
   })
   const [newPassword, setNewPassword] = useState('')
+
+  // Carregar executores do Supabase
+  const loadExecutors = useCallback(async () => {
+    if (!isSupabaseConfigured() || !supabase) {
+      setLoadingExecutors(false)
+      return
+    }
+    
+    try {
+      const { data, error } = await (supabase as any)
+        .from('users_elitetrack')
+        .select('*')
+        .eq('role', 'executor')
+        .order('created_at', { ascending: false })
+      
+      if (error) {
+        console.error('[AdminDashboard] Erro ao carregar executores:', error)
+        return
+      }
+      
+      const mappedExecutors: ExecutorUser[] = (data || []).map((e: any) => ({
+        id: e.id,
+        name: e.name,
+        email: e.email,
+        phone: e.phone || '',
+        role: 'executor' as const,
+        status: e.is_active ? 'active' : 'inactive',
+        createdAt: e.created_at?.split('T')[0] || '',
+        lastLogin: e.last_login?.split('T')[0],
+        projectsCount: 0,
+      }))
+      
+      setExecutors(mappedExecutors)
+      console.log('[AdminDashboard] ✓ Executores carregados do Supabase:', mappedExecutors.length)
+    } catch (err) {
+      console.error('[AdminDashboard] Erro inesperado:', err)
+    } finally {
+      setLoadingExecutors(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadExecutors()
+  }, [loadExecutors])
+
+  // Carregar histórico de ações do executor
+  const loadExecutorActions = useCallback(async (executorId: string) => {
+    // Simulação de ações (em produção, viria de uma tabela de audit_log)
+    const mockActions: ExecutorAction[] = [
+      { id: '1', type: 'login', description: 'Login realizado', timestamp: new Date().toISOString() },
+      { id: '2', type: 'project_created', description: 'Projeto criado', timestamp: new Date(Date.now() - 86400000).toISOString(), projectName: 'Honda Civic - ABC123' },
+      { id: '3', type: 'photo_uploaded', description: 'Fotos adicionadas ao projeto', timestamp: new Date(Date.now() - 172800000).toISOString(), projectName: 'Mercedes GLE 450' },
+      { id: '4', type: 'timeline_updated', description: 'Timeline atualizada', timestamp: new Date(Date.now() - 259200000).toISOString(), projectName: 'BMW X5' },
+      { id: '5', type: 'client_created', description: 'Cliente cadastrado', timestamp: new Date(Date.now() - 345600000).toISOString() },
+    ]
+    setExecutorActions(mockActions)
+  }, [])
 
   // Extrair clientes únicos dos projetos
   const clients = useMemo<ClientInfo[]>(() => {
@@ -120,27 +204,77 @@ export function AdminDashboard() {
     e.email.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const handleCreateExecutor = () => {
+  const handleCreateExecutor = async () => {
     if (!newExecutorData.name || !newExecutorData.email || !newExecutorData.password) {
       addNotification({ type: 'warning', title: 'Campos Obrigatórios', message: 'Preencha todos os campos obrigatórios.' })
       return
     }
     
-    const newExecutor: ExecutorUser = {
-      id: `EXE-${Date.now()}`,
-      name: newExecutorData.name,
-      email: newExecutorData.email,
-      phone: newExecutorData.phone,
-      role: 'executor',
-      status: 'active',
-      createdAt: new Date().toISOString().split('T')[0],
-      projectsCount: 0,
+    // Salvar no Supabase (tabela users_elitetrack)
+    if (isSupabaseConfigured() && supabase && user) {
+      try {
+        const { data, error } = await (supabase as any)
+          .from('users_elitetrack')
+          .insert({
+            name: newExecutorData.name,
+            email: newExecutorData.email.toLowerCase().trim(),
+            phone: newExecutorData.phone || null,
+            role: 'executor',
+            password_hash: newExecutorData.password,
+            created_by: user.id,
+            is_active: true,
+          })
+          .select()
+          .single()
+        
+        if (error) {
+          console.error('[AdminDashboard] Erro ao criar executor:', error)
+          if (error.code === '23505') {
+            addNotification({ type: 'error', title: 'Email já cadastrado', message: 'Este email já está em uso.' })
+          } else {
+            addNotification({ type: 'error', title: 'Erro', message: 'Erro ao criar executor no banco de dados.' })
+          }
+          return
+        }
+        
+        const newExecutor: ExecutorUser = {
+          id: data.id,
+          name: data.name,
+          email: data.email,
+          phone: data.phone || '',
+          role: 'executor',
+          status: 'active',
+          createdAt: new Date().toISOString().split('T')[0],
+          projectsCount: 0,
+        }
+        
+        setExecutors(prev => [...prev, newExecutor])
+        setShowNewExecutorModal(false)
+        setNewExecutorData({ name: '', email: '', phone: '', password: '' })
+        addNotification({ type: 'success', title: 'Executor Criado', message: `${newExecutor.name} foi adicionado com sucesso no Supabase.` })
+        console.log('[AdminDashboard] ✓ Executor criado no Supabase:', data.id)
+      } catch (err) {
+        console.error('[AdminDashboard] Erro inesperado:', err)
+        addNotification({ type: 'error', title: 'Erro', message: 'Erro inesperado ao criar executor.' })
+      }
+    } else {
+      // Fallback para mock data (apenas desenvolvimento)
+      const newExecutor: ExecutorUser = {
+        id: `EXE-${Date.now()}`,
+        name: newExecutorData.name,
+        email: newExecutorData.email,
+        phone: newExecutorData.phone,
+        role: 'executor',
+        status: 'active',
+        createdAt: new Date().toISOString().split('T')[0],
+        projectsCount: 0,
+      }
+      
+      setExecutors(prev => [...prev, newExecutor])
+      setShowNewExecutorModal(false)
+      setNewExecutorData({ name: '', email: '', phone: '', password: '' })
+      addNotification({ type: 'success', title: 'Executor Criado', message: `${newExecutor.name} foi adicionado (modo dev).` })
     }
-    
-    setExecutors(prev => [...prev, newExecutor])
-    setShowNewExecutorModal(false)
-    setNewExecutorData({ name: '', email: '', phone: '', password: '' })
-    addNotification({ type: 'success', title: 'Executor Criado', message: `${newExecutor.name} foi adicionado com sucesso.` })
   }
 
   const handleToggleExecutorStatus = (executor: ExecutorUser) => {
@@ -183,6 +317,77 @@ export function AdminDashboard() {
     { id: '2', clientName: 'Fernanda Costa', vehicle: 'BMW X5', date: '2025-01-16', time: '14:00', type: 'entrega', status: 'pending' },
     { id: '3', clientName: 'João Paulo Santos', vehicle: 'Audi Q7', date: '2025-01-18', time: '10:00', type: 'revisao', status: 'confirmed' },
   ]
+
+  // Filtros aplicados
+  const filteredQuotes = useMemo(() => {
+    return quotes.filter(q => quoteFilter === 'all' || q.status === quoteFilter)
+  }, [quotes, quoteFilter])
+
+  const filteredSchedule = useMemo(() => {
+    return mockSchedule.filter(s => {
+      if (scheduleFilter === 'all') return true
+      if (scheduleFilter === 'revisao' || scheduleFilter === 'entrega') return s.type === scheduleFilter
+      if (scheduleFilter === 'confirmed' || scheduleFilter === 'pending') return s.status === scheduleFilter
+      return true
+    })
+  }, [scheduleFilter])
+
+  const filteredClientsList = useMemo(() => {
+    let result = clients.filter(c =>
+      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.email.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    if (clientFilter === 'accessed') result = result.filter(c => c.hasAccessed)
+    if (clientFilter === 'pending') result = result.filter(c => !c.hasAccessed)
+    return result
+  }, [clients, searchTerm, clientFilter])
+
+  // Funções de exportação Excel
+  const handleExportClients = () => {
+    const data = filteredClientsList.map(c => ({
+      Nome: c.name,
+      Email: c.email,
+      Telefone: c.phone,
+      Veículos: c.vehiclesCount,
+      Status: c.hasAccessed ? 'Acessou' : 'Não acessou',
+      'Último Acesso': c.lastAccess ? new Date(c.lastAccess).toLocaleDateString('pt-BR') : 'Nunca'
+    }))
+    exportToExcelGeneric(data, 'clientes')
+    addNotification({ type: 'success', title: 'Exportação', message: `${data.length} clientes exportados!` })
+  }
+
+  const handleExportQuotes = () => {
+    const data = filteredQuotes.map(q => ({
+      Cliente: q.clientName,
+      Email: q.clientEmail,
+      Veículo: `${q.vehicleBrand} ${q.vehicleModel}`,
+      'Nível Blindagem': q.blindingLevel,
+      Status: q.status === 'pending' ? 'Aguardando' : q.status === 'sent' ? 'Enviado' : q.status === 'approved' ? 'Aprovado' : 'Rejeitado',
+      Valor: q.estimatedPrice || 'A definir',
+      'Data Solicitação': new Date(q.createdAt).toLocaleDateString('pt-BR')
+    }))
+    exportToExcelGeneric(data, 'orcamentos')
+    addNotification({ type: 'success', title: 'Exportação', message: `${data.length} orçamentos exportados!` })
+  }
+
+  const handleExportSchedule = () => {
+    const data = filteredSchedule.map(s => ({
+      Cliente: s.clientName,
+      Veículo: s.vehicle,
+      Data: new Date(s.date).toLocaleDateString('pt-BR'),
+      Horário: s.time,
+      Tipo: s.type === 'revisao' ? 'Revisão' : 'Entrega',
+      Status: s.status === 'confirmed' ? 'Confirmado' : 'Pendente'
+    }))
+    exportToExcelGeneric(data, 'agenda')
+    addNotification({ type: 'success', title: 'Exportação', message: `${data.length} agendamentos exportados!` })
+  }
+
+  const handleViewExecutorDetail = (executor: ExecutorUser) => {
+    setSelectedExecutor(executor)
+    setShowExecutorDetail(true)
+    loadExecutorActions(executor.id)
+  }
 
   const navItems = [
     { id: 'dashboard' as AdminTab, label: 'Dashboard', icon: BarChart3 },
@@ -431,76 +636,196 @@ export function AdminDashboard() {
           {/* Executors Tab */}
           {activeTab === 'executors' && (
             <div className="space-y-6">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div className="relative flex-1 max-w-md">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Buscar executores..."
-                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-500"
-                    title="Buscar executores"
-                  />
-                </div>
-                <button
-                  onClick={() => setShowNewExecutorModal(true)}
-                  className="flex items-center space-x-2 bg-primary text-black px-4 py-3 rounded-xl font-semibold"
-                >
-                  <UserPlus className="w-5 h-5" />
-                  <span>Novo Executor</span>
-                </button>
-              </div>
+              {showExecutorDetail && selectedExecutor ? (
+                /* Tela de Detalhes do Executor */
+                <div className="space-y-6">
+                  <button
+                    onClick={() => { setShowExecutorDetail(false); setSelectedExecutor(null); }}
+                    className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                    <span>Voltar para lista</span>
+                  </button>
 
-              <div className="space-y-3">
-                {filteredExecutors.map((executor) => (
-                  <div key={executor.id} className="bg-white/5 rounded-2xl p-4 border border-white/10">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary/60 rounded-full flex items-center justify-center">
-                          <span className="text-black font-bold text-lg">{executor.name.charAt(0)}</span>
-                        </div>
-                        <div>
-                          <div className="flex items-center space-x-2">
-                            <h4 className="font-semibold">{executor.name}</h4>
-                            <span className={cn(
-                              "px-2 py-0.5 rounded-full text-xs font-medium",
-                              executor.status === 'active' ? "bg-green-500/20 text-green-400" : "bg-gray-500/20 text-gray-400"
-                            )}>
-                              {executor.status === 'active' ? 'Ativo' : 'Inativo'}
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-400">{executor.email}</p>
-                          <p className="text-xs text-gray-500">{executor.phone} • {executor.projectsCount} projetos</p>
-                        </div>
+                  {/* Cabeçalho do Executor */}
+                  <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary/60 rounded-full flex items-center justify-center">
+                        <span className="text-black font-bold text-2xl">{selectedExecutor.name.charAt(0)}</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => { setSelectedExecutor(executor); setShowResetPasswordModal(true); }}
-                          className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
-                          title="Alterar senha"
-                        >
-                          <Key className="w-4 h-4 text-yellow-500" />
-                        </button>
-                        <button
-                          onClick={() => handleToggleExecutorStatus(executor)}
-                          className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
-                          title={executor.status === 'active' ? 'Desativar' : 'Ativar'}
-                        >
-                          {executor.status === 'active' ? <EyeOff className="w-4 h-4 text-gray-400" /> : <Eye className="w-4 h-4 text-green-400" />}
-                        </button>
-                        <button
-                          onClick={() => handleDeleteExecutor(executor)}
-                          className="p-2 bg-white/10 rounded-lg hover:bg-red-500/20 transition-colors"
-                          title="Excluir"
-                        >
-                          <Trash2 className="w-4 h-4 text-red-400" />
-                        </button>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3">
+                          <h2 className="text-2xl font-bold">{selectedExecutor.name}</h2>
+                          <span className={cn(
+                            "px-3 py-1 rounded-full text-sm font-medium",
+                            selectedExecutor.status === 'active' ? "bg-green-500/20 text-green-400" : "bg-gray-500/20 text-gray-400"
+                          )}>
+                            {selectedExecutor.status === 'active' ? 'Ativo' : 'Inativo'}
+                          </span>
+                        </div>
+                        <p className="text-gray-400">{selectedExecutor.email}</p>
+                        <p className="text-sm text-gray-500">{selectedExecutor.phone} • Cadastrado em {selectedExecutor.createdAt}</p>
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
+
+                  {/* Histórico de Ações */}
+                  <div className="bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
+                    <div className="p-4 border-b border-white/10 flex items-center justify-between">
+                      <h3 className="font-semibold flex items-center space-x-2">
+                        <History className="w-5 h-5 text-primary" />
+                        <span>Histórico de Ações</span>
+                      </h3>
+                      <button
+                        onClick={() => loadExecutorActions(selectedExecutor.id)}
+                        className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
+                        title="Atualizar"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="divide-y divide-white/10">
+                      {executorActions.length === 0 ? (
+                        <div className="p-8 text-center text-gray-400">
+                          <History className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                          <p>Nenhuma ação registrada</p>
+                        </div>
+                      ) : (
+                        executorActions.map(action => (
+                          <div key={action.id} className="p-4 hover:bg-white/5 transition-colors">
+                            <div className="flex items-start space-x-3">
+                              <div className={cn(
+                                "w-10 h-10 rounded-xl flex items-center justify-center",
+                                action.type === 'login' ? "bg-blue-500/20" :
+                                action.type === 'project_created' ? "bg-green-500/20" :
+                                action.type === 'photo_uploaded' ? "bg-purple-500/20" :
+                                action.type === 'timeline_updated' ? "bg-yellow-500/20" :
+                                "bg-primary/20"
+                              )}>
+                                {action.type === 'login' && <Users className="w-5 h-5 text-blue-400" />}
+                                {action.type === 'project_created' && <Car className="w-5 h-5 text-green-400" />}
+                                {action.type === 'photo_uploaded' && <FileText className="w-5 h-5 text-purple-400" />}
+                                {action.type === 'timeline_updated' && <Clock className="w-5 h-5 text-yellow-400" />}
+                                {action.type === 'client_created' && <UserPlus className="w-5 h-5 text-primary" />}
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-medium">{action.description}</p>
+                                {action.projectName && (
+                                  <p className="text-sm text-gray-400">{action.projectName}</p>
+                                )}
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {new Date(action.timestamp).toLocaleDateString('pt-BR')} às {new Date(action.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Lista de Executores */
+                <>
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div className="relative flex-1 max-w-md">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Buscar executores..."
+                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-500"
+                        title="Buscar executores"
+                      />
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={loadExecutors}
+                        className="p-3 bg-white/10 rounded-xl hover:bg-white/20 transition-colors"
+                        title="Atualizar lista"
+                      >
+                        <RefreshCw className={cn("w-5 h-5", loadingExecutors && "animate-spin")} />
+                      </button>
+                      <button
+                        onClick={() => setShowNewExecutorModal(true)}
+                        className="flex items-center space-x-2 bg-primary text-black px-4 py-3 rounded-xl font-semibold"
+                      >
+                        <UserPlus className="w-5 h-5" />
+                        <span>Novo Executor</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {loadingExecutors ? (
+                    <div className="text-center py-12">
+                      <RefreshCw className="w-8 h-8 animate-spin mx-auto text-primary mb-4" />
+                      <p className="text-gray-400">Carregando executores...</p>
+                    </div>
+                  ) : filteredExecutors.length === 0 ? (
+                    <div className="text-center py-12 bg-white/5 rounded-2xl border border-white/10">
+                      <Users className="w-12 h-12 mx-auto text-gray-600 mb-4" />
+                      <p className="text-gray-400">Nenhum executor cadastrado</p>
+                      <p className="text-sm text-gray-500">Clique em "Novo Executor" para adicionar</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {filteredExecutors.map((executor) => (
+                        <div 
+                          key={executor.id} 
+                          className="bg-white/5 rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
+                          onClick={() => handleViewExecutorDetail(executor)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                              <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary/60 rounded-full flex items-center justify-center">
+                                <span className="text-black font-bold text-lg">{executor.name.charAt(0)}</span>
+                              </div>
+                              <div>
+                                <div className="flex items-center space-x-2">
+                                  <h4 className="font-semibold">{executor.name}</h4>
+                                  <span className={cn(
+                                    "px-2 py-0.5 rounded-full text-xs font-medium",
+                                    executor.status === 'active' ? "bg-green-500/20 text-green-400" : "bg-gray-500/20 text-gray-400"
+                                  )}>
+                                    {executor.status === 'active' ? 'Ativo' : 'Inativo'}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-gray-400">{executor.email}</p>
+                                <p className="text-xs text-gray-500">{executor.phone || 'Sem telefone'} • {executor.projectsCount} projetos</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2" onClick={e => e.stopPropagation()}>
+                              <button
+                                onClick={() => { setSelectedExecutor(executor); setShowResetPasswordModal(true); }}
+                                className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
+                                title="Alterar senha"
+                              >
+                                <Key className="w-4 h-4 text-yellow-500" />
+                              </button>
+                              <button
+                                onClick={() => handleToggleExecutorStatus(executor)}
+                                className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
+                                title={executor.status === 'active' ? 'Desativar' : 'Ativar'}
+                              >
+                                {executor.status === 'active' ? <EyeOff className="w-4 h-4 text-gray-400" /> : <Eye className="w-4 h-4 text-green-400" />}
+                              </button>
+                              <button
+                                onClick={() => handleDeleteExecutor(executor)}
+                                className="p-2 bg-white/10 rounded-lg hover:bg-red-500/20 transition-colors"
+                                title="Excluir"
+                              >
+                                <Trash2 className="w-4 h-4 text-red-400" />
+                              </button>
+                              <ChevronRight className="w-5 h-5 text-gray-400" />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           )}
 
@@ -521,20 +846,40 @@ export function AdminDashboard() {
                         title="Buscar clientes"
                       />
                     </div>
-                    <div className="flex items-center space-x-4 text-sm">
-                      <div className="flex items-center space-x-2 bg-green-500/20 px-3 py-2 rounded-lg">
-                        <CheckCircle className="w-4 h-4 text-green-400" />
-                        <span className="text-green-400">{stats.clientsWithAccess} acessaram</span>
-                      </div>
-                      <div className="flex items-center space-x-2 bg-gray-500/20 px-3 py-2 rounded-lg">
-                        <Clock className="w-4 h-4 text-gray-400" />
-                        <span className="text-gray-400">{stats.totalClients - stats.clientsWithAccess} pendentes</span>
-                      </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={handleExportClients}
+                        disabled={filteredClientsList.length === 0}
+                        className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-xl transition-colors"
+                      >
+                        <Download className="w-4 h-4" />
+                        <span>Exportar Excel</span>
+                      </button>
                     </div>
                   </div>
 
+                  {/* Filtros de Clientes */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Filter className="w-4 h-4 text-gray-400" />
+                    <span className="text-sm text-gray-400">Filtrar:</span>
+                    {(['all', 'accessed', 'pending'] as const).map(f => (
+                      <button
+                        key={f}
+                        onClick={() => setClientFilter(f)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                          clientFilter === f ? "bg-primary text-black" : "bg-white/10 text-gray-400 hover:bg-white/20"
+                        )}
+                      >
+                        {f === 'all' ? `Todos (${clients.length})` : 
+                         f === 'accessed' ? `Acessaram (${stats.clientsWithAccess})` : 
+                         `Pendentes (${stats.totalClients - stats.clientsWithAccess})`}
+                      </button>
+                    ))}
+                  </div>
+
                   <div className="space-y-3">
-                    {filteredClients.map((client) => (
+                    {filteredClientsList.map((client) => (
                       <div 
                         key={client.id} 
                         className="bg-white/5 rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
@@ -822,6 +1167,36 @@ export function AdminDashboard() {
                   <h2 className="text-2xl font-bold">Painel de Orçamentos</h2>
                   <p className="text-gray-400">Acompanhe todos os orçamentos enviados aos clientes</p>
                 </div>
+                <button
+                  onClick={handleExportQuotes}
+                  disabled={filteredQuotes.length === 0}
+                  className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-xl transition-colors"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Exportar Excel</span>
+                </button>
+              </div>
+
+              {/* Filtros de Orçamentos */}
+              <div className="flex flex-wrap items-center gap-2">
+                <Filter className="w-4 h-4 text-gray-400" />
+                <span className="text-sm text-gray-400">Filtrar:</span>
+                {(['all', 'pending', 'sent', 'approved', 'rejected'] as const).map(f => (
+                  <button
+                    key={f}
+                    onClick={() => setQuoteFilter(f)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                      quoteFilter === f ? "bg-primary text-black" : "bg-white/10 text-gray-400 hover:bg-white/20"
+                    )}
+                  >
+                    {f === 'all' ? `Todos (${quotes.length})` : 
+                     f === 'pending' ? `Aguardando (${quotes.filter(q => q.status === 'pending').length})` : 
+                     f === 'sent' ? `Enviados (${quotes.filter(q => q.status === 'sent').length})` :
+                     f === 'approved' ? `Aprovados (${quotes.filter(q => q.status === 'approved').length})` :
+                     `Rejeitados (${quotes.filter(q => q.status === 'rejected').length})`}
+                  </button>
+                ))}
               </div>
 
               {/* Resumo Gerencial */}
@@ -847,11 +1222,11 @@ export function AdminDashboard() {
               {/* Lista de Orçamentos */}
               <div className="bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
                 <div className="p-4 border-b border-white/10 flex justify-between items-center">
-                  <h3 className="font-semibold">Lista de Orçamentos ({quotes.length})</h3>
+                  <h3 className="font-semibold">Lista de Orçamentos ({filteredQuotes.length})</h3>
                   <span className="text-sm text-gray-400">* Aprovação é feita pelo cliente</span>
                 </div>
                 <div className="divide-y divide-white/10">
-                  {quotes.map((quote) => (
+                  {filteredQuotes.map((quote) => (
                     <div key={quote.id} className="p-4 hover:bg-white/5 transition-colors">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
@@ -924,13 +1299,40 @@ export function AdminDashboard() {
                   <h2 className="text-2xl font-bold">Agenda de Revisões</h2>
                   <p className="text-gray-400">Visualize todos os agendamentos</p>
                 </div>
-                <span className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm">
-                  {mockSchedule.length} agendamentos
-                </span>
+                <button
+                  onClick={handleExportSchedule}
+                  disabled={filteredSchedule.length === 0}
+                  className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-xl transition-colors"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Exportar Excel</span>
+                </button>
+              </div>
+
+              {/* Filtros de Agenda */}
+              <div className="flex flex-wrap items-center gap-2">
+                <Filter className="w-4 h-4 text-gray-400" />
+                <span className="text-sm text-gray-400">Filtrar:</span>
+                {(['all', 'revisao', 'entrega', 'confirmed', 'pending'] as const).map(f => (
+                  <button
+                    key={f}
+                    onClick={() => setScheduleFilter(f)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                      scheduleFilter === f ? "bg-primary text-black" : "bg-white/10 text-gray-400 hover:bg-white/20"
+                    )}
+                  >
+                    {f === 'all' ? `Todos (${mockSchedule.length})` : 
+                     f === 'revisao' ? `Revisões (${mockSchedule.filter(s => s.type === 'revisao').length})` : 
+                     f === 'entrega' ? `Entregas (${mockSchedule.filter(s => s.type === 'entrega').length})` :
+                     f === 'confirmed' ? `Confirmados (${mockSchedule.filter(s => s.status === 'confirmed').length})` :
+                     `Pendentes (${mockSchedule.filter(s => s.status === 'pending').length})`}
+                  </button>
+                ))}
               </div>
 
               <div className="grid gap-4">
-                {mockSchedule.map((item) => (
+                {filteredSchedule.map((item) => (
                   <div key={item.id} className="bg-white/5 rounded-2xl p-4 border border-white/10">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">

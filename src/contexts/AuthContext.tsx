@@ -1,17 +1,10 @@
 import { createContext, useContext, useState, ReactNode } from 'react'
 import type { User } from '../types'
-
-// Chave para armazenar senhas temporárias no localStorage
-const TEMP_PASSWORDS_KEY = 'elitetrack_temp_passwords'
-
-interface TempPasswordEntry {
-  email: string
-  password: string
-  createdAt: string
-  expiresAt: string
-  used: boolean
-  projectId?: string
-}
+import { 
+  registerTempPassword as registerTempPasswordService, 
+  validateTempPassword,
+} from '../services/tempPasswordService'
+import { supabase, isSupabaseConfigured } from '../lib/supabase'
 
 interface AuthContextType {
   user: User | null
@@ -22,54 +15,21 @@ interface AuthContextType {
   updateUser: (userData: Partial<User>) => void
   changePassword: (newPassword: string) => Promise<void>
   registerTempPassword: (email: string, password: string, projectId?: string) => void
-  getTempPasswords: () => TempPasswordEntry[]
+  createUser: (userData: { name: string; email: string; phone?: string; role: 'executor' | 'client'; password: string }) => Promise<User>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-const mockUsers: Record<string, User> = {
-  'cliente@elite.com': {
-    id: '1',
-    name: 'Ricardo Mendes',
-    email: 'cliente@elite.com',
-    phone: '(11) 99999-9999',
-    role: 'client',
-    vipLevel: 'platinum',
-  },
+// Usuários de desenvolvimento (apenas para testes locais quando Supabase não está disponível)
+const devUsers: Record<string, User & { password: string }> = {
   'executor@elite.com': {
-    id: '2',
-    name: 'Carlos Silva',
+    id: 'dev-executor-001',
+    name: 'Executor Dev',
     email: 'executor@elite.com',
     phone: '(11) 98888-8888',
     role: 'executor',
+    password: 'executor123',
   },
-  'admin@elite.com': {
-    id: '3',
-    name: 'Ana Rodrigues',
-    email: 'admin@elite.com',
-    phone: '(11) 97777-7777',
-    role: 'admin',
-  },
-}
-
-const validPasswords: Record<string, string> = {
-  'cliente@elite.com': 'cliente123',
-  'executor@elite.com': 'executor123',
-  'admin@elite.com': 'admin123',
-}
-
-// Funções auxiliares para gerenciar senhas temporárias
-const loadTempPasswords = (): TempPasswordEntry[] => {
-  try {
-    const stored = localStorage.getItem(TEMP_PASSWORDS_KEY)
-    return stored ? JSON.parse(stored) : []
-  } catch {
-    return []
-  }
-}
-
-const saveTempPasswords = (entries: TempPasswordEntry[]) => {
-  localStorage.setItem(TEMP_PASSWORDS_KEY, JSON.stringify(entries))
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -82,43 +42,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   })
 
   const login = async (email: string, password: string) => {
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
     const normalizedEmail = email.toLowerCase().trim()
     
-    // Primeiro, verificar se é um usuário mock
-    const mockUser = mockUsers[normalizedEmail]
-    const validPassword = validPasswords[normalizedEmail]
+    // 1. Tentar autenticar via Supabase (tabela users_elitetrack)
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        console.log('[Auth] Tentando login via Supabase para:', normalizedEmail)
+        
+        const { data, error } = await supabase
+          .from('users_elitetrack')
+          .select('*')
+          .eq('email', normalizedEmail)
+          .eq('is_active', true)
+          .single()
+        
+        const dbUser = data as any
+        if (dbUser && !error) {
+          // Verificar senha (comparação direta por enquanto - em produção usar bcrypt)
+          if (dbUser.password_hash === password) {
+            const authenticatedUser: User = {
+              id: dbUser.id,
+              name: dbUser.name,
+              email: dbUser.email,
+              phone: dbUser.phone || '',
+              role: dbUser.role === 'super_admin' ? 'admin' : dbUser.role,
+              vipLevel: dbUser.vip_level,
+            }
+            
+            setUser(authenticatedUser)
+            setRequiresPasswordChange(false)
+            localStorage.setItem('elite-user', JSON.stringify(authenticatedUser))
+            localStorage.removeItem('elite-requires-password-change')
+            console.log('[Auth] ✓ Login Supabase bem-sucedido:', authenticatedUser.name, '- Role:', dbUser.role)
+            return
+          }
+        }
+      } catch (err) {
+        console.warn('[Auth] Erro ao consultar Supabase:', err)
+      }
+    }
     
-    if (mockUser && password === validPassword) {
-      setUser(mockUser)
+    // 2. Fallback: usuários de desenvolvimento (apenas quando Supabase não disponível)
+    const devUser = devUsers[normalizedEmail]
+    if (devUser && devUser.password === password) {
+      const { password: _, ...userWithoutPassword } = devUser
+      setUser(userWithoutPassword)
       setRequiresPasswordChange(false)
-      localStorage.setItem('elite-user', JSON.stringify(mockUser))
+      localStorage.setItem('elite-user', JSON.stringify(userWithoutPassword))
       localStorage.removeItem('elite-requires-password-change')
+      console.log('[Auth] Login dev bem-sucedido:', devUser.name)
       return
     }
     
-    // Depois, verificar senhas temporárias
-    const tempPasswords = loadTempPasswords()
-    const tempEntry = tempPasswords.find(
-      t => t.email.toLowerCase() === normalizedEmail && t.password === password && !t.used
-    )
+    // 3. Verificar senhas temporárias (para clientes novos)
+    const tempResult = await validateTempPassword(normalizedEmail, password)
     
-    if (tempEntry) {
-      // Verificar se não expirou
-      if (new Date(tempEntry.expiresAt) < new Date()) {
-        throw new Error('Senha temporária expirada. Solicite uma nova ao executor.')
-      }
-      
-      // Marcar como usada
-      const updatedEntries = tempPasswords.map(t => 
-        t.email === tempEntry.email && t.password === tempEntry.password 
-          ? { ...t, used: true } 
-          : t
-      )
-      saveTempPasswords(updatedEntries)
-      
-      // Criar usuário temporário
+    if (tempResult.valid) {
       const tempUser: User = {
         id: `TEMP-${Date.now()}`,
         name: normalizedEmail.split('@')[0],
@@ -131,7 +110,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRequiresPasswordChange(true)
       localStorage.setItem('elite-user', JSON.stringify(tempUser))
       localStorage.setItem('elite-requires-password-change', 'true')
+      console.log('[Auth] Login com senha temporária bem-sucedido para:', normalizedEmail)
       return
+    }
+    
+    if (tempResult.expired) {
+      throw new Error('Senha temporária expirada. Solicite uma nova ao executor.')
     }
     
     throw new Error('Credenciais inválidas')
@@ -155,31 +139,76 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const changePassword = async (newPassword: string) => {
     if (!user) throw new Error('Usuário não autenticado')
     
-    await new Promise(resolve => setTimeout(resolve, 500))
+    // Atualizar senha no Supabase
+    if (isSupabaseConfigured() && supabase) {
+      const { error } = await (supabase as any)
+        .from('users_elitetrack')
+        .update({ password_hash: newPassword, updated_at: new Date().toISOString() })
+        .eq('id', user.id)
+      
+      if (error) {
+        console.error('[Auth] Erro ao atualizar senha:', error)
+        throw new Error('Erro ao atualizar senha')
+      }
+    }
     
-    // Salvar nova senha (em produção, isso iria para o backend)
-    validPasswords[user.email] = newPassword
-    
-    // Remover flag de alteração obrigatória
     setRequiresPasswordChange(false)
     localStorage.removeItem('elite-requires-password-change')
+    console.log('[Auth] Senha alterada com sucesso')
+  }
+
+  const createUser = async (userData: { name: string; email: string; phone?: string; role: 'executor' | 'client'; password: string }): Promise<User> => {
+    if (!user) throw new Error('Usuário não autenticado')
+    if (!isSupabaseConfigured() || !supabase) throw new Error('Supabase não configurado')
+    
+    // Verificar permissões: super_admin/admin pode criar executor, executor pode criar client
+    const currentRole = user.role
+    if (userData.role === 'executor' && currentRole !== 'admin') {
+      throw new Error('Apenas administradores podem criar executores')
+    }
+    if (userData.role === 'client' && currentRole !== 'executor' && currentRole !== 'admin') {
+      throw new Error('Apenas executores ou administradores podem criar clientes')
+    }
+    
+    const { data, error } = await (supabase as any)
+      .from('users_elitetrack')
+      .insert({
+        name: userData.name,
+        email: userData.email.toLowerCase().trim(),
+        phone: userData.phone || null,
+        role: userData.role,
+        password_hash: userData.password,
+        created_by: user.id,
+        is_active: true,
+      })
+      .select()
+      .single()
+    
+    if (error) {
+      console.error('[Auth] Erro ao criar usuário:', error)
+      if (error.code === '23505') {
+        throw new Error('Email já cadastrado')
+      }
+      throw new Error('Erro ao criar usuário')
+    }
+    
+    const newUser: User = {
+      id: (data as any).id,
+      name: (data as any).name,
+      email: (data as any).email,
+      phone: (data as any).phone || '',
+      role: (data as any).role,
+    }
+    
+    console.log('[Auth] ✓ Usuário criado:', newUser.name, '- Role:', newUser.role)
+    return newUser
   }
 
   const registerTempPassword = (email: string, password: string, projectId?: string) => {
-    const entries = loadTempPasswords()
-    const newEntry: TempPasswordEntry = {
-      email: email.toLowerCase(),
-      password,
-      createdAt: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 dias
-      used: false,
-      projectId,
-    }
-    entries.push(newEntry)
-    saveTempPasswords(entries)
+    // Usar o novo serviço que salva no Supabase (com fallback localStorage)
+    registerTempPasswordService(email, password, projectId)
+    console.log('[Auth] Senha temporária registrada para:', email)
   }
-
-  const getTempPasswords = () => loadTempPasswords()
 
   return (
     <AuthContext.Provider value={{ 
@@ -191,7 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       updateUser,
       changePassword,
       registerTempPassword,
-      getTempPasswords,
+      createUser,
     }}>
       {children}
     </AuthContext.Provider>

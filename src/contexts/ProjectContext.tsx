@@ -1,8 +1,9 @@
-import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from 'react'
 import { mockProjects } from '../data/mockData'
 import type { Project } from '../types'
 import { useAuth } from './AuthContext'
 import { projectStorage, isSupabaseConfigured } from '../services/storage'
+import { supabase } from '../lib/supabase'
 
 interface ProjectContextType {
   projects: Project[]
@@ -60,37 +61,123 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const [selectedProject, setSelectedProjectState] = useState<Project | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   
-  // Carregar projetos do Supabase ou localStorage
+  // Referência para subscription do Real-time
+  const subscriptionRef = useRef<any>(null)
+
+  // Função para carregar projetos
+  const loadProjectsFromSupabase = useCallback(async () => {
+    try {
+      console.log('[ProjectContext] Carregando projetos do Supabase...')
+      const supabaseProjects = await projectStorage.getProjects()
+      if (supabaseProjects.length === 0) {
+        console.log('[ProjectContext] Nenhum projeto no Supabase, usando mocks')
+        setProjects(mockProjects)
+      } else {
+        console.log(`[ProjectContext] ${supabaseProjects.length} projetos carregados do Supabase`)
+        setProjects(supabaseProjects)
+      }
+    } catch (error) {
+      console.error('[ProjectContext] Erro ao carregar projetos:', error)
+      setProjects(loadProjectsFromLocalStorage())
+    }
+  }, [])
+
+  // Carregar projetos e configurar Real-time + Polling
   useEffect(() => {
-    const loadProjects = async () => {
+    let pollingInterval: NodeJS.Timeout | null = null
+    let realtimeConnected = false
+
+    const initializeProjects = async () => {
       setIsLoading(true)
       try {
-        if (isSupabaseConfigured()) {
-          console.log('[ProjectContext] Carregando projetos do Supabase...')
-          const supabaseProjects = await projectStorage.getProjects()
-          // Mesclar com mocks se não houver projetos no Supabase
-          if (supabaseProjects.length === 0) {
-            console.log('[ProjectContext] Nenhum projeto no Supabase, usando mocks')
-            setProjects(mockProjects)
-          } else {
-            console.log(`[ProjectContext] ${supabaseProjects.length} projetos carregados do Supabase`)
-            setProjects(supabaseProjects)
-          }
+        if (isSupabaseConfigured() && supabase) {
+          await loadProjectsFromSupabase()
+
+          // Configurar Real-time subscription com canal único
+          console.log('[ProjectContext] Configurando Real-time subscription...')
+          
+          const channelName = `db-changes-${Date.now()}`
+          subscriptionRef.current = supabase.channel(channelName)
+          
+          // Listener para tabela projects
+          subscriptionRef.current.on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'projects' },
+            (payload: any) => {
+              console.log('[ProjectContext] ✓ Real-time projeto:', payload.eventType)
+              loadProjectsFromSupabase()
+            }
+          )
+          
+          // Listener para tabela vehicles
+          subscriptionRef.current.on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'vehicles' },
+            (payload: any) => {
+              console.log('[ProjectContext] ✓ Real-time veículo:', payload.eventType)
+              loadProjectsFromSupabase()
+            }
+          )
+          
+          // Listener para tabela timeline_steps
+          subscriptionRef.current.on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'timeline_steps' },
+            (payload: any) => {
+              console.log('[ProjectContext] ✓ Real-time timeline:', payload.eventType)
+              loadProjectsFromSupabase()
+            }
+          )
+
+          // Subscribe com tratamento de status
+          subscriptionRef.current.subscribe((status: string, err?: Error) => {
+            console.log('[ProjectContext] Real-time status:', status, err?.message || '')
+            
+            if (status === 'SUBSCRIBED') {
+              realtimeConnected = true
+              console.log('[ProjectContext] ✓ Real-time conectado com sucesso!')
+              // Limpar polling se Real-time conectou
+              if (pollingInterval) {
+                clearInterval(pollingInterval)
+                pollingInterval = null
+              }
+            } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED' || status === 'TIMED_OUT') {
+              realtimeConnected = false
+              // Iniciar polling como fallback apenas se ainda não estiver rodando
+              if (!pollingInterval) {
+                console.log('[ProjectContext] ⚠ Real-time falhou, iniciando polling de 15s')
+                pollingInterval = setInterval(() => {
+                  console.log('[ProjectContext] Polling: atualizando dados...')
+                  loadProjectsFromSupabase()
+                }, 15000) // Polling a cada 15 segundos
+              }
+            }
+          })
         } else {
           console.log('[ProjectContext] Supabase não configurado, usando localStorage')
           setProjects(loadProjectsFromLocalStorage())
         }
       } catch (error) {
-        console.error('[ProjectContext] Erro ao carregar projetos:', error)
-        // Fallback para localStorage em caso de erro
+        console.error('[ProjectContext] Erro ao inicializar projetos:', error)
         setProjects(loadProjectsFromLocalStorage())
       } finally {
         setIsLoading(false)
       }
     }
     
-    loadProjects()
-  }, [])
+    initializeProjects()
+
+    // Cleanup
+    return () => {
+      if (subscriptionRef.current && supabase) {
+        console.log('[ProjectContext] Removendo Real-time subscription...')
+        supabase.removeChannel(subscriptionRef.current)
+      }
+      if (pollingInterval) {
+        clearInterval(pollingInterval)
+      }
+    }
+  }, [loadProjectsFromSupabase])
   
   // Salvar no localStorage como backup (sempre)
   useEffect(() => {

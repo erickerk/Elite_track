@@ -24,7 +24,7 @@ export function Dashboard() {
   const { projects } = useProjects()
 
   const userProjects = projects.filter(p => p.user.id === user?.id || p.user.email === user?.email)
-  const [selectedProject, setSelectedProject] = useState<Project>(userProjects[0] || projects[0])
+  const [selectedProject, setSelectedProject] = useState<Project | null>(userProjects[0] || projects[0] || null)
   const [showVehicleSelector, setShowVehicleSelector] = useState(false)
   const [showQRModal, setShowQRModal] = useState(false)
   const [showAddVehicleModal, setShowAddVehicleModal] = useState(false)
@@ -42,18 +42,15 @@ export function Dashboard() {
   }
 
   useEffect(() => {
-    const next = userProjects[0] || projects[0]
-    if (next && next.id !== selectedProject.id) {
+    const next = userProjects[0] || projects[0] || null
+    if (next && next.id !== selectedProject?.id) {
       setSelectedProject(next)
     }
-  }, [projects, userProjects, selectedProject.id])
+  }, [projects, userProjects, selectedProject?.id])
 
-  const currentStep = selectedProject.timeline.find(step => step.status === 'in_progress')
-
-  const qrCodeUrl = `${window.location.origin}/verify/${selectedProject.id}`
-
-  // Fade in animation
+  // Fade in animation - deve vir antes do early return para manter ordem dos hooks
   useEffect(() => {
+    if (!selectedProject) return
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -64,7 +61,27 @@ export function Dashboard() {
 
     document.querySelectorAll('.fade-in').forEach(el => observer.observe(el))
     return () => observer.disconnect()
-  }, [])
+  }, [selectedProject])
+
+  // Early return se não há projeto selecionado
+  if (!selectedProject) {
+    return (
+      <div className={cn("min-h-screen flex items-center justify-center", isDark ? "bg-carbon-900" : "bg-gray-50")}>
+        <div className="text-center p-8">
+          <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <QrCode className="w-8 h-8 text-primary" />
+          </div>
+          <h2 className="text-xl font-bold mb-2">Nenhum projeto encontrado</h2>
+          <p className="text-gray-400 mb-4">Você ainda não tem veículos cadastrados.</p>
+          <p className="text-sm text-gray-500">Entre em contato com a Elite Blindagens para iniciar seu acompanhamento.</p>
+        </div>
+      </div>
+    )
+  }
+
+  const currentStep = selectedProject.timeline.find(step => step.status === 'in_progress')
+
+  const qrCodeUrl = `${window.location.origin}/verify/${selectedProject.id}`
 
   const handleCopyQR = async () => {
     await navigator.clipboard.writeText(qrCodeUrl)

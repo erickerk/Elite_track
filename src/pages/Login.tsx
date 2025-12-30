@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import '../styles/Login.css'
 
 export function Login() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const projectId = searchParams.get('project')
   const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -12,6 +14,7 @@ export function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [showFirstAccessInfo, setShowFirstAccessInfo] = useState(!!projectId)
 
   useEffect(() => {
     // Fade in animation
@@ -96,9 +99,38 @@ export function Login() {
           {/* Login Form */}
           <div className="login-card rounded-3xl p-8 fade-in visible">
             <div className="mb-8">
-              <h1 className="text-2xl font-bold mb-2 text-center">Bem-vindo de volta</h1>
-              <p className="text-gray-400 text-center text-sm">Entre na sua conta para continuar</p>
+              <h1 className="text-2xl font-bold mb-2 text-center">
+                {showFirstAccessInfo ? 'Primeiro Acesso' : 'Bem-vindo de volta'}
+              </h1>
+              <p className="text-gray-400 text-center text-sm">
+                {showFirstAccessInfo 
+                  ? 'Use o email e senha temporária enviados para você' 
+                  : 'Entre na sua conta para continuar'}
+              </p>
             </div>
+
+            {showFirstAccessInfo && (
+              <div className="mb-6 p-4 bg-primary/10 border border-primary/30 rounded-xl">
+                <div className="flex items-start gap-3">
+                  <i className="ri-information-line text-primary text-lg mt-0.5"></i>
+                  <div className="text-sm">
+                    <p className="text-white font-medium mb-1">Instruções de Primeiro Acesso:</p>
+                    <ul className="text-gray-300 space-y-1">
+                      <li>• Digite o <strong>email</strong> cadastrado</li>
+                      <li>• Use a <strong>senha temporária</strong> de 4 dígitos</li>
+                      <li>• Você criará uma nova senha após o login</li>
+                    </ul>
+                  </div>
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => setShowFirstAccessInfo(false)}
+                  className="mt-3 text-xs text-gray-400 hover:text-white transition-colors"
+                >
+                  Ocultar instruções
+                </button>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>

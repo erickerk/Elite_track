@@ -12,26 +12,180 @@
   }
 
   body.light {
-    @apply bg-[#F5F5F5] text-carbon-900;
+    @apply bg-[#F8F9FA] text-carbon-900;
   }
 
-  /* Light mode improvements */
+  /* ============================================
+     LIGHT MODE - Melhorias de UX/UI
+     ============================================ */
+  
+  /* Glass Effect para Light Mode */
   body.light .glass-effect {
-    background-color: rgba(255, 255, 255, 0.95);
-    border-color: #e5e7eb;
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
   }
 
+  /* Inputs e Formulários */
   body.light input,
   body.light textarea,
   body.light select {
-    background-color: white;
-    border-color: #d1d5db;
-    color: #1a1a1a;
+    background-color: #FFFFFF;
+    border-color: #E5E7EB;
+    color: #1F2937;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+
+  body.light input:focus,
+  body.light textarea:focus,
+  body.light select:focus {
+    border-color: #D4AF37;
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
   }
 
   body.light input::placeholder,
   body.light textarea::placeholder {
-    color: #9ca3af;
+    color: #9CA3AF;
+  }
+
+  /* Cards e Containers */
+  body.light .bg-carbon-900 {
+    background-color: #FFFFFF !important;
+    border: 1px solid #E5E7EB;
+  }
+
+  body.light .bg-carbon-800 {
+    background-color: #F9FAFB !important;
+    border: 1px solid #E5E7EB;
+  }
+
+  body.light .bg-carbon-700 {
+    background-color: #F3F4F6 !important;
+  }
+
+  /* Textos */
+  body.light .text-white {
+    color: #1F2937 !important;
+  }
+
+  body.light .text-gray-400 {
+    color: #6B7280 !important;
+  }
+
+  body.light .text-gray-500 {
+    color: #6B7280 !important;
+  }
+
+  body.light .text-gray-300 {
+    color: #4B5563 !important;
+  }
+
+  /* Bordas */
+  body.light .border-carbon-700,
+  body.light .border-carbon-600,
+  body.light .border-white\/10,
+  body.light .border-white\/5 {
+    border-color: #E5E7EB !important;
+  }
+
+  /* Botões Secundários */
+  body.light .bg-white\/5,
+  body.light .bg-white\/10 {
+    background-color: rgba(0, 0, 0, 0.03) !important;
+  }
+
+  body.light .hover\:bg-white\/5:hover,
+  body.light .hover\:bg-white\/10:hover {
+    background-color: rgba(0, 0, 0, 0.06) !important;
+  }
+
+  /* Sidebar e Navegação */
+  body.light aside,
+  body.light nav {
+    background-color: #FFFFFF !important;
+    border-color: #E5E7EB !important;
+  }
+
+  /* Header */
+  body.light header {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    border-color: #E5E7EB !important;
+  }
+
+  /* Shadows para Light Mode */
+  body.light .shadow-card-dark {
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08) !important;
+  }
+
+  /* Cards Premium */
+  body.light .card-premium {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  }
+
+  /* Modals */
+  body.light .bg-black {
+    background-color: #FFFFFF !important;
+  }
+
+  body.light [class*="bg-black/"] {
+    background-color: rgba(0, 0, 0, 0.5) !important;
+  }
+
+  /* Timeline e Progress */
+  body.light .bg-gradient-to-b.from-carbon-800 {
+    background: linear-gradient(to bottom, #F9FAFB, #FFFFFF) !important;
+  }
+
+  /* Status Colors - mantidos para consistência */
+  body.light .text-status-success { color: #059669 !important; }
+  body.light .text-status-warning { color: #D97706 !important; }
+  body.light .text-status-error { color: #DC2626 !important; }
+  body.light .text-status-info { color: #2563EB !important; }
+
+  /* Gold/Primary mantidos */
+  body.light .text-gold,
+  body.light .text-primary {
+    color: #B8860B !important;
+  }
+
+  body.light .bg-gold\/10,
+  body.light .bg-gold\/20 {
+    background-color: rgba(212, 175, 55, 0.12) !important;
+  }
+
+  /* Hover States */
+  body.light .hover\:bg-carbon-800:hover {
+    background-color: #F3F4F6 !important;
+  }
+
+  /* Dividers */
+  body.light hr,
+  body.light [class*="divide-"] > * {
+    border-color: #E5E7EB !important;
+  }
+
+  /* Icons em Light Mode */
+  body.light svg.text-white {
+    color: #374151 !important;
+  }
+
+  /* Badges e Tags */
+  body.light .bg-green-500\/20 {
+    background-color: rgba(16, 185, 129, 0.15) !important;
+  }
+
+  body.light .bg-yellow-500\/20 {
+    background-color: rgba(245, 158, 11, 0.15) !important;
+  }
+
+  body.light .bg-red-500\/20 {
+    background-color: rgba(239, 68, 68, 0.15) !important;
+  }
+
+  body.light .bg-blue-500\/20 {
+    background-color: rgba(59, 130, 246, 0.15) !important;
   }
 }
 

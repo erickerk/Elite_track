@@ -1,13 +1,38 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   UserPlus, Copy, CheckCircle, Clock, XCircle, 
   AlertCircle, Trash2, RefreshCw, Car, Mail, Phone, User,
-  Link as LinkIcon, Share2, X
+  Link as LinkIcon, Share2, X, Download, Filter
 } from 'lucide-react'
 import { useInvite } from '../../contexts/InviteContext'
 import { mockProjects } from '../../data/mockData'
 import type { RegistrationInvite } from '../../types'
+
+const exportInvitesToExcel = (invites: RegistrationInvite[], filename: string) => {
+  const data = invites.map(inv => ({
+    'Proprietário': inv.ownerName,
+    'Veículo': inv.vehicleInfo,
+    'Placa': inv.vehiclePlate,
+    'Status': inv.status === 'pending' ? 'Pendente' : inv.status === 'used' ? 'Utilizado' : inv.status === 'expired' ? 'Expirado' : 'Revogado',
+    'Token': inv.token,
+    'Criado em': new Date(inv.createdAt).toLocaleDateString('pt-BR'),
+    'Expira em': new Date(inv.expiresAt).toLocaleDateString('pt-BR'),
+  }))
+  
+  const headers = Object.keys(data[0] || {})
+  const csvContent = [
+    headers.join(';'),
+    ...data.map(row => headers.map(h => String((row as Record<string, string>)[h] ?? '')).join(';'))
+  ].join('\n')
+  
+  const BOM = '\uFEFF'
+  const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(blob)
+  link.download = `${filename}_${new Date().toISOString().split('T')[0]}.csv`
+  link.click()
+}
 
 interface InviteManagerProps {
   projectId?: string
@@ -21,11 +46,24 @@ export function InviteManager({ projectId, onClose }: InviteManagerProps) {
   const [isCreating, setIsCreating] = useState(false)
   const [newInvite, setNewInvite] = useState<RegistrationInvite | null>(null)
   const [copiedToken, setCopiedToken] = useState<string | null>(null)
-  const [filter, setFilter] = useState<'all' | 'pending' | 'used' | 'expired'>('all')
+  const [filter, setFilter] = useState<'all' | 'pending' | 'used' | 'expired' | 'revoked'>('all')
 
-  const displayedInvites = projectId 
-    ? getInvitesByProject(projectId)
-    : invites.filter(i => filter === 'all' || i.status === filter)
+  const displayedInvites = useMemo(() => {
+    const baseInvites = projectId ? getInvitesByProject(projectId) : invites
+    return baseInvites.filter(i => filter === 'all' || i.status === filter)
+  }, [projectId, invites, filter, getInvitesByProject])
+
+  const inviteStats = useMemo(() => ({
+    total: invites.length,
+    pending: invites.filter(i => i.status === 'pending').length,
+    used: invites.filter(i => i.status === 'used').length,
+    expired: invites.filter(i => i.status === 'expired').length,
+    revoked: invites.filter(i => i.status === 'revoked').length,
+  }), [invites])
+
+  const handleExportInvites = () => {
+    exportInvitesToExcel(displayedInvites, 'convites')
+  }
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -101,6 +139,14 @@ export function InviteManager({ projectId, onClose }: InviteManagerProps) {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={handleExportInvites}
+            disabled={displayedInvites.length === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-xl transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            <span>Exportar Excel</span>
+          </button>
           {onClose && (
             <button
               onClick={onClose}
@@ -111,6 +157,30 @@ export function InviteManager({ projectId, onClose }: InviteManagerProps) {
               <X className="w-5 h-5" />
             </button>
           )}
+        </div>
+      </div>
+
+      {/* Estatísticas de Convites */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="bg-carbon-800 rounded-xl p-3 border border-carbon-700 text-center">
+          <div className="text-2xl font-bold text-white">{inviteStats.total}</div>
+          <div className="text-xs text-gray-400">Total</div>
+        </div>
+        <div className="bg-yellow-500/10 rounded-xl p-3 border border-yellow-500/20 text-center">
+          <div className="text-2xl font-bold text-yellow-400">{inviteStats.pending}</div>
+          <div className="text-xs text-gray-400">Pendentes</div>
+        </div>
+        <div className="bg-green-500/10 rounded-xl p-3 border border-green-500/20 text-center">
+          <div className="text-2xl font-bold text-green-400">{inviteStats.used}</div>
+          <div className="text-xs text-gray-400">Utilizados</div>
+        </div>
+        <div className="bg-gray-500/10 rounded-xl p-3 border border-gray-500/20 text-center">
+          <div className="text-2xl font-bold text-gray-400">{inviteStats.expired}</div>
+          <div className="text-xs text-gray-400">Expirados</div>
+        </div>
+        <div className="bg-red-500/10 rounded-xl p-3 border border-red-500/20 text-center">
+          <div className="text-2xl font-bold text-red-400">{inviteStats.revoked}</div>
+          <div className="text-xs text-gray-400">Revogados</div>
         </div>
       </div>
 
@@ -312,8 +382,10 @@ export function InviteManager({ projectId, onClose }: InviteManagerProps) {
 
       {/* Filter Tabs */}
       {!projectId && (
-        <div className="flex gap-2">
-          {(['all', 'pending', 'used', 'expired'] as const).map(f => (
+        <div className="flex flex-wrap items-center gap-2">
+          <Filter className="w-4 h-4 text-gray-400" />
+          <span className="text-sm text-gray-400">Filtrar:</span>
+          {(['all', 'pending', 'used', 'expired', 'revoked'] as const).map(f => (
             <button
               key={f}
               onClick={() => setFilter(f)}
@@ -323,9 +395,11 @@ export function InviteManager({ projectId, onClose }: InviteManagerProps) {
                   : 'bg-carbon-800 text-gray-400 hover:text-white'
               }`}
             >
-              {f === 'all' ? 'Todos' : 
-               f === 'pending' ? 'Pendentes' : 
-               f === 'used' ? 'Utilizados' : 'Expirados'}
+              {f === 'all' ? `Todos (${inviteStats.total})` : 
+               f === 'pending' ? `Pendentes (${inviteStats.pending})` : 
+               f === 'used' ? `Utilizados (${inviteStats.used})` : 
+               f === 'expired' ? `Expirados (${inviteStats.expired})` :
+               `Revogados (${inviteStats.revoked})`}
             </button>
           ))}
         </div>

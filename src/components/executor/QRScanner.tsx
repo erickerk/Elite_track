@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Camera, X, QrCode, Search, Flashlight, SwitchCamera } from 'lucide-react'
 import { cn } from '../../lib/utils'
+import jsQR from 'jsqr'
 
 interface QRScannerProps {
   isOpen: boolean
@@ -11,20 +12,89 @@ interface QRScannerProps {
 
 export function QRScanner({ isOpen, onClose, onScan, projectSuggestions = [] }: QRScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const scanIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const [manualInput, setManualInput] = useState('')
   const [cameraActive, setCameraActive] = useState(false)
   const [cameraError, setCameraError] = useState<string | null>(null)
   const [flashOn, setFlashOn] = useState(false)
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment')
+  const [scanning, setScanning] = useState(false)
+  const [lastScannedCode, setLastScannedCode] = useState<string | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
 
+  // Função para parar o scan
+  const stopScanning = useCallback(() => {
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current)
+      scanIntervalRef.current = null
+    }
+    setScanning(false)
+  }, [])
+
   const stopCamera = useCallback(() => {
+    stopScanning()
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop())
       streamRef.current = null
     }
     setCameraActive(false)
-  }, [])
+  }, [stopScanning])
+
+  // Função para escanear frame do vídeo
+  const scanFrame = useCallback(() => {
+    if (!videoRef.current || !canvasRef.current) return
+
+    const video = videoRef.current
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext('2d')
+    
+    if (!ctx || video.readyState !== video.HAVE_ENOUGH_DATA) return
+
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+      inversionAttempts: 'dontInvert',
+    })
+
+    if (code && code.data) {
+      // Evitar scan duplicado do mesmo código
+      if (code.data !== lastScannedCode) {
+        console.log('[QRScanner] QR Code detectado:', code.data)
+        setLastScannedCode(code.data)
+        stopScanning()
+        
+        // Extrair ID do projeto da URL se for uma URL de verificação
+        let projectCode = code.data
+        if (code.data.includes('/verify/')) {
+          const parts = code.data.split('/verify/')
+          projectCode = parts[1] || code.data
+        } else if (code.data.includes('/card/')) {
+          const parts = code.data.split('/card/')
+          projectCode = parts[1] || code.data
+        }
+        
+        onScan(projectCode)
+        // Fechar após scan bem-sucedido
+        stopCamera()
+        setManualInput('')
+        onClose()
+      }
+    }
+  }, [lastScannedCode, onScan, stopScanning, onClose, stopCamera])
+
+  // Iniciar scan contínuo quando câmera ativa
+  useEffect(() => {
+    if (cameraActive && !scanning) {
+      setScanning(true)
+      setLastScannedCode(null)
+      scanIntervalRef.current = setInterval(scanFrame, 200) // Scan a cada 200ms
+    }
+    return () => stopScanning()
+  }, [cameraActive, scanning, scanFrame, stopScanning])
 
   const startCamera = useCallback(async () => {
     setCameraError(null)
@@ -91,6 +161,9 @@ export function QRScanner({ isOpen, onClose, onScan, projectSuggestions = [] }: 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
+      {/* Canvas oculto para processamento do QR Code */}
+      <canvas ref={canvasRef} className="hidden" />
+      
       <div className="relative w-full max-w-lg mx-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">

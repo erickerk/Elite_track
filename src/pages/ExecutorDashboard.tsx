@@ -6,11 +6,13 @@ import {
   CheckCircle, Clock, AlertCircle, Car, QrCode, Bell,
   FileText, CreditCard, MessageCircle, Settings, Search, 
   Users, Home, Image, LogOut, ChevronRight, Plus, X, Save, Edit3, Calendar,
-  DollarSign, Paperclip, Send, Eye, Download, Filter, ExternalLink, Camera
+  DollarSign, Paperclip, Send, Eye, Download, Filter, ExternalLink, Camera,
+  Grid3X3, List, FileSpreadsheet
 } from 'lucide-react'
 import { Modal } from '../components/ui/Modal'
 import { NotificationPanel } from '../components/ui/NotificationPanel'
-import { QRScanner, ExecutorChat, ExecutorTimeline, ExecutorPhotos } from '../components/executor'
+import { QRScanner, ExecutorChat, ExecutorTimeline, ExecutorPhotos, ClientDetailModal } from '../components/executor'
+import { exportToExcel, formatDateBR, formatPhone } from '../utils/exportToExcel'
 import { useAuth } from '../contexts/AuthContext'
 // Nota: registerTempPassword é usado para registrar senhas temporárias para novos clientes
 import { useNotifications } from '../contexts/NotificationContext'
@@ -158,6 +160,7 @@ export function ExecutorDashboard() {
   const [ticketFilterMonth, setTicketFilterMonth] = useState<string>('all')
   const [ticketFilterClient, setTicketFilterClient] = useState<string>('all')
   const [showPublicPreview, setShowPublicPreview] = useState(false)
+  const [showCardPreview, setShowCardPreview] = useState(false)
   const [createdProjectData, setCreatedProjectData] = useState<{ 
     id: string; 
     qrCode: string; 
@@ -195,6 +198,18 @@ export function ExecutorDashboard() {
     processStartDate: '', // Data de início do processo
     estimatedDeliveryDate: '', // Previsão de entrega
   })
+  
+  // Estados para aba Clientes
+  const [clientViewMode, setClientViewMode] = useState<'list' | 'grid'>('list')
+  const [showClientDetailModal, setShowClientDetailModal] = useState(false)
+  const [selectedClientForModal, setSelectedClientForModal] = useState<Project | null>(null)
+  
+  // Estados para filtros da Agenda
+  const [scheduleFilterType, setScheduleFilterType] = useState<string>('all')
+  const [scheduleFilterStatus, setScheduleFilterStatus] = useState<string>('all')
+  
+  // Estados para filtros de Orçamentos
+  const [quoteFilterStatus, setQuoteFilterStatus] = useState<string>('all')
   
   // Estado para área de consulta de QR Codes
   const [showQRLookup, setShowQRLookup] = useState(false)
@@ -579,14 +594,14 @@ export function ExecutorDashboard() {
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
     const tempPassword = generateTempPassword()
     
-    // URL de registro com token (temporário - expira em 7 dias)
-    const registerUrl = `${window.location.origin}/register?token=${inviteToken}&project=${savedProject.id}`
+    // URL de login direto (o cliente já tem senha temporária registrada)
+    const loginUrl = `${window.location.origin}/login?project=${savedProject.id}`
     
     // URL de verificação do projeto (permanente - vitalício)
     const verifyUrl = `${window.location.origin}/verify/${savedProject.id}`
     
-    // Gerar QR Code de CADASTRO (temporário)
-    QRCode.toDataURL(registerUrl, {
+    // Gerar QR Code para LOGIN (cliente já tem senha temporária)
+    QRCode.toDataURL(loginUrl, {
       width: 400,
       margin: 3,
       color: { dark: '#000000', light: '#FFFFFF' },
@@ -666,31 +681,28 @@ export function ExecutorDashboard() {
   const shareViaWhatsApp = () => {
     if (!createdProjectData) return
     
-    // URL de registro com token único
-    const registerUrl = `${window.location.origin}/register?token=${createdProjectData.inviteToken}&project=${createdProjectData.id}`
+    // URL de login direto
+    const loginUrl = `${window.location.origin}/login?project=${createdProjectData.id}`
     const expirationDate = new Date(createdProjectData.expiresAt).toLocaleDateString('pt-BR')
     
     // Mensagem clara e objetiva para público operacional
-    const message = `*ELITE BLINDAGENS - CADASTRO*
+    const message = `*ELITE BLINDAGENS - ACESSO AO APP*
 
 Ola ${createdProjectData.clientName}!
 
 Seu veiculo *${createdProjectData.vehicle}* esta em nosso sistema.
 
-*PARA SE CADASTRAR:*
-1. Baixe a IMAGEM do QR Code que vou enviar
-2. Escaneie com a camera do celular OU
-3. Acesse: ${registerUrl}
+*PARA ACESSAR O APP:*
+1. Acesse: ${loginUrl}
+2. Use os dados abaixo para entrar
 
 *SEUS DADOS DE ACESSO:*
 E-mail: ${createdProjectData.clientEmail}
-Senha temporaria: *${createdProjectData.tempPassword}*
-Codigo do Projeto: ${createdProjectData.id}
+Senha: *${createdProjectData.tempPassword}*
 
-*ATENCAO:*
-- Link EXCLUSIVO para voce
-- Valido ate ${expirationDate}
-- Use apenas 1 vez
+*IMPORTANTE:*
+- No primeiro acesso, voce devera criar uma nova senha
+- Senha temporaria valida ate ${expirationDate}
 
 Duvidas? Ligue: (11) 93456-7890
 
@@ -710,41 +722,38 @@ Elite Blindagens`
   const shareViaEmail = () => {
     if (!createdProjectData) return
     
-    // URL de registro com token único
-    const registerUrl = `${window.location.origin}/register?token=${createdProjectData.inviteToken}&project=${createdProjectData.id}`
+    // URL de login direto
+    const loginUrl = `${window.location.origin}/login?project=${createdProjectData.id}`
     const expirationDate = new Date(createdProjectData.expiresAt).toLocaleDateString('pt-BR')
     
-    const subject = `Elite Blindagens - Cadastro do seu ${createdProjectData.vehicle}`
+    const subject = `Elite Blindagens - Acesso ao App - ${createdProjectData.vehicle}`
     
     const body = `Olá ${createdProjectData.clientName}!
 
 Seu veículo ${createdProjectData.vehicle} está em nosso sistema.
 
 ========================================
-COMO SE CADASTRAR
+COMO ACESSAR O APP
 ========================================
 
-1. Escaneie o QR Code em anexo OU
-2. Acesse o link: ${registerUrl}
+Acesse: ${loginUrl}
 
 ========================================
 SEUS DADOS DE ACESSO
 ========================================
 
 E-mail: ${createdProjectData.clientEmail}
-Senha temporária: ${createdProjectData.tempPassword}
-Código do Projeto: ${createdProjectData.id}
+Senha: ${createdProjectData.tempPassword}
 
 ========================================
 IMPORTANTE
 ========================================
 
-- Link EXCLUSIVO para você
-- Válido até: ${expirationDate}
-- Use apenas 1 vez
+- No primeiro acesso, você deverá criar uma nova senha
+- Senha temporária válida até: ${expirationDate}
 
 ========================================
-APÓS O CADASTRO VOCÊ TERÁ ACESSO A
+O QUE VOCÊ TERÁ ACESSO
 ========================================
 
 - Acompanhamento em tempo real
@@ -753,8 +762,6 @@ APÓS O CADASTRO VOCÊ TERÁ ACESSO A
 - Elite Card (cartão de benefícios)
 
 ========================================
-
-ATENÇÃO: Anexe a imagem do QR Code a este e-mail!
 
 Dúvidas? Ligue: (11) 93456-7890
 
@@ -1417,7 +1424,7 @@ contato@eliteblindagens.com.br`
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => {
-                    setShowShareModal(true)
+                    setShowCardPreview(true)
                     addNotification({ type: 'info', title: 'Cartão Elite', message: 'Abrindo visualização do cartão...' })
                   }}
                   className="bg-primary text-black py-3 rounded-xl font-semibold flex items-center justify-center space-x-2"
@@ -1467,13 +1474,73 @@ contato@eliteblindagens.com.br`
           {/* Schedule Tab - Agenda de Revisões */}
           {activeTab === 'schedule' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
                   <h2 className="text-2xl font-bold">Agenda de Revisões</h2>
                   <p className="text-gray-400">Visualize todos os agendamentos de revisões e entregas</p>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-400">{mockScheduledRevisions.length} agendamentos</span>
+                <div className="flex items-center gap-3 flex-wrap">
+                  {/* Filtro por Tipo */}
+                  <select
+                    value={scheduleFilterType}
+                    onChange={(e) => setScheduleFilterType(e.target.value)}
+                    className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white"
+                    title="Filtrar por tipo"
+                  >
+                    <option value="all">Todos os Tipos</option>
+                    <option value="revisao">Revisões</option>
+                    <option value="entrega">Entregas</option>
+                  </select>
+                  {/* Filtro por Status */}
+                  <select
+                    value={scheduleFilterStatus}
+                    onChange={(e) => setScheduleFilterStatus(e.target.value)}
+                    className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white"
+                    title="Filtrar por status"
+                  >
+                    <option value="all">Todos os Status</option>
+                    <option value="confirmed">Confirmados</option>
+                    <option value="pending">Pendentes</option>
+                  </select>
+                  {/* Download Excel */}
+                  <button
+                    onClick={() => {
+                      const filteredRevisions = mockScheduledRevisions.filter(r => 
+                        (scheduleFilterType === 'all' || r.type === scheduleFilterType) &&
+                        (scheduleFilterStatus === 'all' || r.status === scheduleFilterStatus)
+                      )
+                      exportToExcel(
+                        filteredRevisions.map(r => ({
+                          cliente: r.clientName,
+                          veiculo: r.vehicle,
+                          data: r.date,
+                          horario: r.time,
+                          tipo: r.type === 'revisao' ? 'Revisão' : 'Entrega',
+                          status: r.status === 'confirmed' ? 'Confirmado' : 'Pendente',
+                          telefone: r.phone,
+                        })),
+                        [
+                          { header: 'Cliente', key: 'cliente' },
+                          { header: 'Veículo', key: 'veiculo' },
+                          { header: 'Data', key: 'data', formatter: (v) => formatDateBR(v as string) },
+                          { header: 'Horário', key: 'horario' },
+                          { header: 'Tipo', key: 'tipo' },
+                          { header: 'Status', key: 'status' },
+                          { header: 'Telefone', key: 'telefone', formatter: (v) => formatPhone(v as string) },
+                        ],
+                        'agenda_elite_track'
+                      )
+                      addNotification({ type: 'success', title: 'Download', message: 'Arquivo Excel gerado com sucesso!' })
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-500/20 text-green-400 rounded-xl hover:bg-green-500/30 transition-colors"
+                  >
+                    <FileSpreadsheet className="w-5 h-5" />
+                    <span className="hidden sm:inline">Excel</span>
+                  </button>
+                  <span className="text-sm text-gray-400">{mockScheduledRevisions.filter(r => 
+                    (scheduleFilterType === 'all' || r.type === scheduleFilterType) &&
+                    (scheduleFilterStatus === 'all' || r.status === scheduleFilterStatus)
+                  ).length} agendamentos</span>
                 </div>
               </div>
 
@@ -1657,10 +1724,77 @@ contato@eliteblindagens.com.br`
           {/* Clients Tab - Consulta de Clientes e Documentos */}
           {activeTab === 'clients' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
                   <h2 className="text-2xl font-bold">Clientes e Documentos</h2>
                   <p className="text-gray-400">Consulte informações e documentos dos clientes</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  {/* Botões de Visualização */}
+                  <div className="flex items-center bg-white/5 rounded-xl p-1">
+                    <button
+                      onClick={() => setClientViewMode('list')}
+                      className={cn(
+                        "p-2 rounded-lg transition-colors",
+                        clientViewMode === 'list' ? "bg-primary text-black" : "text-gray-400 hover:text-white"
+                      )}
+                      title="Visualização em lista"
+                    >
+                      <List className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => setClientViewMode('grid')}
+                      className={cn(
+                        "p-2 rounded-lg transition-colors",
+                        clientViewMode === 'grid' ? "bg-primary text-black" : "text-gray-400 hover:text-white"
+                      )}
+                      title="Visualização em grade"
+                    >
+                      <Grid3X3 className="w-5 h-5" />
+                    </button>
+                  </div>
+                  {/* Download Excel */}
+                  <button
+                    onClick={() => {
+                      const filteredProjects = projects.filter(p => 
+                        p.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        p.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        p.vehicle.plate.toLowerCase().includes(searchTerm.toLowerCase())
+                      )
+                      exportToExcel(
+                        filteredProjects.map(p => ({
+                          nome: p.user.name,
+                          email: p.user.email,
+                          telefone: p.user.phone,
+                          veiculo: `${p.vehicle.brand} ${p.vehicle.model}`,
+                          placa: p.vehicle.plate,
+                          ano: p.vehicle.year,
+                          nivel: p.vehicle.blindingLevel,
+                          status: statusConfig[p.status as keyof typeof statusConfig]?.label || p.status,
+                          inicio: p.startDate,
+                          previsao: p.estimatedDelivery,
+                        })),
+                        [
+                          { header: 'Nome', key: 'nome' },
+                          { header: 'E-mail', key: 'email' },
+                          { header: 'Telefone', key: 'telefone', formatter: (v) => formatPhone(v as string) },
+                          { header: 'Veículo', key: 'veiculo' },
+                          { header: 'Placa', key: 'placa' },
+                          { header: 'Ano', key: 'ano' },
+                          { header: 'Nível', key: 'nivel' },
+                          { header: 'Status', key: 'status' },
+                          { header: 'Início', key: 'inicio', formatter: (v) => formatDateBR(v as string) },
+                          { header: 'Previsão', key: 'previsao', formatter: (v) => formatDateBR(v as string) },
+                        ],
+                        'clientes_elite_track'
+                      )
+                      addNotification({ type: 'success', title: 'Download', message: 'Arquivo Excel gerado com sucesso!' })
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-500/20 text-green-400 rounded-xl hover:bg-green-500/30 transition-colors"
+                  >
+                    <FileSpreadsheet className="w-5 h-5" />
+                    <span className="hidden sm:inline">Excel</span>
+                  </button>
                 </div>
               </div>
 
@@ -1679,58 +1813,119 @@ contato@eliteblindagens.com.br`
                 </div>
               </div>
 
-              {/* Client List */}
+              {/* Client List/Grid */}
               <div className="glass-effect rounded-2xl overflow-hidden">
-                <div className="p-4 border-b border-white/10">
-                  <h3 className="font-semibold">Lista de Clientes ({projects.length})</h3>
-                </div>
-                <div className="divide-y divide-white/10">
-                  {projects
-                    .filter(p => 
+                <div className="p-4 border-b border-white/10 flex items-center justify-between">
+                  <h3 className="font-semibold">
+                    {clientViewMode === 'list' ? 'Lista' : 'Grade'} de Clientes ({projects.filter(p => 
                       p.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                       p.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                       p.vehicle.plate.toLowerCase().includes(searchTerm.toLowerCase())
-                    )
-                    .map((project) => (
-                    <div 
-                      key={project.id} 
-                      className="p-4 hover:bg-white/5 transition-colors cursor-pointer"
-                      onClick={() => {
-                        setSelectedProject(project)
-                        addNotification({
-                          type: 'info',
-                          title: 'Cliente Selecionado',
-                          message: `Visualizando dados de ${project.user.name}`
-                        })
-                      }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
+                    ).length})
+                  </h3>
+                </div>
+                
+                {/* Vista em Lista */}
+                {clientViewMode === 'list' && (
+                  <div className="divide-y divide-white/10">
+                    {projects
+                      .filter(p => 
+                        p.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        p.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        p.vehicle.plate.toLowerCase().includes(searchTerm.toLowerCase())
+                      )
+                      .map((project) => (
+                      <div 
+                        key={project.id} 
+                        className="p-4 hover:bg-white/5 transition-colors cursor-pointer"
+                        onClick={() => {
+                          setSelectedClientForModal(project)
+                          setShowClientDetailModal(true)
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-4">
+                            <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
+                              <Users className="w-6 h-6 text-primary" />
+                            </div>
+                            <div>
+                              <div className="font-semibold">{project.user.name}</div>
+                              <div className="text-sm text-gray-400">{project.user.email}</div>
+                              <div className="text-xs text-gray-500">{project.user.phone}</div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm font-medium">{project.vehicle.brand} {project.vehicle.model}</div>
+                            <div className="text-xs text-gray-400">{project.vehicle.plate}</div>
+                            <div className={cn(
+                              "text-xs mt-1 px-2 py-0.5 rounded-full inline-block",
+                              statusConfig[project.status as keyof typeof statusConfig]?.color || 'bg-gray-500',
+                              "text-white"
+                            )}>
+                              {statusConfig[project.status as keyof typeof statusConfig]?.label || project.status}
+                            </div>
+                          </div>
+                          <ChevronRight className="w-5 h-5 text-gray-400" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Vista em Grade */}
+                {clientViewMode === 'grid' && (
+                  <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {projects
+                      .filter(p => 
+                        p.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        p.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        p.vehicle.plate.toLowerCase().includes(searchTerm.toLowerCase())
+                      )
+                      .map((project) => (
+                      <div 
+                        key={project.id} 
+                        className="bg-white/5 border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-colors cursor-pointer"
+                        onClick={() => {
+                          setSelectedClientForModal(project)
+                          setShowClientDetailModal(true)
+                        }}
+                      >
+                        <div className="flex items-center gap-3 mb-3">
                           <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
                             <Users className="w-6 h-6 text-primary" />
                           </div>
-                          <div>
-                            <div className="font-semibold">{project.user.name}</div>
-                            <div className="text-sm text-gray-400">{project.user.email}</div>
-                            <div className="text-xs text-gray-500">{project.user.phone}</div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold truncate">{project.user.name}</div>
+                            <div className="text-xs text-gray-400 truncate">{project.user.email}</div>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-sm font-medium">{project.vehicle.brand} {project.vehicle.model}</div>
-                          <div className="text-xs text-gray-400">{project.vehicle.plate}</div>
-                          <div className={cn(
-                            "text-xs mt-1 px-2 py-0.5 rounded-full inline-block",
-                            statusConfig[project.status as keyof typeof statusConfig]?.color || 'bg-gray-500',
-                            "text-white"
-                          )}>
-                            {statusConfig[project.status as keyof typeof statusConfig]?.label || project.status}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-400">Veículo:</span>
+                            <span className="font-medium">{project.vehicle.brand} {project.vehicle.model}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-400">Placa:</span>
+                            <span className="font-mono">{project.vehicle.plate}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-400">Status:</span>
+                            <span className={cn(
+                              "px-2 py-0.5 rounded-full text-xs",
+                              statusConfig[project.status as keyof typeof statusConfig]?.color || 'bg-gray-500',
+                              "text-white"
+                            )}>
+                              {statusConfig[project.status as keyof typeof statusConfig]?.label || project.status}
+                            </span>
                           </div>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-gray-400" />
+                        <button className="w-full mt-3 py-2 bg-primary/20 text-primary rounded-xl text-sm font-medium hover:bg-primary/30 transition-colors">
+                          Ver Detalhes
+                        </button>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Selected Client Details */}
@@ -2233,15 +2428,72 @@ contato@eliteblindagens.com.br`
           {/* Quotes Tab - Gestão de Orçamentos */}
           {activeTab === 'quotes' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
                   <h2 className="text-xl font-bold">Orçamentos</h2>
                   <p className="text-sm text-gray-400">Gerencie solicitações de orçamento dos clientes</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
                   <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm">
                     {getPendingQuotes().length} pendentes
                   </span>
+                  {/* Filtro de Status */}
+                  <select
+                    value={quoteFilterStatus}
+                    onChange={(e) => setQuoteFilterStatus(e.target.value)}
+                    className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white"
+                    title="Filtrar por status"
+                  >
+                    <option value="all">Todos os Status</option>
+                    <option value="pending">Pendentes</option>
+                    <option value="analyzed">Analisados</option>
+                    <option value="sent">Enviados</option>
+                    <option value="approved">Aprovados</option>
+                    <option value="rejected">Rejeitados</option>
+                  </select>
+                  {/* Download Excel */}
+                  <button
+                    onClick={() => {
+                      const filteredQuotes = quotes.filter(q => quoteFilterStatus === 'all' || q.status === quoteFilterStatus)
+                      exportToExcel(
+                        filteredQuotes.map(q => ({
+                          cliente: q.clientName,
+                          email: q.clientEmail,
+                          telefone: q.clientPhone,
+                          veiculo: `${q.vehicleBrand} ${q.vehicleModel}`,
+                          ano: q.vehicleYear,
+                          placa: q.vehiclePlate,
+                          nivel: q.blindingLevel,
+                          status: q.status === 'pending' ? 'Pendente' :
+                                  q.status === 'analyzed' ? 'Analisado' :
+                                  q.status === 'sent' ? 'Enviado' :
+                                  q.status === 'approved' ? 'Aprovado' : 'Rejeitado',
+                          valor: q.estimatedPrice || '',
+                          prazo: q.estimatedDays ? `${q.estimatedDays} dias` : '',
+                          data: q.createdAt,
+                        })),
+                        [
+                          { header: 'Cliente', key: 'cliente' },
+                          { header: 'E-mail', key: 'email' },
+                          { header: 'Telefone', key: 'telefone', formatter: (v) => formatPhone(v as string) },
+                          { header: 'Veículo', key: 'veiculo' },
+                          { header: 'Ano', key: 'ano' },
+                          { header: 'Placa', key: 'placa' },
+                          { header: 'Nível', key: 'nivel' },
+                          { header: 'Status', key: 'status' },
+                          { header: 'Valor', key: 'valor' },
+                          { header: 'Prazo', key: 'prazo' },
+                          { header: 'Data', key: 'data', formatter: (v) => formatDateBR(v as string) },
+                        ],
+                        'orcamentos_elite_track'
+                      )
+                      addNotification({ type: 'success', title: 'Download', message: 'Arquivo Excel gerado com sucesso!' })
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-500/20 text-green-400 rounded-xl hover:bg-green-500/30 transition-colors"
+                  >
+                    <FileSpreadsheet className="w-5 h-5" />
+                    <span className="hidden sm:inline">Excel</span>
+                  </button>
                   <button
                     onClick={() => setShowNewQuoteModal(true)}
                     className="flex items-center gap-2 px-4 py-2 bg-primary text-black rounded-xl font-semibold hover:bg-primary/90 transition-colors"
@@ -2254,13 +2506,13 @@ contato@eliteblindagens.com.br`
 
               {/* Lista de Orçamentos */}
               <div className="space-y-4">
-                {quotes.length === 0 ? (
+                {quotes.filter(q => quoteFilterStatus === 'all' || q.status === quoteFilterStatus).length === 0 ? (
                   <div className="text-center py-12 bg-white/5 rounded-2xl">
                     <DollarSign className="w-16 h-16 mx-auto text-gray-600 mb-4" />
                     <p className="text-gray-400">Nenhum orçamento solicitado</p>
                   </div>
                 ) : (
-                  quotes.map((quote) => (
+                  quotes.filter(q => quoteFilterStatus === 'all' || q.status === quoteFilterStatus).map((quote) => (
                     <div 
                       key={quote.id}
                       className="bg-white/5 border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-colors cursor-pointer"
@@ -3738,6 +3990,103 @@ contato@eliteblindagens.com.br`
               >
                 <Edit3 className="w-4 h-4" />
                 Editar Projeto
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Modal de Detalhes do Cliente */}
+      <ClientDetailModal
+        isOpen={showClientDetailModal}
+        onClose={() => {
+          setShowClientDetailModal(false)
+          setSelectedClientForModal(null)
+        }}
+        client={selectedClientForModal}
+        allClientProjects={selectedClientForModal ? projects.filter(p => p.user.email === selectedClientForModal.user.email) : []}
+        onSelectProject={(project) => {
+          setSelectedClientForModal(project)
+        }}
+        onNotification={addNotification}
+      />
+
+      {/* Modal de Visualização do Cartão Elite */}
+      <Modal isOpen={showCardPreview} onClose={() => setShowCardPreview(false)} size="md">
+        {selectedProject && (
+          <div className="p-6">
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-bold text-primary">Cartão Elite Digital</h2>
+              <p className="text-sm text-gray-400">Visualização do cartão do cliente</p>
+            </div>
+
+            {/* Cartão Elite */}
+            <div className="bg-gradient-to-br from-carbon-800 to-carbon-900 rounded-3xl p-6 border border-primary/30 relative overflow-hidden mb-6">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="font-['Pacifico'] text-2xl text-primary">Elite</div>
+                  <CreditCard className="w-8 h-8 text-primary" />
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-xs text-gray-400">Número do Cartão</p>
+                    <p className="text-lg font-mono font-bold">ELITE-{selectedProject.id.slice(-8).toUpperCase()}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">Cliente</p>
+                    <p className="font-semibold">{selectedProject.user.name}</p>
+                  </div>
+                  <div className="flex justify-between">
+                    <div>
+                      <p className="text-xs text-gray-400">Veículo</p>
+                      <p className="text-sm">{selectedProject.vehicle.brand} {selectedProject.vehicle.model}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-400">Placa</p>
+                      <p className="text-sm font-mono">{selectedProject.vehicle.plate}</p>
+                    </div>
+                  </div>
+                  <div className="flex justify-between pt-2 border-t border-white/10">
+                    <div>
+                      <p className="text-xs text-gray-400">Nível de Blindagem</p>
+                      <p className="text-sm font-semibold text-primary">{selectedProject.vehicle.blindingLevel}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-400">Válido até</p>
+                      <p className="text-sm font-semibold">Vitalício</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Ações */}
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  const phone = selectedProject.user.phone?.replace(/\D/g, '')
+                  const msg = `Olá ${selectedProject.user.name}! Segue o link do seu Cartão Elite Digital: ${window.location.origin}/card/${selectedProject.id}`
+                  window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(msg)}`, '_blank')
+                  addNotification({ type: 'success', title: 'WhatsApp', message: 'Abrindo WhatsApp para compartilhar o cartão...' })
+                }}
+                className="w-full flex items-center justify-center gap-2 bg-green-500/20 text-green-400 py-3 rounded-xl font-semibold hover:bg-green-500/30 transition-colors"
+              >
+                <Send className="w-5 h-5" />
+                <span>Enviar via WhatsApp</span>
+              </button>
+              <button
+                onClick={() => window.open(`${window.location.origin}/card/${selectedProject.id}`, '_blank')}
+                className="w-full flex items-center justify-center gap-2 bg-primary/20 text-primary py-3 rounded-xl font-semibold hover:bg-primary/30 transition-colors"
+              >
+                <ExternalLink className="w-5 h-5" />
+                <span>Abrir Link Público</span>
+              </button>
+              <button
+                onClick={() => setShowCardPreview(false)}
+                className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-gray-400"
+              >
+                Fechar
               </button>
             </div>
           </div>
