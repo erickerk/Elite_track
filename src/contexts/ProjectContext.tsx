@@ -85,7 +85,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   // Carregar projetos e configurar Real-time + Polling
   useEffect(() => {
     let pollingInterval: NodeJS.Timeout | null = null
-    let realtimeConnected = false
 
     const initializeProjects = async () => {
       setIsLoading(true)
@@ -134,7 +133,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
             console.log('[ProjectContext] Real-time status:', status, err?.message || '')
             
             if (status === 'SUBSCRIBED') {
-              realtimeConnected = true
               console.log('[ProjectContext] ✓ Real-time conectado com sucesso!')
               // Limpar polling se Real-time conectou
               if (pollingInterval) {
@@ -142,7 +140,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
                 pollingInterval = null
               }
             } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED' || status === 'TIMED_OUT') {
-              realtimeConnected = false
               // Iniciar polling como fallback apenas se ainda não estiver rodando
               if (!pollingInterval) {
                 console.log('[ProjectContext] ⚠ Real-time falhou, iniciando polling de 15s')

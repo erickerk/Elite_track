@@ -140,6 +140,7 @@ export function AdminDashboard() {
 
   // Carregar histórico de ações do executor
   const loadExecutorActions = useCallback(async (executorId: string) => {
+    console.log('[AdminDashboard] Carregando histórico do executor:', executorId)
     // Simulação de ações (em produção, viria de uma tabela de audit_log)
     const mockActions: ExecutorAction[] = [
       { id: '1', type: 'login', description: 'Login realizado', timestamp: new Date().toISOString() },
@@ -400,11 +401,6 @@ export function AdminDashboard() {
     { id: 'invites' as AdminTab, label: 'Convites', icon: Send },
     { id: 'settings' as AdminTab, label: 'Configurações', icon: Settings },
   ]
-
-  const filteredClients = clients.filter(c =>
-    c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.email.toLowerCase().includes(searchTerm.toLowerCase())
-  )
 
   return (
     <div className="min-h-screen bg-black text-white font-['Inter'] flex">
