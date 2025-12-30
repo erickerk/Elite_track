@@ -218,6 +218,7 @@ export function ExecutorDashboard() {
   const [vehiclePhoto, setVehiclePhoto] = useState<string | null>(null)
   const vehiclePhotoInputRef = useRef<HTMLInputElement>(null)
   const vehicleCameraInputRef = useRef<HTMLInputElement>(null)
+  const editVehiclePhotoRef = useRef<HTMLInputElement>(null)
 
   const handleVehiclePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -254,6 +255,67 @@ export function ExecutorDashboard() {
       })
     }
     reader.readAsDataURL(file)
+  }
+
+  // Função para editar foto do veículo selecionado
+  const handleEditVehiclePhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !selectedProject) return
+
+    if (!file.type.startsWith('image/')) {
+      addNotification({
+        type: 'warning',
+        title: 'Arquivo inválido',
+        message: 'Selecione uma imagem (JPG ou PNG).',
+      })
+      return
+    }
+
+    const maxSizeBytes = 5 * 1024 * 1024
+    if (file.size > maxSizeBytes) {
+      addNotification({
+        type: 'warning',
+        title: 'Arquivo muito grande',
+        message: 'A foto deve ter no máximo 5MB.',
+      })
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onloadend = async () => {
+      const newPhotoUrl = reader.result as string
+      
+      // Atualizar o projeto com a nova foto
+      const updatedVehicle = {
+        ...selectedProject.vehicle,
+        images: [newPhotoUrl, ...(selectedProject.vehicle.images?.slice(1) || [])]
+      }
+      
+      const updatedProject = { ...selectedProject, vehicle: updatedVehicle }
+      setSelectedProject(updatedProject)
+      
+      // Persistir no contexto global
+      await updateGlobalProject(selectedProject.id, { vehicle: updatedVehicle })
+      
+      addNotification({
+        type: 'success',
+        title: 'Foto Atualizada',
+        message: 'A foto do veículo foi atualizada com sucesso!',
+      })
+    }
+    reader.onerror = () => {
+      addNotification({
+        type: 'error',
+        title: 'Erro ao ler foto',
+        message: 'Não foi possível carregar a foto. Tente novamente.',
+      })
+    }
+    reader.readAsDataURL(file)
+    
+    // Limpar o input para permitir selecionar a mesma imagem novamente
+    if (editVehiclePhotoRef.current) {
+      editVehiclePhotoRef.current.value = ''
+    }
   }
 
   const allProjects = projects
@@ -685,37 +747,54 @@ export function ExecutorDashboard() {
     const loginUrl = `${window.location.origin}/login?project=${createdProjectData.id}`
     const expirationDate = new Date(createdProjectData.expiresAt).toLocaleDateString('pt-BR')
     
-    // Mensagem clara e objetiva para público operacional
-    const message = `*ELITE BLINDAGENS - ACESSO AO APP*
+    // Mensagem premium e profissional
+    const message = `━━━━━━━━━━━━━━━━━━━━━━
+✨ *ELITE BLINDAGENS* ✨
+   _Excelência em Proteção Veicular_
+━━━━━━━━━━━━━━━━━━━━━━
 
-Ola ${createdProjectData.clientName}!
+Olá *${createdProjectData.clientName}*! 👋
 
-Seu veiculo *${createdProjectData.vehicle}* esta em nosso sistema.
+Seja bem-vindo(a) ao nosso sistema exclusivo de acompanhamento! Seu veículo *${createdProjectData.vehicle}* foi registrado com sucesso.
 
-*PARA ACESSAR O APP:*
-1. Acesse: ${loginUrl}
-2. Use os dados abaixo para entrar
+🚗 *DADOS DO VEÍCULO:*
+   • Veículo: *${createdProjectData.vehicle}*
+   • Cliente: ${createdProjectData.clientName}
 
-*SEUS DADOS DE ACESSO:*
-E-mail: ${createdProjectData.clientEmail}
-Senha: *${createdProjectData.tempPassword}*
+🔐 *ACESSE SEU PAINEL EXCLUSIVO:*
 
-*IMPORTANTE:*
-- No primeiro acesso, voce devera criar uma nova senha
-- Senha temporaria valida ate ${expirationDate}
+📱 *Link de Acesso:*
+${loginUrl}
 
-Duvidas? Ligue: (11) 93456-7890
+👤 *Seus Dados de Login:*
+   • E-mail: ${createdProjectData.clientEmail}
+   • Senha: *${createdProjectData.tempPassword}*
 
-Elite Blindagens`
+✅ *COMO ACESSAR:*
+   1️⃣ Clique no link acima
+   2️⃣ Digite seu e-mail e senha
+   3️⃣ No primeiro acesso, crie sua senha definitiva
+   4️⃣ Pronto! Acompanhe cada etapa do seu projeto
+
+⚠️ *IMPORTANTE:*
+   • Senha temporária válida até *${expirationDate}*
+   • Crie sua senha pessoal no primeiro acesso
+   • Mantenha seus dados em segurança
+
+📞 *Suporte:* (11) 93456-7890
+📧 *E-mail:* contato@eliteblindagens.com.br
+
+━━━━━━━━━━━━━━━━━━━━━━
+   _Elite Blindagens - Sua Segurança é Nossa Prioridade_`
 
     const phone = createdProjectData.clientPhone.replace(/\D/g, '')
     const fullPhone = phone.startsWith('55') ? phone : `55${phone}`
     window.open(`https://wa.me/${fullPhone}?text=${encodeURIComponent(message)}`, '_blank')
     
     addNotification({
-      type: 'warning',
-      title: 'IMPORTANTE!',
-      message: 'Baixe o QR Code e envie como IMAGEM junto com a mensagem.',
+      type: 'info',
+      title: 'Mensagem Enviada',
+      message: 'Não esqueça de enviar o QR Code como imagem para o cliente!',
     })
   }
 
@@ -726,54 +805,71 @@ Elite Blindagens`
     const loginUrl = `${window.location.origin}/login?project=${createdProjectData.id}`
     const expirationDate = new Date(createdProjectData.expiresAt).toLocaleDateString('pt-BR')
     
-    const subject = `Elite Blindagens - Acesso ao App - ${createdProjectData.vehicle}`
+    const subject = `✨ Elite Blindagens - Acesso Exclusivo ao Seu Projeto - ${createdProjectData.vehicle}`
     
-    const body = `Olá ${createdProjectData.clientName}!
+    const body = `════════════════════════════════════════
+          ELITE BLINDAGENS
+   Excelência em Proteção Veicular
+════════════════════════════════════════
 
-Seu veículo ${createdProjectData.vehicle} está em nosso sistema.
+Olá ${createdProjectData.clientName}!
 
-========================================
-COMO ACESSAR O APP
-========================================
+Seja bem-vindo(a) ao nosso sistema exclusivo de acompanhamento!
+Seu veículo ${createdProjectData.vehicle} foi registrado com sucesso.
 
-Acesse: ${loginUrl}
+────────────────────────────────────────
+🔐 ACESSE SEU PAINEL EXCLUSIVO
+────────────────────────────────────────
 
-========================================
-SEUS DADOS DE ACESSO
-========================================
+📱 Link de Acesso:
+${loginUrl}
 
-E-mail: ${createdProjectData.clientEmail}
-Senha: ${createdProjectData.tempPassword}
+👤 Seus Dados de Login:
+   • E-mail: ${createdProjectData.clientEmail}
+   • Senha: ${createdProjectData.tempPassword}
 
-========================================
-IMPORTANTE
-========================================
+────────────────────────────────────────
+✅ COMO ACESSAR
+────────────────────────────────────────
 
-- No primeiro acesso, você deverá criar uma nova senha
-- Senha temporária válida até: ${expirationDate}
+1. Clique no link acima
+2. Digite seu e-mail e senha
+3. No primeiro acesso, crie sua senha definitiva
+4. Pronto! Acompanhe cada etapa do seu projeto
 
-========================================
-O QUE VOCÊ TERÁ ACESSO
-========================================
+────────────────────────────────────────
+⚠️ IMPORTANTE
+────────────────────────────────────────
 
-- Acompanhamento em tempo real
-- Fotos e atualizações da equipe
-- Laudo técnico de blindagem
-- Elite Card (cartão de benefícios)
+• Senha temporária válida até: ${expirationDate}
+• Crie sua senha pessoal no primeiro acesso
+• Mantenha seus dados em segurança
 
-========================================
+────────────────────────────────────────
+🌟 O QUE VOCÊ TERÁ ACESSO
+────────────────────────────────────────
 
-Dúvidas? Ligue: (11) 93456-7890
+✓ Acompanhamento em tempo real do seu projeto
+✓ Fotos e atualizações da equipe técnica
+✓ Laudo técnico de blindagem completo
+✓ Elite Card - Cartão de Benefícios Exclusivos
+✓ Suporte direto com a equipe
 
-Equipe Elite Blindagens
-contato@eliteblindagens.com.br`
+════════════════════════════════════════
+
+📞 Suporte: (11) 93456-7890
+📧 E-mail: contato@eliteblindagens.com.br
+
+        Elite Blindagens
+   Sua Segurança é Nossa Prioridade
+════════════════════════════════════════`
 
     window.open(`mailto:${createdProjectData.clientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank')
     
     addNotification({
-      type: 'warning',
-      title: 'IMPORTANTE!',
-      message: 'Baixe o QR Code e ANEXE ao e-mail antes de enviar.',
+      type: 'info',
+      title: 'E-mail Preparado',
+      message: 'Não esqueça de anexar o QR Code ao e-mail antes de enviar!',
     })
   }
 
@@ -1119,17 +1215,35 @@ contato@eliteblindagens.com.br`
                 </button>
               </div>
 
+              {/* Input escondido para editar foto do veículo */}
+              <input
+                ref={editVehiclePhotoRef}
+                type="file"
+                accept="image/*"
+                onChange={handleEditVehiclePhoto}
+                className="hidden"
+                aria-label="Editar foto do veículo"
+              />
+
               {/* Destaque do Veículo Selecionado */}
               {selectedProject && (
                 <div className="bg-primary/10 border-2 border-primary rounded-2xl p-4 mb-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 rounded-xl overflow-hidden bg-carbon-900 flex-shrink-0 ring-2 ring-primary">
+                      <div 
+                        className="w-16 h-16 rounded-xl overflow-hidden bg-carbon-900 flex-shrink-0 ring-2 ring-primary relative group cursor-pointer"
+                        onClick={() => editVehiclePhotoRef.current?.click()}
+                        title="Clique para editar a foto"
+                      >
                         {selectedProject.vehicle.images?.[0] ? (
                           <img src={selectedProject.vehicle.images[0]} alt={selectedProject.vehicle.model} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center"><Car className="w-8 h-8 text-gray-500" /></div>
                         )}
+                        {/* Overlay de edição */}
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <Camera className="w-6 h-6 text-white" />
+                        </div>
                       </div>
                       <div>
                         <div className="flex items-center gap-2 mb-1">
@@ -3764,14 +3878,59 @@ contato@eliteblindagens.com.br`
               <div className="bg-white/5 rounded-xl p-4">
                 <h4 className="font-semibold mb-3 flex items-center gap-2">
                   <Send className="w-4 h-4 text-primary" />
-                  Reenviar para o Cliente
+                  Reenviar Acesso ao Cliente
                 </h4>
                 <div className="flex gap-3">
                   <button
                     onClick={() => {
-                      const verifyUrl = `${window.location.origin}/verify/${foundProject.id}`
-                      const message = `*ELITE BLINDAGENS*\n\nOlá ${foundProject.user.name}!\n\nAqui está o link para acompanhar seu veículo:\n${verifyUrl}\n\nPlaca: ${foundProject.vehicle.plate}\nVeículo: ${foundProject.vehicle.brand} ${foundProject.vehicle.model}`
+                      // Gerar nova senha temporária
+                      const newTempPassword = Math.floor(1000 + Math.random() * 9000).toString()
+                      const loginUrl = `${window.location.origin}/login?project=${foundProject.id}`
+                      const expirationDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')
+                      
+                      // Registrar nova senha temporária
+                      registerTempPassword(foundProject.user.email, newTempPassword, foundProject.id)
+                      
+                      const message = `━━━━━━━━━━━━━━━━━━━━━━
+✨ *ELITE BLINDAGENS* ✨
+   _Excelência em Proteção Veicular_
+━━━━━━━━━━━━━━━━━━━━━━
+
+Olá *${foundProject.user.name}*! 👋
+
+Seu veículo *${foundProject.vehicle.brand} ${foundProject.vehicle.model}* está em nosso sistema de acompanhamento exclusivo.
+
+🚗 *DADOS DO VEÍCULO:*
+   • Placa: *${foundProject.vehicle.plate}*
+   • Modelo: ${foundProject.vehicle.brand} ${foundProject.vehicle.model}
+
+🔐 *ACESSE SEU PAINEL EXCLUSIVO:*
+
+📱 *Link de Acesso:*
+${loginUrl}
+
+👤 *Seus Dados de Login:*
+   • E-mail: ${foundProject.user.email}
+   • Senha: *${newTempPassword}*
+
+⚠️ *IMPORTANTE:*
+   • No primeiro acesso, você criará uma nova senha pessoal
+   • Senha temporária válida até ${expirationDate}
+   • Mantenha seus dados em segurança
+
+📞 *Suporte:* (11) 93456-7890
+📧 *E-mail:* contato@eliteblindagens.com.br
+
+━━━━━━━━━━━━━━━━━━━━━━
+   _Elite Blindagens - Sua Segurança é Nossa Prioridade_`
+                      
                       window.open(`https://wa.me/55${foundProject.user.phone?.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`, '_blank')
+                      
+                      addNotification({
+                        type: 'success',
+                        title: 'Nova Senha Gerada',
+                        message: `Senha temporária ${newTempPassword} gerada para ${foundProject.user.name}`,
+                      })
                     }}
                     className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2"
                   >
@@ -3780,10 +3939,24 @@ contato@eliteblindagens.com.br`
                   </button>
                   <button
                     onClick={() => {
-                      const verifyUrl = `${window.location.origin}/verify/${foundProject.id}`
-                      const subject = `Elite Blindagens - Acesso ao Projeto ${foundProject.vehicle.plate}`
-                      const body = `Olá ${foundProject.user.name}!\n\nAqui está o link para acompanhar seu veículo:\n${verifyUrl}\n\nPlaca: ${foundProject.vehicle.plate}\nVeículo: ${foundProject.vehicle.brand} ${foundProject.vehicle.model}`
+                      // Gerar nova senha temporária
+                      const newTempPassword = Math.floor(1000 + Math.random() * 9000).toString()
+                      const loginUrl = `${window.location.origin}/login?project=${foundProject.id}`
+                      const expirationDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')
+                      
+                      // Registrar nova senha temporária
+                      registerTempPassword(foundProject.user.email, newTempPassword, foundProject.id)
+                      
+                      const subject = `✨ Elite Blindagens - Acesso Exclusivo ao Seu Projeto`
+                      const body = `Olá ${foundProject.user.name}!\n\nSeu veículo ${foundProject.vehicle.brand} ${foundProject.vehicle.model} está em nosso sistema de acompanhamento exclusivo.\n\n🚗 DADOS DO VEÍCULO:\n• Placa: ${foundProject.vehicle.plate}\n• Modelo: ${foundProject.vehicle.brand} ${foundProject.vehicle.model}\n\n🔐 ACESSE SEU PAINEL EXCLUSIVO:\n\nLink: ${loginUrl}\n\n👤 Seus Dados de Login:\n• E-mail: ${foundProject.user.email}\n• Senha: ${newTempPassword}\n\n⚠️ IMPORTANTE:\n• No primeiro acesso, você criará uma nova senha pessoal\n• Senha temporária válida até ${expirationDate}\n\n---\nElite Blindagens - Sua Segurança é Nossa Prioridade\nSuporte: (11) 93456-7890`
+                      
                       window.open(`mailto:${foundProject.user.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank')
+                      
+                      addNotification({
+                        type: 'success',
+                        title: 'Nova Senha Gerada',
+                        message: `Senha temporária ${newTempPassword} gerada para ${foundProject.user.name}`,
+                      })
                     }}
                     className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2"
                   >

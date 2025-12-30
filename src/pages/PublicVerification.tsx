@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-// import html2canvas from 'html2canvas' // Removido - não utilizado
 import jsPDF from 'jspdf'
 import { 
   Shield, CheckCircle, Clock, AlertCircle, Calendar, Car,
@@ -15,7 +14,8 @@ import { ProgressRing } from '../components/ui/ProgressRing'
 import { cn } from '../lib/utils'
 import { useAuth } from '../contexts/AuthContext'
 import { useProjects } from '../contexts/ProjectContext'
-import type { Project } from '../types'
+import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import type { Project, Vehicle, TimelineStep } from '../types'
 import { COMPANY_INFO } from '../constants/companyInfo'
 
 const statusConfig = {
@@ -290,29 +290,155 @@ export function PublicVerification() {
     }
   }
 
+  // Função para buscar projeto diretamente do Supabase
+  const fetchProjectFromSupabase = useCallback(async (searchTerm: string): Promise<Project | null> => {
+    if (!isSupabaseConfigured() || !supabase) return null
+
+    try {
+      console.log('[PublicVerification] Buscando no Supabase:', searchTerm)
+      
+      // Buscar por ID ou por placa do veículo
+      const { data: projectData } = await (supabase as any)
+        .from('projects')
+        .select(`
+          *,
+          vehicles (*),
+          users (*),
+          timeline_steps (*)
+        `)
+        .or(`id.eq.${searchTerm},vehicles.plate.ilike.${searchTerm}`)
+        .limit(1)
+
+      // Se não encontrou por ID, buscar por placa
+      if (!projectData || projectData.length === 0) {
+        const { data: vehicleData } = await (supabase as any)
+          .from('vehicles')
+          .select('id')
+          .ilike('plate', searchTerm)
+          .limit(1)
+
+        if (vehicleData && vehicleData.length > 0) {
+          const { data: projectByVehicle } = await (supabase as any)
+            .from('projects')
+            .select(`
+              *,
+              vehicles (*),
+              users (*),
+              timeline_steps (*)
+            `)
+            .eq('vehicle_id', vehicleData[0].id)
+            .limit(1)
+
+          if (projectByVehicle && projectByVehicle.length > 0) {
+            return convertDbProjectToProject(projectByVehicle[0])
+          }
+        }
+        return null
+      }
+
+      return convertDbProjectToProject(projectData[0])
+    } catch (err) {
+      console.error('[PublicVerification] Erro ao buscar no Supabase:', err)
+      return null
+    }
+  }, [])
+
+  // Converter dados do banco para o formato Project
+  const convertDbProjectToProject = (dbProject: any): Project => {
+    const vehicle: Vehicle = {
+      id: dbProject.vehicles?.id || '',
+      brand: dbProject.vehicles?.brand || '',
+      model: dbProject.vehicles?.model || '',
+      year: dbProject.vehicles?.year || 0,
+      color: dbProject.vehicles?.color || '',
+      plate: dbProject.vehicles?.plate || '',
+      blindingLevel: dbProject.vehicles?.blinding_level || 'IIIA',
+      images: [],
+    }
+
+    const timeline: TimelineStep[] = (dbProject.timeline_steps || [])
+      .sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0))
+      .map((step: any) => ({
+        id: step.id,
+        title: step.title,
+        description: step.description || '',
+        status: step.status,
+        date: step.date,
+        estimatedDate: step.estimated_date,
+        technician: step.technician,
+        notes: step.notes,
+        photos: [],
+      }))
+
+    return {
+      id: dbProject.id,
+      vehicle,
+      user: {
+        id: dbProject.users?.id || '',
+        name: dbProject.users?.name || 'Cliente',
+        email: dbProject.users?.email || '',
+        phone: dbProject.users?.phone || '',
+        role: 'client',
+      },
+      status: dbProject.status,
+      progress: dbProject.progress || 0,
+      timeline,
+      startDate: dbProject.start_date,
+      estimatedDelivery: dbProject.estimated_delivery,
+      actualDelivery: dbProject.actual_delivery,
+      qrCode: dbProject.qr_code || '',
+      vehicleReceivedDate: dbProject.vehicle_received_date,
+      processStartDate: dbProject.process_start_date,
+      completedDate: dbProject.completed_date,
+    }
+  }
+
   useEffect(() => {
-    setLoading(true)
-    const timer = setTimeout(() => {
-      const pid = projectId || ''
+    const searchProject = async () => {
+      setLoading(true)
+      const pid = (projectId || '').trim()
+      const pidUpper = pid.toUpperCase()
+      
+      console.log('[PublicVerification] Buscando projeto:', pid)
+      console.log('[PublicVerification] Projetos no contexto:', projects.length)
+
+      // 1. Primeiro, buscar no contexto local
       const found = projects.find(p =>
         p.id === pid ||
+        p.id.toLowerCase() === pid.toLowerCase() ||
         p.qrCode === pid ||
-        p.id.replace('PRJ-', '') === pid
+        p.id.replace('PRJ-', '') === pid ||
+        p.vehicle?.plate?.toUpperCase() === pidUpper ||
+        p.vehicle?.plate?.toUpperCase().replace('-', '') === pidUpper.replace('-', '')
       )
 
       if (found) {
+        console.log('[PublicVerification] ✓ Encontrado no contexto:', found.id)
         setProject(found)
         setError(false)
+        setLoading(false)
+        return
+      }
+
+      // 2. Se não encontrou no contexto, buscar diretamente no Supabase
+      console.log('[PublicVerification] Não encontrado no contexto, buscando no Supabase...')
+      const supabaseProject = await fetchProjectFromSupabase(pid)
+
+      if (supabaseProject) {
+        console.log('[PublicVerification] ✓ Encontrado no Supabase:', supabaseProject.id)
+        setProject(supabaseProject)
+        setError(false)
       } else {
+        console.log('[PublicVerification] ✗ Projeto não encontrado')
         setProject(null)
         setError(true)
       }
 
       setLoading(false)
-    }, 400)
+    }
 
-    return () => clearTimeout(timer)
-  }, [projectId, projects])
+    searchProject()
+  }, [projectId, projects, fetchProjectFromSupabase])
 
   if (loading) {
     return (

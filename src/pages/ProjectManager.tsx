@@ -4,13 +4,14 @@ import {
   Upload, CheckCircle, Clock, AlertCircle, 
   ChevronRight, Plus, X, Image as ImageIcon,
   FileText, CreditCard, Award, Camera,
-  Play, Pause
+  Play, Pause, Loader2
 } from 'lucide-react'
 import { Modal } from '../components/ui/Modal'
 import { useAuth } from '../contexts/AuthContext'
 import { useNotifications } from '../contexts/NotificationContext'
 import { useProjects } from '../contexts/ProjectContext'
 import { cn } from '../lib/utils'
+import { uploadStepPhoto } from '../services/photoUploadService'
 import type { Project, TimelineStep, BlindingSpecs } from '../types'
 
 export function ProjectManager() {
@@ -30,6 +31,8 @@ export function ProjectManager() {
   const [showCardModal, setShowCardModal] = useState(false)
   const [stepNotes, setStepNotes] = useState('')
   const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([])
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
+  const [isUploading, setIsUploading] = useState(false)
   const [nextStepDate, setNextStepDate] = useState('')
   const [newStatus, setNewStatus] = useState<'pending' | 'in_progress' | 'completed' | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -170,6 +173,7 @@ export function ProjectManager() {
       Array.from(files).forEach(file => {
         const url = URL.createObjectURL(file)
         setUploadedPhotos(prev => [...prev, url])
+        setUploadedFiles(prev => [...prev, file])
       })
     }
   }
@@ -188,31 +192,65 @@ export function ProjectManager() {
     }
   }
 
-  const handleUploadPhotos = () => {
-    if (selectedStep && uploadedPhotos.length > 0 && project) {
-      // Atualizar fotos da etapa
-      const updatedTimeline = project.timeline.map(s => {
-        if (s.id === selectedStep.id) {
-          return { ...s, photos: [...s.photos, ...uploadedPhotos] }
+  const handleUploadPhotos = async () => {
+    if (selectedStep && uploadedFiles.length > 0 && project) {
+      setIsUploading(true)
+      
+      try {
+        const savedPhotoUrls: string[] = []
+        
+        // Upload de cada foto para o Supabase Storage e salvar na tabela step_photos
+        for (const file of uploadedFiles) {
+          const savedPhoto = await uploadStepPhoto(
+            file,
+            selectedStep.id,
+            'during',
+            `Foto da etapa ${selectedStep.title}`,
+            user?.id
+          )
+          
+          if (savedPhoto) {
+            savedPhotoUrls.push(savedPhoto.photo_url)
+          }
         }
-        return s
-      })
-      
-      const updatedProject = { ...project, timeline: updatedTimeline }
-      setProject(updatedProject)
-      
-      // Persistir no contexto global
-      updateProject(project.id, { timeline: updatedTimeline })
-      
-      addNotification({
-        type: 'success',
-        title: 'Fotos Adicionadas',
-        message: `${uploadedPhotos.length} foto(s) adicionada(s) à etapa ${selectedStep.title}.`,
-        projectId: project.id,
-        stepId: selectedStep.id,
-      })
-      setShowPhotoUpload(false)
-      setUploadedPhotos([])
+        
+        // Se não conseguiu salvar no Supabase, usar as URLs locais como fallback
+        const photosToAdd = savedPhotoUrls.length > 0 ? savedPhotoUrls : uploadedPhotos
+        
+        // Atualizar fotos da etapa no estado local
+        const updatedTimeline = project.timeline.map(s => {
+          if (s.id === selectedStep.id) {
+            return { ...s, photos: [...s.photos, ...photosToAdd] }
+          }
+          return s
+        })
+        
+        const updatedProject = { ...project, timeline: updatedTimeline }
+        setProject(updatedProject)
+        
+        // Persistir no contexto global
+        updateProject(project.id, { timeline: updatedTimeline })
+        
+        addNotification({
+          type: 'success',
+          title: 'Fotos Adicionadas',
+          message: `${uploadedFiles.length} foto(s) adicionada(s) à etapa ${selectedStep.title}.`,
+          projectId: project.id,
+          stepId: selectedStep.id,
+        })
+      } catch (error) {
+        console.error('[ProjectManager] Erro ao fazer upload das fotos:', error)
+        addNotification({
+          type: 'error',
+          title: 'Erro no Upload',
+          message: 'Não foi possível salvar algumas fotos. Tente novamente.',
+        })
+      } finally {
+        setIsUploading(false)
+        setShowPhotoUpload(false)
+        setUploadedPhotos([])
+        setUploadedFiles([])
+      }
     }
   }
 
@@ -757,11 +795,20 @@ export function ProjectManager() {
           {/* Save Button */}
           <button
             onClick={handleUploadPhotos}
-            disabled={uploadedPhotos.length === 0}
+            disabled={uploadedPhotos.length === 0 || isUploading}
             className="w-full bg-primary text-black py-4 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
           >
-            <Upload className="w-5 h-5" />
-            <span>Salvar {uploadedPhotos.length > 0 ? `${uploadedPhotos.length} Foto(s)` : 'Fotos'}</span>
+            {isUploading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Salvando...</span>
+              </>
+            ) : (
+              <>
+                <Upload className="w-5 h-5" />
+                <span>Salvar {uploadedPhotos.length > 0 ? `${uploadedPhotos.length} Foto(s)` : 'Fotos'}</span>
+              </>
+            )}
           </button>
         </div>
       </Modal>
