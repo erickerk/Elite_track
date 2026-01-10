@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
-import { Send, Search, User, Clock, CheckCheck, ArrowLeft } from 'lucide-react'
+import { Send, Search, User, Clock, CheckCheck, ArrowLeft, Plus, X } from 'lucide-react'
 import { useChat } from '../../contexts/ChatContext'
 import { useAuth } from '../../contexts/AuthContext'
-import { mockProjects } from '../../data/mockData'
+import { useProjects } from '../../contexts/ProjectContext'
 import { cn } from '../../lib/utils'
 
 interface ExecutorChatProps {
@@ -11,11 +11,18 @@ interface ExecutorChatProps {
 
 export function ExecutorChat({ onBack }: ExecutorChatProps) {
   const { user } = useAuth()
-  const { conversations, sendMessage, markConversationAsRead } = useChat()
+  const { conversations, sendMessage, markConversationAsRead, createConversation } = useChat()
+  const { projects } = useProjects()
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null)
   const [newMessage, setNewMessage] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
+  const [showNewConversation, setShowNewConversation] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  
+  // Clientes que ainda não têm conversa
+  const clientsWithoutConversation = projects.filter(project => 
+    !conversations.some(conv => conv.projectId === project.id)
+  )
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -26,7 +33,7 @@ export function ExecutorChat({ onBack }: ExecutorChatProps) {
   }, [selectedConversation, conversations])
 
   const getProjectForConversation = (projectId: string) => {
-    return mockProjects.find(p => p.id === projectId)
+    return projects.find(p => p.id === projectId)
   }
 
   const filteredConversations = conversations.filter(conv => {
@@ -46,6 +53,17 @@ export function ExecutorChat({ onBack }: ExecutorChatProps) {
   const handleSelectConversation = (convId: string) => {
     setSelectedConversation(convId)
     markConversationAsRead(convId)
+  }
+  
+  // Iniciar nova conversa com um cliente
+  const handleStartNewConversation = async (projectId: string) => {
+    if (!user) return
+    
+    const newConvId = await createConversation(projectId, user.id)
+    if (newConvId) {
+      setSelectedConversation(newConvId)
+      setShowNewConversation(false)
+    }
   }
 
   const handleSendMessage = () => {
@@ -97,10 +115,38 @@ export function ExecutorChat({ onBack }: ExecutorChatProps) {
               </button>
             )}
             <h2 className="text-lg font-bold">Mensagens</h2>
-            <span className="bg-primary/20 text-primary px-2 py-1 rounded-lg text-xs font-semibold">
-              {conversations.reduce((acc, c) => acc + c.unreadCount, 0)} novas
-            </span>
+            <button
+              onClick={() => setShowNewConversation(!showNewConversation)}
+              className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center hover:bg-primary/30 transition-colors"
+              title="Nova conversa"
+              aria-label="Iniciar nova conversa"
+            >
+              {showNewConversation ? <X className="w-5 h-5 text-primary" /> : <Plus className="w-5 h-5 text-primary" />}
+            </button>
           </div>
+          
+          {/* Seletor de cliente para nova conversa */}
+          {showNewConversation && (
+            <div className="mb-4 p-3 bg-primary/10 rounded-xl border border-primary/30">
+              <p className="text-sm text-primary font-medium mb-2">Selecione um cliente:</p>
+              {clientsWithoutConversation.length === 0 ? (
+                <p className="text-xs text-gray-400">Todos os clientes já têm conversa</p>
+              ) : (
+                <div className="max-h-40 overflow-y-auto space-y-2">
+                  {clientsWithoutConversation.map(project => (
+                    <button
+                      key={project.id}
+                      onClick={() => handleStartNewConversation(project.id)}
+                      className="w-full p-2 bg-white/5 hover:bg-white/10 rounded-lg text-left transition-colors"
+                    >
+                      <p className="font-medium text-sm">{project.user.name}</p>
+                      <p className="text-xs text-gray-400">{project.vehicle.brand} {project.vehicle.model}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <input

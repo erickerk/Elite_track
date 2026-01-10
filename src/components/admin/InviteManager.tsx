@@ -6,7 +6,7 @@ import {
   Link as LinkIcon, Share2, X, Download, Filter
 } from 'lucide-react'
 import { useInvite } from '../../contexts/InviteContext'
-import { mockProjects } from '../../data/mockData'
+import { useProjects } from '../../contexts/ProjectContext'
 import type { RegistrationInvite } from '../../types'
 
 const exportInvitesToExcel = (invites: RegistrationInvite[], filename: string) => {
@@ -41,6 +41,7 @@ interface InviteManagerProps {
 
 export function InviteManager({ projectId, onClose }: InviteManagerProps) {
   const { invites, createInvite, revokeInvite, getInvitesByProject } = useInvite()
+  const { projects } = useProjects()
   const [selectedProject, setSelectedProject] = useState(projectId || '')
   const [ownerData, setOwnerData] = useState({ name: '', email: '', phone: '' })
   const [isCreating, setIsCreating] = useState(false)
@@ -204,7 +205,7 @@ export function InviteManager({ projectId, onClose }: InviteManagerProps) {
               aria-label="Selecione um projeto para gerar convite"
             >
               <option value="">Selecione um projeto...</option>
-              {mockProjects.map(p => (
+              {projects.map(p => (
                 <option key={p.id} value={p.id}>
                   {p.vehicle.brand} {p.vehicle.model} - {p.vehicle.plate}
                 </option>

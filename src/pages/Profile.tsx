@@ -22,7 +22,11 @@ export function Profile() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { projects: allProjects } = useProjects()
-  const userProjects = allProjects.filter(p => p.user.id === user?.id || p.user.email === user?.email)
+  // Filtrar projetos do usuário e remover duplicatas por ID
+  const userProjectsRaw = allProjects.filter(p => p.user.id === user?.id || p.user.email === user?.email)
+  const userProjects = userProjectsRaw.filter((proj, index, self) => 
+    index === self.findIndex(p => p.id === proj.id)
+  )
   const project = userProjects[0] || allProjects[0]
   const availableTabs = getTabsForRole(user?.role)
   const isExecutor = user?.role === 'executor'
@@ -118,7 +122,7 @@ export function Profile() {
   }
 
   return (
-    <div className="bg-black text-white font-['Inter'] overflow-x-hidden min-h-screen">
+    <div className="bg-black text-white font-['Inter'] overflow-x-hidden min-h-screen overflow-y-auto pb-20">
       <style>{`
         .profile-section { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); }
         .profile-section:hover { background: rgba(255,255,255,0.08); border-color: rgba(212,175,55,0.3); }
@@ -150,7 +154,14 @@ export function Profile() {
                 <h1 className="text-xl font-bold">Configurações do Perfil</h1>
               </div>
               <div className="flex items-center space-x-3">
-                <div className="text-right">
+                <button
+                  onClick={handleLogout}
+                  className="md:hidden w-10 h-10 bg-red-500/20 hover:bg-red-500/30 rounded-full flex items-center justify-center transition-colors"
+                  title="Sair"
+                >
+                  <i className="ri-logout-box-line text-red-400"></i>
+                </button>
+                <div className="text-right hidden sm:block">
                   <div className="text-sm font-medium">{user?.name}</div>
                   <div className="text-xs text-gray-500">Executor</div>
                 </div>
@@ -174,7 +185,14 @@ export function Profile() {
                   <span className="text-primary font-semibold text-sm">Perfil</span>
                 </nav>
               </div>
-              <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={handleLogout}
+                  className="md:hidden w-10 h-10 bg-red-500/20 hover:bg-red-500/30 rounded-full flex items-center justify-center transition-colors"
+                  title="Sair"
+                >
+                  <i className="ri-logout-box-line text-red-400"></i>
+                </button>
                 <button className="flex items-center space-x-2">
                   <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
                     <i className="ri-notification-3-line text-primary text-sm"></i>
@@ -182,7 +200,7 @@ export function Profile() {
                   {unreadCount > 0 && <span className="bg-primary text-black text-xs px-2 py-1 rounded-full font-semibold">{unreadCount}</span>}
                 </button>
                 <div className="flex items-center space-x-3">
-                  <div className="text-right">
+                  <div className="text-right hidden sm:block">
                     <div className="text-sm font-medium">{user?.name}</div>
                     <div className="text-xs text-gray-400">{project.vehicle.brand} {project.vehicle.model}</div>
                   </div>
@@ -273,12 +291,12 @@ export function Profile() {
                 <div className="glass-effect cinematic-blur rounded-3xl p-6 profile-section lg:col-span-2">
                   <div className="flex items-center justify-between mb-6"><h3 className="text-xl font-semibold">Endereço</h3><div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center"><i className="ri-map-pin-line text-primary"></i></div></div>
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    <div className="lg:col-span-2"><label className="block text-sm font-medium text-gray-400 mb-2">Rua</label><input type="text" value={personalData.address} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm" title="Rua" placeholder="Nome da rua" /></div>
-                    <div><label className="block text-sm font-medium text-gray-400 mb-2">Número</label><input type="text" value={personalData.number} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm" title="Número" placeholder="123" /></div>
-                    <div><label className="block text-sm font-medium text-gray-400 mb-2">Complemento</label><input type="text" value={personalData.complement} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm" title="Complemento" placeholder="Apto, Bloco, etc" /></div>
-                    <div><label className="block text-sm font-medium text-gray-400 mb-2">Bairro</label><input type="text" value={personalData.neighborhood} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm" title="Bairro" placeholder="Nome do bairro" /></div>
-                    <div><label className="block text-sm font-medium text-gray-400 mb-2">Cidade</label><input type="text" value={personalData.city} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm" title="Cidade" placeholder="Nome da cidade" /></div>
-                    <div><label className="block text-sm font-medium text-gray-400 mb-2">CEP</label><input type="text" value={personalData.cep} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm" title="CEP" placeholder="00000-000" /></div>
+                    <div className="lg:col-span-2"><label className="block text-sm font-medium text-gray-400 mb-2">Rua</label><input type="text" value={personalData.address} onChange={(e) => { setPersonalData({...personalData, address: e.target.value}); setHasUnsavedChanges(true); }} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-primary/50" title="Rua" placeholder="Nome da rua" /></div>
+                    <div><label className="block text-sm font-medium text-gray-400 mb-2">Número</label><input type="text" value={personalData.number} onChange={(e) => { setPersonalData({...personalData, number: e.target.value}); setHasUnsavedChanges(true); }} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-primary/50" title="Número" placeholder="123" /></div>
+                    <div><label className="block text-sm font-medium text-gray-400 mb-2">Complemento</label><input type="text" value={personalData.complement} onChange={(e) => { setPersonalData({...personalData, complement: e.target.value}); setHasUnsavedChanges(true); }} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-primary/50" title="Complemento" placeholder="Apto, Bloco, etc" /></div>
+                    <div><label className="block text-sm font-medium text-gray-400 mb-2">Bairro</label><input type="text" value={personalData.neighborhood} onChange={(e) => { setPersonalData({...personalData, neighborhood: e.target.value}); setHasUnsavedChanges(true); }} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-primary/50" title="Bairro" placeholder="Nome do bairro" /></div>
+                    <div><label className="block text-sm font-medium text-gray-400 mb-2">Cidade</label><input type="text" value={personalData.city} onChange={(e) => { setPersonalData({...personalData, city: e.target.value}); setHasUnsavedChanges(true); }} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-primary/50" title="Cidade" placeholder="Nome da cidade" /></div>
+                    <div><label className="block text-sm font-medium text-gray-400 mb-2">CEP</label><input type="text" value={personalData.cep} onChange={(e) => { setPersonalData({...personalData, cep: e.target.value}); setHasUnsavedChanges(true); }} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-primary/50" title="CEP" placeholder="00000-000" /></div>
                   </div>
                 </div>
                 <div className="flex justify-end space-x-4 lg:col-span-2">

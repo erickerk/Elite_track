@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from 'react'
-import { mockProjects } from '../data/mockData'
+// PRODUÇÃO: Projetos carregados exclusivamente do Supabase
 import type { Project } from '../types'
 import { useAuth } from './AuthContext'
 import { projectStorage, isSupabaseConfigured } from '../services/storage'
@@ -36,14 +36,12 @@ const loadProjectsFromLocalStorage = (): Project[] => {
     const stored = localStorage.getItem(PROJECTS_STORAGE_KEY)
     if (stored) {
       const parsed = JSON.parse(stored)
-      const storedIds = new Set(parsed.map((p: Project) => p.id))
-      const uniqueMocks = mockProjects.filter(m => !storedIds.has(m.id))
-      return [...parsed, ...uniqueMocks]
+      return parsed
     }
   } catch (e) {
     console.error('Erro ao carregar projetos:', e)
   }
-  return mockProjects
+  return []
 }
 
 // Função para salvar projetos no localStorage (fallback)
@@ -70,8 +68,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       console.log('[ProjectContext] Carregando projetos do Supabase...')
       const supabaseProjects = await projectStorage.getProjects()
       if (supabaseProjects.length === 0) {
-        console.log('[ProjectContext] Nenhum projeto no Supabase, usando mocks')
-        setProjects(mockProjects)
+        console.log('[ProjectContext] Nenhum projeto no Supabase')
+        setProjects([])
       } else {
         console.log(`[ProjectContext] ${supabaseProjects.length} projetos carregados do Supabase`)
         setProjects(supabaseProjects)
@@ -349,7 +347,8 @@ export function useProjects() {
 export function useUserProject() {
   const { selectedProject, userProjects, completedProject, setSelectedProject, selectProjectByIndex } = useProjects()
   
-  const project = selectedProject || userProjects[0] || mockProjects[0]
+  // PRODUÇÃO: Apenas projetos do Supabase
+  const project = selectedProject || userProjects[0] || null
   
   return {
     project,

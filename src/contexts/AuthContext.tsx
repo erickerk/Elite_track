@@ -20,17 +20,10 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// Usuários de desenvolvimento (apenas para testes locais quando Supabase não está disponível)
-const devUsers: Record<string, User & { password: string }> = {
-  'executor@elite.com': {
-    id: 'dev-executor-001',
-    name: 'Executor Dev',
-    email: 'executor@elite.com',
-    phone: '(11) 98888-8888',
-    role: 'executor',
-    password: 'executor123',
-  },
-}
+// PRODUÇÃO: Autenticação exclusiva via Supabase
+// Usuários gerenciados no banco de dados users_elitetrack
+// Admin Master: juniorrodrigues1011@gmail.com (NUNCA pode ser excluído)
+const devUsers: Record<string, User & { password: string }> = {}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {

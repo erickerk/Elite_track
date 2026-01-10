@@ -1,4 +1,8 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react'
+import { supabase, isSupabaseConfigured } from '../lib/supabase/client'
+
+// Cast supabase para any para permitir acesso a tabelas ainda não tipadas
+const db = supabase as any
 
 export interface QuoteRequest {
   id: string
@@ -46,17 +50,113 @@ const QuoteContext = createContext<QuoteContextType | undefined>(undefined)
 
 const initialQuotes: QuoteRequest[] = []
 
+// Helper para converter dados do Supabase para QuoteRequest
+function dbQuoteToQuote(dbQuote: any): QuoteRequest {
+  return {
+    id: dbQuote.id,
+    clientId: dbQuote.client_id || '',
+    clientName: dbQuote.client_name,
+    clientEmail: dbQuote.client_email,
+    clientPhone: dbQuote.client_phone,
+    vehicleType: dbQuote.vehicle_type || '',
+    vehicleBrand: dbQuote.vehicle_brand,
+    vehicleModel: dbQuote.vehicle_model,
+    vehicleYear: dbQuote.vehicle_year || '',
+    vehiclePlate: dbQuote.vehicle_plate,
+    blindingLevel: dbQuote.blinding_level || '',
+    serviceType: dbQuote.service_type,
+    serviceDescription: dbQuote.service_description,
+    clientDescription: dbQuote.client_description,
+    status: dbQuote.status,
+    estimatedPrice: dbQuote.estimated_price,
+    estimatedDays: dbQuote.estimated_days,
+    executorNotes: dbQuote.executor_notes,
+    executorId: dbQuote.executor_id,
+    executorName: dbQuote.executor_name,
+    clientResponse: dbQuote.client_response,
+    createdAt: dbQuote.created_at,
+    respondedAt: dbQuote.responded_at,
+    approvedAt: dbQuote.approved_at,
+    rejectedAt: dbQuote.rejected_at,
+  }
+}
+
 export function QuoteProvider({ children }: { children: ReactNode }) {
   const [quotes, setQuotes] = useState<QuoteRequest[]>(initialQuotes)
 
-  const addQuote = useCallback((quote: Omit<QuoteRequest, 'id' | 'createdAt' | 'status'>) => {
+  // Carregar orçamentos do Supabase ao iniciar
+  useEffect(() => {
+    const loadQuotes = async () => {
+      if (!isSupabaseConfigured() || !db) {
+        return
+      }
+
+      try {
+        const { data, error } = await db
+          .from('quotes')
+          .select('*')
+          .order('created_at', { ascending: false })
+
+        if (error) {
+          console.error('Erro ao carregar orçamentos:', error)
+        } else if (data) {
+          setQuotes(data.map(dbQuoteToQuote))
+        }
+      } catch (error) {
+        console.error('Erro ao carregar orçamentos:', error)
+      }
+    }
+
+    loadQuotes()
+  }, [])
+
+  const addQuote = useCallback(async (quote: Omit<QuoteRequest, 'id' | 'createdAt' | 'status'>) => {
     const newQuote: QuoteRequest = {
       ...quote,
       id: `quote-${Date.now()}`,
       status: 'pending',
       createdAt: new Date().toISOString(),
     }
+
+    // Adicionar localmente primeiro para feedback imediato
     setQuotes(prev => [newQuote, ...prev])
+
+    // Sincronizar com Supabase
+    if (isSupabaseConfigured() && db) {
+      try {
+        const { data, error } = await db
+          .from('quotes')
+          .insert({
+            client_id: quote.clientId || null,
+            client_name: quote.clientName,
+            client_email: quote.clientEmail,
+            client_phone: quote.clientPhone,
+            vehicle_type: quote.vehicleType,
+            vehicle_brand: quote.vehicleBrand,
+            vehicle_model: quote.vehicleModel,
+            vehicle_year: quote.vehicleYear,
+            vehicle_plate: quote.vehiclePlate,
+            blinding_level: quote.blindingLevel,
+            service_type: quote.serviceType,
+            service_description: quote.serviceDescription,
+            client_description: quote.clientDescription,
+            status: 'pending',
+          })
+          .select()
+          .single()
+
+        if (error) {
+          console.error('Erro ao salvar orçamento no Supabase:', error)
+        } else if (data) {
+          // Atualizar com o ID real do Supabase
+          setQuotes(prev => prev.map(q => 
+            q.id === newQuote.id ? dbQuoteToQuote(data) : q
+          ))
+        }
+      } catch (error) {
+        console.error('Erro ao salvar orçamento:', error)
+      }
+    }
   }, [])
 
   const updateQuoteStatus = useCallback((id: string, status: QuoteRequest['status'], data?: Partial<QuoteRequest>) => {

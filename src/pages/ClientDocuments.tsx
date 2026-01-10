@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
   Upload, FileText, Image, File, Trash2, Download, Eye,
@@ -7,7 +7,11 @@ import {
 import { Modal } from '../components/ui/Modal'
 import { useAuth } from '../contexts/AuthContext'
 import { useNotifications } from '../contexts/NotificationContext'
+import { supabase, isSupabaseConfigured } from '../lib/supabase/client'
 import { cn } from '../lib/utils'
+
+// Cast supabase para any para permitir acesso a tabelas ainda não tipadas
+const db = supabase as any
 
 interface Document {
   id: string
@@ -20,12 +24,7 @@ interface Document {
   url?: string
 }
 
-const mockDocuments: Document[] = [
-  { id: '1', name: 'CNH_Frente.jpg', type: 'image', size: '1.2 MB', uploadedAt: '2025-12-10', status: 'approved', category: 'personal' },
-  { id: '2', name: 'CNH_Verso.jpg', type: 'image', size: '1.1 MB', uploadedAt: '2025-12-10', status: 'approved', category: 'personal' },
-  { id: '3', name: 'CRLV_2025.pdf', type: 'pdf', size: '856 KB', uploadedAt: '2025-12-11', status: 'approved', category: 'vehicle' },
-  { id: '4', name: 'Apolice_Seguro.pdf', type: 'pdf', size: '2.3 MB', uploadedAt: '2025-12-12', status: 'pending', category: 'insurance' },
-]
+const mockDocuments: Document[] = []
 
 const categories = [
   { id: 'vehicle', label: 'Veículo', icon: '🚗' },
@@ -42,7 +41,7 @@ const statusConfig = {
 
 export function ClientDocuments() {
   const navigate = useNavigate()
-  useAuth()
+  const { user } = useAuth()
   const { addNotification } = useNotifications()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -54,16 +53,56 @@ export function ClientDocuments() {
   const [uploadCategory, setUploadCategory] = useState<string>('other')
   const [dragOver, setDragOver] = useState(false)
 
+  // Carregar documentos do Supabase
+  useEffect(() => {
+    const loadDocuments = async () => {
+      if (!isSupabaseConfigured() || !db || !user?.id) {
+        return
+      }
+
+      try {
+        const { data, error } = await db
+          .from('client_documents')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('uploaded_at', { ascending: false })
+
+        if (error) {
+          console.error('Erro ao carregar documentos:', error)
+          return
+        }
+
+        if (data && data.length > 0) {
+          const docs = data.map((d: any) => ({
+            id: d.id,
+            name: d.name,
+            type: d.type,
+            size: d.size,
+            uploadedAt: d.uploaded_at,
+            status: d.status,
+            category: d.category,
+            url: d.url,
+          }))
+          setDocuments(docs)
+        }
+      } catch (error) {
+        console.error('Erro ao carregar documentos:', error)
+      }
+    }
+
+    loadDocuments()
+  }, [user?.id])
+
   const filteredDocuments = selectedCategory === 'all' 
     ? documents 
     : documents.filter(d => d.category === selectedCategory)
 
-  const handleFileSelect = (files: FileList | null) => {
+  const handleFileSelect = async (files: FileList | null) => {
     if (!files || files.length === 0) return
 
-    Array.from(files).forEach(file => {
-      const newDoc: Document = {
-        id: `doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    const uploadPromises = Array.from(files).map(async (file) => {
+      const tempDoc: Document = {
+        id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         name: file.name,
         type: file.type.includes('image') ? 'image' : file.type.includes('pdf') ? 'pdf' : 'document',
         size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
@@ -72,8 +111,50 @@ export function ClientDocuments() {
         category: uploadCategory as Document['category'],
         url: URL.createObjectURL(file),
       }
-      setDocuments(prev => [newDoc, ...prev])
+      
+      // Adicionar localmente primeiro
+      setDocuments(prev => [tempDoc, ...prev])
+
+      // Sincronizar com Supabase
+      if (isSupabaseConfigured() && db && user?.id) {
+        try {
+          // Upload do arquivo para o storage do Supabase (opcional)
+          // Por enquanto, salvamos apenas os metadados
+          const { data, error } = await db
+            .from('client_documents')
+            .insert({
+              user_id: user.id,
+              name: file.name,
+              type: tempDoc.type,
+              size: tempDoc.size,
+              category: uploadCategory,
+              status: 'pending',
+              url: tempDoc.url,
+            })
+            .select()
+            .single()
+
+          if (error) {
+            console.error('Erro ao salvar documento no Supabase:', error)
+          } else if (data) {
+            // Atualizar com o ID real do Supabase
+            setDocuments(prev => prev.map(d => 
+              d.id === tempDoc.id ? {
+                ...d,
+                id: data.id,
+                uploadedAt: data.uploaded_at,
+              } : d
+            ))
+          }
+        } catch (error) {
+          console.error('Erro ao fazer upload:', error)
+        }
+      }
+
+      return tempDoc
     })
+
+    await Promise.all(uploadPromises)
 
     addNotification({
       type: 'success',
@@ -89,8 +170,26 @@ export function ClientDocuments() {
     handleFileSelect(e.dataTransfer.files)
   }
 
-  const handleDelete = (docId: string) => {
+  const handleDelete = async (docId: string) => {
+    // Remover localmente primeiro
     setDocuments(prev => prev.filter(d => d.id !== docId))
+
+    // Sincronizar com Supabase
+    if (isSupabaseConfigured() && db) {
+      try {
+        const { error } = await db
+          .from('client_documents')
+          .delete()
+          .eq('id', docId)
+
+        if (error) {
+          console.error('Erro ao deletar documento:', error)
+        }
+      } catch (error) {
+        console.error('Erro ao deletar documento:', error)
+      }
+    }
+
     addNotification({ type: 'info', title: 'Documento Removido', message: 'O documento foi removido com sucesso.' })
   }
 

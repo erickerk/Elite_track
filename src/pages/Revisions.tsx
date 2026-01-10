@@ -1,8 +1,9 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { 
   Calendar, Clock, CheckCircle, AlertTriangle, Bell,
-  Wrench, Shield, Eye, Phone, MapPin, ChevronRight, MessageCircle
+  Wrench, Shield, Eye, Phone, MapPin, ChevronRight, MessageCircle, ArrowLeft
 } from 'lucide-react'
 import { COMPANY_INFO, getWhatsAppLink, getPhoneLink } from '../constants/companyInfo'
 import { Card } from '../components/ui/Card'
@@ -78,26 +79,56 @@ const statusConfig = {
 }
 
 export function Revisions() {
+  const navigate = useNavigate()
   const { theme } = useTheme()
   const { projects } = useProjects()
   const project = projects[0]
   const isDark = theme === 'dark'
   const [selectedRevision, setSelectedRevision] = useState<Revision | null>(null)
   const [showScheduleModal, setShowScheduleModal] = useState(false)
+  const [scheduleDate, setScheduleDate] = useState('')
+  const [scheduleTime, setScheduleTime] = useState('')
 
   const pendingRevisions = mockRevisions.filter(r => r.status === 'pending' || r.status === 'scheduled')
   const completedRevisions = mockRevisions.filter(r => r.status === 'completed')
   const nextRevision = pendingRevisions[0]
 
-  
+  const handleConfirmSchedule = () => {
+    if (!scheduleDate || !scheduleTime) {
+      alert('Por favor, selecione data e horário')
+      return
+    }
+    alert(`Revis\u00e3o agendada para ${scheduleDate} \u00e0s ${scheduleTime}. Entraremos em contato para confirmar.`)
+    setShowScheduleModal(false)
+    setScheduleDate('')
+    setScheduleTime('')
+  }
+
   return (
     <div className="space-y-6">
+      {/* Bot\u00e3o Voltar */}
+      <div className="flex items-center gap-4">
+        <button
+          onClick={() => navigate(-1)}
+          className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center transition-colors"
+          title="Voltar"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        <div
+          className="font-['Pacifico'] text-xl text-gold cursor-pointer"
+          onClick={() => navigate('/dashboard')}
+        >
+          EliteTrack\u2122
+        </div>
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="text-center"
       >
-        <h1 className="text-h2 font-bold mb-1">Revisões e Agenda</h1>
+        <h1 className="text-h2 font-bold mb-1">Revis\u00f5es e Agenda</h1>
         <p className="text-caption text-gray-400">
           Mantenha sua blindagem sempre em dia
         </p>
@@ -359,6 +390,8 @@ export function Revisions() {
             <label className="block text-caption font-medium mb-2">Data Preferencial</label>
             <input
               type="date"
+              value={scheduleDate}
+              onChange={(e) => setScheduleDate(e.target.value)}
               className={cn(
                 'w-full rounded-xl px-4 py-3 border outline-none',
                 isDark ? 'bg-carbon-800 border-carbon-700 text-white' : 'bg-white border-gray-300'
@@ -372,6 +405,8 @@ export function Revisions() {
           <div>
             <label className="block text-caption font-medium mb-2">Horário</label>
             <select 
+              value={scheduleTime}
+              onChange={(e) => setScheduleTime(e.target.value)}
               className={cn(
                 'w-full rounded-xl px-4 py-3 border outline-none',
                 isDark ? 'bg-carbon-800 border-carbon-700 text-white' : 'bg-white border-gray-300'
@@ -379,12 +414,13 @@ export function Revisions() {
               title="Selecione o horário"
               aria-label="Horário preferencial para revisão"
             >
-              <option>08:00 - 09:00</option>
-              <option>09:00 - 10:00</option>
-              <option>10:00 - 11:00</option>
-              <option>14:00 - 15:00</option>
-              <option>15:00 - 16:00</option>
-              <option>16:00 - 17:00</option>
+              <option value="">Selecione um horário</option>
+              <option value="08:00 - 09:00">08:00 - 09:00</option>
+              <option value="09:00 - 10:00">09:00 - 10:00</option>
+              <option value="10:00 - 11:00">10:00 - 11:00</option>
+              <option value="14:00 - 15:00">14:00 - 15:00</option>
+              <option value="15:00 - 16:00">15:00 - 16:00</option>
+              <option value="16:00 - 17:00">16:00 - 17:00</option>
             </select>
           </div>
 
@@ -442,7 +478,11 @@ export function Revisions() {
 
           <div className="flex gap-3 pt-2">
             <Button variant="outline" className="flex-1" onClick={() => setShowScheduleModal(false)}>
-              Fechar
+              Cancelar
+            </Button>
+            <Button className="flex-1" onClick={handleConfirmSchedule}>
+              <Calendar className="w-4 h-4 mr-2" />
+              Confirmar Agendamento
             </Button>
           </div>
         </div>

@@ -1,5 +1,9 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react'
+import { supabase, isSupabaseConfigured } from '../lib/supabase/client'
 import type { ChatMessage, ChatConversation } from '../types'
+
+// Cast supabase para any para permitir acesso a tabelas ainda não tipadas
+const db = supabase as any
 
 interface ChatContextType {
   conversations: ChatConversation[]
@@ -8,141 +12,97 @@ interface ChatContextType {
   sendMessage: (conversationId: string, content: string, sender: { id: string; name: string; role: 'client' | 'executor' | 'admin' }) => void
   markConversationAsRead: (conversationId: string) => void
   getConversationByProjectId: (projectId: string) => ChatConversation | undefined
+  createConversation: (projectId: string, userId: string) => Promise<string | null>
   totalUnreadCount: number
+  setUserId: (userId: string | null) => void
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
 
-const initialConversations: ChatConversation[] = [
-  {
-    id: 'conv-1',
-    projectId: 'PRJ-2025-001',
-    participants: ['1', '2', '3'],
-    messages: [
-      {
-        id: 'msg-1',
-        senderId: '1',
-        senderName: 'Ricardo Mendes',
-        senderRole: 'client',
-        content: 'Olá! Gostaria de saber como está o andamento da blindagem do meu veículo.',
-        timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000),
-        read: true,
-        projectId: 'PRJ-2025-001',
-      },
-      {
-        id: 'msg-2',
-        senderId: '2',
-        senderName: 'Carlos Silva',
-        senderRole: 'executor',
-        content: 'Olá Ricardo! Seu veículo está na etapa de instalação da manta opaca. Tudo correndo conforme planejado!',
-        timestamp: new Date(Date.now() - 47 * 60 * 60 * 1000),
-        read: true,
-        projectId: 'PRJ-2025-001',
-      },
-      {
-        id: 'msg-3',
-        senderId: '1',
-        senderName: 'Ricardo Mendes',
-        senderRole: 'client',
-        content: 'Excelente! Vocês conseguem me enviar algumas fotos do processo?',
-        timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-        read: true,
-        projectId: 'PRJ-2025-001',
-      },
-      {
-        id: 'msg-4',
-        senderId: '2',
-        senderName: 'Carlos Silva',
-        senderRole: 'executor',
-        content: 'Claro! Acabamos de adicionar novas fotos na galeria do seu projeto. Você pode acessar pelo app a qualquer momento.',
-        timestamp: new Date(Date.now() - 23 * 60 * 60 * 1000),
-        read: true,
-        projectId: 'PRJ-2025-001',
-      },
-      {
-        id: 'msg-5',
-        senderId: '1',
-        senderName: 'Ricardo Mendes',
-        senderRole: 'client',
-        content: 'Perfeito! Vocês podem me dar uma previsão mais exata de quando ficará pronto?',
-        timestamp: new Date(Date.now() - 30 * 60 * 1000),
-        read: false,
-        projectId: 'PRJ-2025-001',
-      },
-    ],
-    unreadCount: 1,
-  },
-  {
-    id: 'conv-2',
-    projectId: 'PRJ-2025-002',
-    participants: ['4', '2', '3'],
-    messages: [
-      {
-        id: 'msg-6',
-        senderId: '4',
-        senderName: 'Fernanda Costa',
-        senderRole: 'client',
-        content: 'Bom dia! Preciso de informações sobre o nível de proteção do meu veículo.',
-        timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
-        read: true,
-        projectId: 'PRJ-2025-002',
-      },
-      {
-        id: 'msg-7',
-        senderId: '4',
-        senderName: 'Fernanda Costa',
-        senderRole: 'client',
-        content: 'Também queria saber se vocês já iniciaram a instalação dos vidros blindados.',
-        timestamp: new Date(Date.now() - 15 * 60 * 1000),
-        read: false,
-        projectId: 'PRJ-2025-002',
-      },
-    ],
-    unreadCount: 1,
-  },
-  {
-    id: 'conv-3',
-    projectId: 'PRJ-2025-003',
-    participants: ['5', '2', '3'],
-    messages: [
-      {
-        id: 'msg-8',
-        senderId: '5',
-        senderName: 'Pedro Santos',
-        senderRole: 'client',
-        content: 'Boa tarde! Meu carro já está na fase final?',
-        timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000),
-        read: true,
-        projectId: 'PRJ-2025-003',
-      },
-      {
-        id: 'msg-9',
-        senderId: '2',
-        senderName: 'Carlos Silva',
-        senderRole: 'executor',
-        content: 'Olá Pedro! Sim, estamos finalizando os ajustes. Em breve entraremos em contato para agendar a entrega.',
-        timestamp: new Date(Date.now() - 2.5 * 60 * 60 * 1000),
-        read: true,
-        projectId: 'PRJ-2025-003',
-      },
-      {
-        id: 'msg-10',
-        senderId: '5',
-        senderName: 'Pedro Santos',
-        senderRole: 'client',
-        content: 'Ótimo! Aguardo o contato. Já estou ansioso para ver o resultado!',
-        timestamp: new Date(Date.now() - 10 * 60 * 1000),
-        read: false,
-        projectId: 'PRJ-2025-003',
-      },
-    ],
-    unreadCount: 1,
-  },
-]
+// Helper para converter dados do Supabase
+function dbConversationToConversation(dbConv: any, messages: ChatMessage[]): ChatConversation {
+  return {
+    id: dbConv.id,
+    projectId: dbConv.project_id,
+    participants: [], // Será preenchido conforme necessário
+    messages,
+    unreadCount: dbConv.unread_count || 0,
+  }
+}
+
+function dbMessageToMessage(dbMsg: any): ChatMessage {
+  return {
+    id: dbMsg.id,
+    senderId: dbMsg.sender_id,
+    senderName: dbMsg.sender_name,
+    senderRole: dbMsg.sender_role,
+    content: dbMsg.content,
+    timestamp: new Date(dbMsg.created_at),
+    read: dbMsg.read,
+    projectId: dbMsg.conversation_id, // Usaremos conversation_id como referência
+  }
+}
+
+// PRODUÇÃO: Conversas carregadas exclusivamente do Supabase
+const initialConversations: ChatConversation[] = []
 
 export function ChatProvider({ children }: { children: ReactNode }) {
   const [conversations, setConversations] = useState<ChatConversation[]>(initialConversations)
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
+
+  // Carregar conversas do Supabase filtradas por usuário
+  useEffect(() => {
+    const loadConversations = async () => {
+      if (!isSupabaseConfigured() || !db || !userId) {
+        return
+      }
+
+      try {
+        // Buscar conversas do usuário
+        const { data: convData, error: convError } = await db
+          .from('chat_conversations')
+          .select('*')
+          .eq('user_id', userId)
+          .order('last_message_at', { ascending: false })
+
+        if (convError) {
+          console.error('Erro ao carregar conversas:', convError)
+          return
+        }
+
+        if (!convData || convData.length === 0) {
+          setConversations(initialConversations)
+          return
+        }
+
+        // Buscar mensagens de cada conversa
+        const conversationsWithMessages = await Promise.all(
+          convData.map(async (conv: any) => {
+            const { data: messages, error: msgError } = await db
+              .from('chat_messages')
+              .select('*')
+              .eq('conversation_id', conv.id)
+              .order('created_at', { ascending: true })
+
+            if (msgError) {
+              console.error('Erro ao carregar mensagens:', msgError)
+              return dbConversationToConversation(conv, [])
+            }
+
+            const chatMessages = (messages || []).map(dbMessageToMessage)
+            return dbConversationToConversation(conv, chatMessages)
+          })
+        )
+
+        setConversations(conversationsWithMessages)
+      } catch (error) {
+        console.error('Erro ao carregar conversas:', error)
+      }
+    }
+
+    loadConversations()
+  }, [userId])
 
   const totalUnreadCount = conversations.reduce((acc, conv) => acc + conv.unreadCount, 0)
 
@@ -150,7 +110,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     setActiveConversationId(id)
   }, [])
 
-  const sendMessage = useCallback((
+  const sendMessage = useCallback(async (
     conversationId: string,
     content: string,
     sender: { id: string; name: string; role: 'client' | 'executor' | 'admin' }
@@ -165,6 +125,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       read: false,
     }
 
+    // Atualizar localmente primeiro
     setConversations(prev =>
       prev.map(conv => {
         if (conv.id === conversationId) {
@@ -177,6 +138,49 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         return conv
       })
     )
+
+    // Sincronizar com Supabase
+    if (isSupabaseConfigured() && db) {
+      try {
+        const { data, error } = await db
+          .from('chat_messages')
+          .insert({
+            conversation_id: conversationId,
+            sender_id: sender.id,
+            sender_name: sender.name,
+            sender_role: sender.role,
+            content,
+            read: false,
+          })
+          .select()
+          .single()
+
+        if (error) {
+          console.error('Erro ao salvar mensagem:', error)
+        } else if (data) {
+          // Atualizar com o ID real do Supabase
+          setConversations(prev =>
+            prev.map(conv => {
+              if (conv.id === conversationId) {
+                const updatedMessages = conv.messages.map(msg =>
+                  msg.id === newMessage.id ? dbMessageToMessage(data) : msg
+                )
+                return { ...conv, messages: updatedMessages }
+              }
+              return conv
+            })
+          )
+
+          // Atualizar timestamp da conversa
+          await db
+            .from('chat_conversations')
+            .update({ last_message_at: new Date().toISOString() })
+            .eq('id', conversationId)
+        }
+      } catch (error) {
+        console.error('Erro ao enviar mensagem:', error)
+      }
+    }
   }, [])
 
   const markConversationAsRead = useCallback((conversationId: string) => {
@@ -198,6 +202,57 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     return conversations.find(conv => conv.projectId === projectId)
   }, [conversations])
 
+  const createConversation = useCallback(async (projectId: string, userId: string): Promise<string | null> => {
+    // Verificar se já existe conversa para este projeto
+    const existing = conversations.find(c => c.projectId === projectId)
+    if (existing) return existing.id
+
+    // Criar nova conversa
+    const newConvId = `conv-${Date.now()}`
+    const newConversation: ChatConversation = {
+      id: newConvId,
+      projectId,
+      participants: [userId],
+      messages: [],
+      unreadCount: 0,
+    }
+
+    // Adicionar localmente
+    setConversations(prev => [newConversation, ...prev])
+
+    // Sincronizar com Supabase
+    if (isSupabaseConfigured() && db) {
+      try {
+        const { data, error } = await db
+          .from('chat_conversations')
+          .insert({
+            project_id: projectId,
+            user_id: userId,
+            unread_count: 0,
+          })
+          .select()
+          .single()
+
+        if (error) {
+          console.error('Erro ao criar conversa:', error)
+          return newConvId
+        }
+
+        if (data) {
+          // Atualizar com ID real do Supabase
+          setConversations(prev => prev.map(c => 
+            c.id === newConvId ? { ...c, id: data.id } : c
+          ))
+          return data.id
+        }
+      } catch (error) {
+        console.error('Erro ao criar conversa:', error)
+      }
+    }
+
+    return newConvId
+  }, [conversations])
+
   return (
     <ChatContext.Provider
       value={{
@@ -207,7 +262,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         sendMessage,
         markConversationAsRead,
         getConversationByProjectId,
+        createConversation,
         totalUnreadCount,
+        setUserId,
       }}
     >
       {children}

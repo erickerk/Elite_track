@@ -56,22 +56,93 @@ const statusConfig = {
   delivered: { label: 'Entregue', color: 'bg-blue-500', textColor: 'text-blue-400' },
 }
 
-// Mock de agendamentos de revisão
-const mockScheduledRevisions = [
-  { id: '1', clientName: 'Ricardo Mendes', vehicle: 'Audi Q7', date: '2025-01-15', time: '09:00', type: 'revisao', status: 'confirmed', phone: '11999999999' },
-  { id: '2', clientName: 'Fernanda Costa', vehicle: 'BMW X5', date: '2025-01-16', time: '14:00', type: 'revisao', status: 'pending', phone: '11988888888' },
-  { id: '3', clientName: 'João Paulo Santos', vehicle: 'Mercedes GLE', date: '2025-01-18', time: '10:00', type: 'entrega', status: 'confirmed', phone: '11977777777' },
-  { id: '4', clientName: 'Maria Silva', vehicle: 'Range Rover', date: '2025-01-20', time: '11:00', type: 'revisao', status: 'pending', phone: '11966666666' },
-]
+// Função para calcular revisões anuais baseadas em projetos reais
+function calculateRevisionReminders(projects: Project[]) {
+  const today = new Date()
+  return projects
+    .filter(p => p.status === 'completed' || p.status === 'delivered')
+    .map(p => {
+      const completionDate = p.actualDelivery || p.completedDate || p.estimatedDelivery
+      if (!completionDate) return null
+      
+      const blindingDate = new Date(completionDate)
+      const nextRevisionDate = new Date(blindingDate)
+      nextRevisionDate.setFullYear(nextRevisionDate.getFullYear() + 1)
+      
+      const diffTime = nextRevisionDate.getTime() - today.getTime()
+      const daysUntil = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      
+      return {
+        id: `REV-${p.id}`,
+        clientName: p.user.name,
+        vehicle: `${p.vehicle.brand} ${p.vehicle.model}`,
+        blindingDate: blindingDate.toISOString().split('T')[0],
+        nextRevisionDate: nextRevisionDate.toISOString().split('T')[0],
+        daysUntil,
+        phone: p.user.phone || '',
+        email: p.user.email || '',
+        projectId: p.id,
+      }
+    })
+    .filter(Boolean) as Array<{
+      id: string; clientName: string; vehicle: string; blindingDate: string;
+      nextRevisionDate: string; daysUntil: number; phone: string; email: string; projectId: string;
+    }>
+}
 
-// Mock de clientes que devem retornar para revisão anual
-const mockRevisionReminders = [
-  { id: 'R1', clientName: 'Carlos Alberto', vehicle: 'Toyota Hilux', blindingDate: '2025-01-25', nextRevisionDate: '2025-01-25', daysUntil: 4, phone: '11955555555', email: 'carlos@email.com' },
-  { id: 'R2', clientName: 'Ana Paula', vehicle: 'Jeep Compass', blindingDate: '2025-02-10', nextRevisionDate: '2025-02-10', daysUntil: 20, phone: '11944444444', email: 'ana@email.com' },
-  { id: 'R3', clientName: 'Roberto Lima', vehicle: 'Volvo XC90', blindingDate: '2025-01-20', nextRevisionDate: '2025-01-20', daysUntil: -1, phone: '11933333333', email: 'roberto@email.com' },
-  { id: 'R4', clientName: 'Patricia Santos', vehicle: 'Porsche Cayenne', blindingDate: '2025-02-28', nextRevisionDate: '2025-02-28', daysUntil: 38, phone: '11922222222', email: 'patricia@email.com' },
-  { id: 'R5', clientName: 'Fernando Oliveira', vehicle: 'Land Rover Defender', blindingDate: '2025-01-18', nextRevisionDate: '2025-01-18', daysUntil: -3, phone: '11911111111', email: 'fernando@email.com' },
-]
+// Função para calcular agendamentos baseados em projetos
+function calculateScheduledRevisions(projects: Project[]) {
+  const today = new Date()
+  const revisions: Array<{
+    id: string; clientName: string; vehicle: string; date: string;
+    time: string; type: string; status: string; phone: string; projectId: string;
+  }> = []
+  
+  // Projetos com entrega estimada próxima (próximos 30 dias)
+  projects.forEach(p => {
+    if (p.status === 'in_progress' && p.estimatedDelivery) {
+      const deliveryDate = new Date(p.estimatedDelivery)
+      const diffDays = Math.ceil((deliveryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+      if (diffDays >= 0 && diffDays <= 30) {
+        revisions.push({
+          id: `ENT-${p.id}`,
+          clientName: p.user.name,
+          vehicle: `${p.vehicle.brand} ${p.vehicle.model}`,
+          date: deliveryDate.toISOString().split('T')[0],
+          time: '10:00',
+          type: 'entrega',
+          status: diffDays <= 7 ? 'confirmed' : 'pending',
+          phone: p.user.phone || '',
+          projectId: p.id,
+        })
+      }
+    }
+    
+    // Revisões anuais (projetos completados)
+    if ((p.status === 'completed' || p.status === 'delivered') && (p.actualDelivery || p.completedDate)) {
+      const completionDate = new Date(p.actualDelivery || p.completedDate || '')
+      const revisionDate = new Date(completionDate)
+      revisionDate.setFullYear(revisionDate.getFullYear() + 1)
+      
+      const diffDays = Math.ceil((revisionDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+      if (diffDays >= -30 && diffDays <= 60) {
+        revisions.push({
+          id: `REV-${p.id}`,
+          clientName: p.user.name,
+          vehicle: `${p.vehicle.brand} ${p.vehicle.model}`,
+          date: revisionDate.toISOString().split('T')[0],
+          time: '09:00',
+          type: 'revisao',
+          status: diffDays <= 0 ? 'pending' : 'pending',
+          phone: p.user.phone || '',
+          projectId: p.id,
+        })
+      }
+    }
+  })
+  
+  return revisions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+}
 
 // Tipo estendido para tickets com dados do projeto/cliente
 interface TicketWithDetails extends SupportTicket {
@@ -185,18 +256,40 @@ export function ExecutorDashboard() {
     technicalResponsible: user?.name || '',
   })
   const [newCarData, setNewCarData] = useState({
+    // Cliente
     clientName: '',
     clientEmail: '',
     clientPhone: '',
+    clientCpfCnpj: '',
+    clientAddress: '',
+    // Veículo
     brand: '',
     model: '',
+    version: '',
     year: '',
     plate: '',
     color: '',
     chassis: '',
-    vehicleReceivedDate: new Date().toISOString().split('T')[0], // Data de recebimento do veículo
-    processStartDate: '', // Data de início do processo
-    estimatedDeliveryDate: '', // Previsão de entrega
+    kmCheckin: '',
+    vehicleType: 'SUV',
+    // Projeto - Datas
+    vehicleReceivedDate: new Date().toISOString().split('T')[0],
+    processStartDate: '',
+    estimatedDeliveryDate: '',
+    // Projeto - Blindagem
+    blindingLine: 'UltraLite Armor™',
+    protectionLevel: 'NIJ III-A',
+    usageType: 'Executivo',
+    // Vidros
+    glassManufacturer: 'SafeMax',
+    glassThickness: '21',
+    glassWarrantyYears: '10',
+    // Opacos
+    aramidLayers: '9',
+    opaqueManufacturer: 'NextOne',
+    // Responsáveis
+    technicalResponsible: '',
+    supervisorName: '',
   })
   
   // Estados para aba Clientes
@@ -705,11 +798,13 @@ export function ExecutorDashboard() {
     setShowShareModal(true)
     
     setNewCarData({
-      clientName: '', clientEmail: '', clientPhone: '',
-      brand: '', model: '', year: '', plate: '', color: '', chassis: '',
-      vehicleReceivedDate: new Date().toISOString().split('T')[0],
-      processStartDate: '',
-      estimatedDeliveryDate: '',
+      clientName: '', clientEmail: '', clientPhone: '', clientCpfCnpj: '', clientAddress: '',
+      brand: '', model: '', version: '', year: '', plate: '', color: '', chassis: '', kmCheckin: '', vehicleType: 'SUV',
+      vehicleReceivedDate: new Date().toISOString().split('T')[0], processStartDate: '', estimatedDeliveryDate: '',
+      blindingLine: 'UltraLite Armor™', protectionLevel: 'NIJ III-A', usageType: 'Executivo',
+      glassManufacturer: 'SafeMax', glassThickness: '21', glassWarrantyYears: '10',
+      aramidLayers: '9', opaqueManufacturer: 'NextOne',
+      technicalResponsible: '', supervisorName: '',
     })
     setVehiclePhoto(null)
     
@@ -1052,6 +1147,16 @@ ${loginUrl}
                   aria-label="Configurações"
                 >
                   <Settings className="w-5 h-5" />
+                </button>
+
+                {/* Botão Sair - Visível no Mobile */}
+                <button
+                  onClick={handleLogout}
+                  className="lg:hidden w-10 h-10 bg-red-500/20 rounded-xl flex items-center justify-center hover:bg-red-500/30 transition-colors"
+                  title="Sair"
+                  aria-label="Sair do sistema"
+                >
+                  <LogOut className="w-5 h-5 text-red-400" />
                 </button>
               </div>
             </div>
@@ -1492,10 +1597,23 @@ ${loginUrl}
               <div className="bg-gradient-to-br from-carbon-800 to-carbon-900 rounded-3xl p-6 border border-primary/30 relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
                 <div className="relative z-10">
+                  {/* Header com Logo Elite */}
                   <div className="flex items-center justify-between mb-6">
-                    <div className="font-['Pacifico'] text-2xl text-primary">Elite</div>
-                    <CreditCard className="w-8 h-8 text-primary" />
+                    <div className="flex items-center gap-2">
+                      <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
+                        <span className="font-['Pacifico'] text-black text-lg">E</span>
+                      </div>
+                      <div>
+                        <div className="font-['Pacifico'] text-2xl text-primary">Elite</div>
+                        <div className="text-[10px] text-gray-400 -mt-1">BLINDAGENS</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <CreditCard className="w-8 h-8 text-primary" />
+                      <div className="text-[10px] text-primary font-semibold">PREMIUM</div>
+                    </div>
                   </div>
+                  
                   <div className="space-y-4">
                     <div>
                       <p className="text-xs text-gray-400">Número do Cartão</p>
@@ -1528,6 +1646,21 @@ ${loginUrl}
                         )}>
                           {statusConfig[selectedProject.status as keyof typeof statusConfig]?.label}
                         </p>
+                      </div>
+                    </div>
+                    
+                    {/* QR Code do Projeto */}
+                    <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                      <div>
+                        <p className="text-xs text-gray-400 mb-1">Verificar Autenticidade</p>
+                        <p className="text-[10px] text-gray-500">Escaneie o QR Code</p>
+                      </div>
+                      <div className="w-16 h-16 bg-white rounded-lg p-1 flex items-center justify-center">
+                        {projectQrCodeUrl ? (
+                          <img src={projectQrCodeUrl} alt="QR Code" className="w-full h-full" />
+                        ) : (
+                          <QrCode className="w-10 h-10 text-black" />
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1619,7 +1752,8 @@ ${loginUrl}
                   {/* Download Excel */}
                   <button
                     onClick={() => {
-                      const filteredRevisions = mockScheduledRevisions.filter(r => 
+                      const scheduledRevisions = calculateScheduledRevisions(projects)
+                      const filteredRevisions = scheduledRevisions.filter(r => 
                         (scheduleFilterType === 'all' || r.type === scheduleFilterType) &&
                         (scheduleFilterStatus === 'all' || r.status === scheduleFilterStatus)
                       )
@@ -1651,7 +1785,7 @@ ${loginUrl}
                     <FileSpreadsheet className="w-5 h-5" />
                     <span className="hidden sm:inline">Excel</span>
                   </button>
-                  <span className="text-sm text-gray-400">{mockScheduledRevisions.filter(r => 
+                  <span className="text-sm text-gray-400">{calculateScheduledRevisions(projects).filter(r => 
                     (scheduleFilterType === 'all' || r.type === scheduleFilterType) &&
                     (scheduleFilterStatus === 'all' || r.status === scheduleFilterStatus)
                   ).length} agendamentos</span>
@@ -1666,7 +1800,7 @@ ${loginUrl}
                       <Calendar className="w-6 h-6 text-blue-400" />
                     </div>
                     <div>
-                      <div className="text-2xl font-bold">{mockScheduledRevisions.length}</div>
+                      <div className="text-2xl font-bold">{calculateScheduledRevisions(projects).length}</div>
                       <div className="text-sm text-gray-400">Total</div>
                     </div>
                   </div>
@@ -1677,7 +1811,7 @@ ${loginUrl}
                       <CheckCircle className="w-6 h-6 text-green-400" />
                     </div>
                     <div>
-                      <div className="text-2xl font-bold">{mockScheduledRevisions.filter(r => r.status === 'confirmed').length}</div>
+                      <div className="text-2xl font-bold">{calculateScheduledRevisions(projects).filter(r => r.status === 'confirmed').length}</div>
                       <div className="text-sm text-gray-400">Confirmados</div>
                     </div>
                   </div>
@@ -1688,7 +1822,7 @@ ${loginUrl}
                       <Clock className="w-6 h-6 text-yellow-400" />
                     </div>
                     <div>
-                      <div className="text-2xl font-bold">{mockScheduledRevisions.filter(r => r.status === 'pending').length}</div>
+                      <div className="text-2xl font-bold">{calculateScheduledRevisions(projects).filter(r => r.status === 'pending').length}</div>
                       <div className="text-sm text-gray-400">Pendentes</div>
                     </div>
                   </div>
@@ -1699,7 +1833,7 @@ ${loginUrl}
                       <Car className="w-6 h-6 text-primary" />
                     </div>
                     <div>
-                      <div className="text-2xl font-bold">{mockScheduledRevisions.filter(r => r.type === 'entrega').length}</div>
+                      <div className="text-2xl font-bold">{calculateScheduledRevisions(projects).filter(r => r.type === 'entrega').length}</div>
                       <div className="text-sm text-gray-400">Entregas</div>
                     </div>
                   </div>
@@ -1714,11 +1848,11 @@ ${loginUrl}
                     <h3 className="font-semibold">Revisões Anuais Pendentes</h3>
                   </div>
                   <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm">
-                    {mockRevisionReminders.filter(r => r.daysUntil <= 30).length} pendentes
+                    {calculateRevisionReminders(projects).filter(r => r.daysUntil <= 30).length} pendentes
                   </span>
                 </div>
                 <div className="divide-y divide-white/10">
-                  {mockRevisionReminders
+                  {calculateRevisionReminders(projects)
                     .sort((a, b) => a.daysUntil - b.daysUntil)
                     .map((reminder) => (
                     <div key={reminder.id} className="p-4 hover:bg-white/5 transition-colors">
@@ -1784,7 +1918,7 @@ ${loginUrl}
                   <h3 className="font-semibold">Próximos Agendamentos</h3>
                 </div>
                 <div className="divide-y divide-white/10">
-                  {mockScheduledRevisions.map((revision) => (
+                  {calculateScheduledRevisions(projects).map((revision) => (
                     <div key={revision.id} className="p-4 hover:bg-white/5 transition-colors">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">

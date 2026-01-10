@@ -8,6 +8,7 @@ import { QuoteProvider } from './contexts/QuoteContext'
 import { PushNotificationProvider } from './contexts/PushNotificationContext'
 import { LeadsProvider } from './contexts/LeadsContext'
 import { InviteProvider } from './contexts/InviteContext'
+import { EliteShieldProvider } from './contexts/EliteShieldContext'
 import { Layout, ExecutorLayout, AdminLayout } from './components/layout'
 import { 
   Dashboard, Timeline, Gallery, Chat, Profile, Login, QRCodePage,
@@ -261,7 +262,9 @@ export default function App() {
                 <ChatProvider>
                   <ProjectProvider>
                     <QuoteProvider>
-                      <AppRoutes />
+                      <EliteShieldProvider>
+                        <AppRoutes />
+                      </EliteShieldProvider>
                     </QuoteProvider>
                   </ProjectProvider>
                 </ChatProvider>

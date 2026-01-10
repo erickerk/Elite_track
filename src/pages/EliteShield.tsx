@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { 
   FileText, Download, Share2, Shield, Award, Calendar,
-  User, Car, CheckCircle, QrCode, Printer, Eye, Upload
+  User, Car, CheckCircle, QrCode, Printer, Eye, Upload, BookOpen
 } from 'lucide-react'
 import { COMPANY_INFO } from '../constants/companyInfo'
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card'
@@ -12,6 +12,7 @@ import { Modal } from '../components/ui/Modal'
 import { cn } from '../lib/utils'
 import { useTheme } from '../contexts/ThemeContext'
 import { useProjects } from '../contexts/ProjectContext'
+import { EliteShieldViewer } from '../components/eliteshield'
 
 export function EliteShield() {
   const { theme } = useTheme()
@@ -19,6 +20,7 @@ export function EliteShield() {
   const project = projects[0]
   const isDark = theme === 'dark'
   const [showPreview, setShowPreview] = useState(false)
+  const [showFullReport, setShowFullReport] = useState(false)
   const [stampImage, setStampImage] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const stampInputRef = useRef<HTMLInputElement>(null)
@@ -152,7 +154,20 @@ export function EliteShield() {
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
-    alert('Laudo EliteShield™ baixado com sucesso!\n\nAbra o arquivo HTML no navegador e use Ctrl+P para salvar como PDF.')
+  }
+
+  const handleDownloadPDF = async () => {
+    const htmlContent = generateLaudoHTML()
+    const printWindow = window.open('', '_blank')
+    if (printWindow) {
+      printWindow.document.write(htmlContent)
+      printWindow.document.close()
+      printWindow.focus()
+      setTimeout(() => {
+        printWindow.print()
+        setTimeout(() => printWindow.close(), 1000)
+      }, 500)
+    }
   }
 
   const handleShare = () => {
@@ -296,15 +311,27 @@ ${COMPANY_INFO.websiteDisplay}
           </div>
 
           <div className="space-y-2">
-            <Button className="w-full" onClick={() => setShowPreview(true)}>
-              <Eye className="w-4 h-4 mr-2" />
-              Visualizar Laudo Completo
+            <Button className="w-full" onClick={() => setShowFullReport(true)}>
+              <BookOpen className="w-4 h-4 mr-2" />
+              Ver Laudo EliteShield™ (15 Telas)
             </Button>
             
-            <div className="grid grid-cols-3 gap-2">
-              <Button variant="outline" onClick={handleDownload}>
+            <Button variant="outline" className="w-full" onClick={() => setShowPreview(true)}>
+              <Eye className="w-4 h-4 mr-2" />
+              Visualizar Resumo
+            </Button>
+            
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" onClick={handleDownload} className="flex items-center justify-center gap-2">
                 <Download className="w-4 h-4" />
+                <span className="text-xs">HTML</span>
               </Button>
+              <Button variant="outline" onClick={handleDownloadPDF} className="flex items-center justify-center gap-2">
+                <Printer className="w-4 h-4" />
+                <span className="text-xs">PDF</span>
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 gap-2 mt-2">
               <Button variant="outline" onClick={handleShare}>
                 <Share2 className="w-4 h-4" />
               </Button>
@@ -325,7 +352,7 @@ ${COMPANY_INFO.websiteDisplay}
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <QrCode className="w-5 h-5 text-gold" />
-              QR Code do Laudo
+              QR Code do Elite Shield
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -550,6 +577,16 @@ ${COMPANY_INFO.websiteDisplay}
           </div>
         </div>
       </Modal>
+
+      {/* Modal do Laudo Completo com 15 Telas */}
+      {showFullReport && project && (
+        <div className="fixed inset-0 z-50">
+          <EliteShieldViewer 
+            projectId={project.id} 
+            onClose={() => setShowFullReport(false)} 
+          />
+        </div>
+      )}
     </div>
   )
 }

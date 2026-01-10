@@ -542,11 +542,11 @@ export function Quotes() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-primary font-bold">{option.priceRange}</div>
-                          <div className="text-xs text-gray-400 flex items-center justify-end mt-1">
+                          <div className="text-xs text-gray-400 flex items-center justify-end">
                             <Clock className="w-3 h-3 mr-1" />
                             ~{option.estimatedDays} dias
                           </div>
+                          <div className="text-xs text-primary mt-1">Or\u00e7amento sob consulta</div>
                         </div>
                       </div>
                     </button>
@@ -588,8 +588,8 @@ export function Quotes() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-primary font-bold">{option.priceRange}</div>
                           <div className="text-xs text-gray-400">~{option.estimatedDays} dias</div>
+                          <div className="text-xs text-primary">Or\u00e7amento sob consulta</div>
                         </div>
                       </div>
                     </button>
@@ -631,8 +631,8 @@ export function Quotes() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-primary font-bold">{option.priceRange}</div>
                           <div className="text-xs text-gray-400">~{option.estimatedDays} dias</div>
+                          <div className="text-xs text-primary">Orçamento sob consulta</div>
                         </div>
                       </div>
                     </button>

@@ -1,174 +1,16 @@
 import type { Project, Notification, TimelineStep, User } from '../types'
 
-export const mockClients: User[] = [
-  {
-    id: '1',
-    name: 'Ricardo Mendes',
-    email: 'cliente@elite.com',
-    phone: '(11) 99999-9999',
-    role: 'client',
-    vipLevel: 'platinum',
-  },
-  {
-    id: '4',
-    name: 'Fernanda Costa',
-    email: 'fernanda@email.com',
-    phone: '(11) 98765-4321',
-    role: 'client',
-    vipLevel: 'gold',
-  },
-  {
-    id: '5',
-    name: 'João Paulo Santos',
-    email: 'joao@email.com',
-    phone: '(11) 91234-5678',
-    role: 'client',
-    vipLevel: 'platinum',
-  },
-  {
-    id: '6',
-    name: 'Maria Silva',
-    email: 'maria@email.com',
-    phone: '(11) 99876-5432',
-    role: 'client',
-    vipLevel: 'standard',
-  },
-]
+// Clientes serão carregados do Supabase
+export const mockClients: User[] = []
 
-export const mockTimeline: TimelineStep[] = [
-  {
-    id: '1',
-    title: 'Check-in do Veículo',
-    description: 'Veículo recebido e documentado. Inspeção inicial realizada com registro fotográfico completo.',
-    status: 'completed',
-    date: '2025-12-10T09:00:00',
-    technician: 'Carlos Silva',
-    photos: [
-      'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400',
-      'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=400',
-    ],
-    notes: 'Veículo em excelente estado. Sem avarias pré-existentes.',
-  },
-  {
-    id: '2',
-    title: 'Desmontagem',
-    description: 'Remoção completa de painéis internos, forros, bancos e componentes para acesso às áreas de blindagem.',
-    status: 'completed',
-    date: '2025-12-11T14:30:00',
-    technician: 'Roberto Almeida',
-    photos: [
-      'https://images.unsplash.com/photo-1489824904134-891ab64532f1?w=400',
-    ],
-  },
-  {
-    id: '3',
-    title: 'Instalação dos Vidros',
-    description: 'Instalação dos vidros balísticos certificados com espessura de 21mm a 42mm conforme nível de proteção.',
-    status: 'completed',
-    date: '2025-12-12T10:00:00',
-    technician: 'Fernando Costa',
-    photos: [
-      'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400',
-      'https://images.unsplash.com/photo-1542362567-b07e54358753?w=400',
-    ],
-  },
-  {
-    id: '4',
-    title: 'Instalação da Manta Opaca',
-    description: 'Aplicação de mantas aramidas (Kevlar) e aço balístico em portas, colunas A/B/C, teto e assoalho.',
-    status: 'in_progress',
-    estimatedDate: '2025-12-16T16:00:00',
-    technician: 'Equipe Técnica A',
-    photos: [
-      'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=400',
-    ],
-    notes: 'Processo em andamento. Manta das portas concluída, faltam colunas e teto.',
-  },
-  {
-    id: '5',
-    title: 'Montagem',
-    description: 'Remontagem de todos os componentes internos: painéis, forros, bancos e sistemas elétricos.',
-    status: 'pending',
-    estimatedDate: '2025-12-18T09:00:00',
-    photos: [],
-  },
-  {
-    id: '6',
-    title: 'Acabamento',
-    description: 'Ajustes finos de acabamento, vedações, borrachas e alinhamento de portas e vidros.',
-    status: 'pending',
-    estimatedDate: '2025-12-20T14:00:00',
-    photos: [],
-  },
-  {
-    id: '7',
-    title: 'Vistoria',
-    description: 'Inspeção de qualidade completa por supervisor técnico certificado.',
-    status: 'pending',
-    estimatedDate: '2025-12-21T10:00:00',
-    photos: [],
-  },
-  {
-    id: '8',
-    title: 'Laudo EliteShield™',
-    description: 'Emissão do laudo técnico oficial com registro de materiais, lotes e certificações.',
-    status: 'pending',
-    estimatedDate: '2025-12-22T11:00:00',
-    photos: [],
-  },
-  {
-    id: '9',
-    title: 'Testes',
-    description: 'Testes de rodagem, funcionamento de vidros elétricos, travas e sistemas de segurança.',
-    status: 'pending',
-    estimatedDate: '2025-12-23T09:00:00',
-    photos: [],
-  },
-  {
-    id: '10',
-    title: 'Higienização',
-    description: 'Limpeza completa interna e externa, polimento e preparação para entrega.',
-    status: 'pending',
-    estimatedDate: '2025-12-24T14:00:00',
-    photos: [],
-  },
-  {
-    id: '11',
-    title: 'Pronto para Entrega',
-    description: 'Veículo finalizado, documentação preparada e agendamento com cliente para retirada.',
-    status: 'pending',
-    estimatedDate: '2025-12-26T10:00:00',
-    photos: [],
-  },
-]
+// Timeline será gerado automaticamente ao criar projetos
+export const mockTimeline: TimelineStep[] = []
 
-export const mockProject: Project = {
-  id: 'PRJ-2025-001',
-  vehicle: {
-    id: 'VH-001',
-    brand: 'Mercedes-Benz',
-    model: 'GLE 450',
-    year: 2025,
-    color: 'Preto Obsidiana',
-    plate: 'ABC-1234',
-    images: [
-      'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800',
-      'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800',
-      'https://images.unsplash.com/photo-1617531653332-bd46c24f2068?w=800',
-    ],
-    blindingLevel: 'Nível III-A',
-  },
-  user: mockClients[0],
-  status: 'in_progress',
-  progress: 36,
-  timeline: mockTimeline,
-  startDate: '2025-01-15',
-  estimatedDelivery: '2025-02-08',
-  qrCode: 'ELITE-PRJ-2025-001-QR',
-}
+// Projeto será criado via Supabase
+export const mockProject: Project | null = null
 
-// Timeline padrão para novos projetos
-const createDefaultTimeline = (startDate: string, status: 'pending' | 'in_progress' = 'pending'): TimelineStep[] => {
+// Timeline padrão para novos projetos (usado pelo executor ao criar projetos)
+export const createDefaultTimeline = (startDate: string, status: 'pending' | 'in_progress' = 'pending'): TimelineStep[] => {
   const steps = [
     { title: 'Check-in do Veículo', description: 'Veículo recebido e documentado. Inspeção inicial realizada com registro fotográfico completo.' },
     { title: 'Desmontagem', description: 'Remoção completa de painéis internos, forros, bancos e componentes para acesso às áreas de blindagem.' },
@@ -200,8 +42,7 @@ const createDefaultTimeline = (startDate: string, status: 'pending' | 'in_progre
 }
 
 export const mockProjects: Project[] = [
-  mockProject,
-  {
+  /*{
     id: 'PRJ-2025-002',
     vehicle: {
       id: 'VH-002',
@@ -507,35 +348,8 @@ export const mockProjects: Project[] = [
     startDate: '2025-01-25',
     estimatedDelivery: '2025-02-20',
     qrCode: 'ELITE-PRJ-2025-004-QR',
-  },
+  },*/
 ]
 
-export const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    title: 'Nova atualização disponível',
-    message: 'A etapa "Blindagem de Carroceria" foi iniciada. Acompanhe o progresso em tempo real.',
-    type: 'info',
-    read: false,
-    createdAt: '2025-01-25T10:30:00',
-    projectId: 'PRJ-2025-001',
-  },
-  {
-    id: '2',
-    title: 'Fotos adicionadas',
-    message: 'Novas fotos foram adicionadas à etapa de instalação de vidros blindados.',
-    type: 'success',
-    read: false,
-    createdAt: '2025-01-22T16:45:00',
-    projectId: 'PRJ-2025-001',
-  },
-  {
-    id: '3',
-    title: 'Previsão de entrega atualizada',
-    message: 'A data estimada de entrega foi confirmada para 08/02/2025.',
-    type: 'info',
-    read: true,
-    createdAt: '2025-01-20T09:00:00',
-    projectId: 'PRJ-2025-001',
-  },
-]
+// Notificações serão carregadas do Supabase
+export const mockNotifications: Notification[] = []

@@ -260,7 +260,10 @@ export function LandingPage() {
         <header ref={headerRef} className="fixed top-0 left-0 right-0 z-50 transition-all duration-300" id="main-header">
           <div className="glass-effect cinematic-blur border-b border-white/10 px-6 py-4">
             <div className="max-w-7xl mx-auto flex justify-between items-center">
-              <div className="font-['Pacifico'] text-2xl text-primary luxury-glow">EliteTrack™</div>
+              <div className="flex items-center gap-3">
+                <img src="/logo-elite.png" alt="Elite Blindagens" className="h-10 w-auto" />
+                <div className="font-['Pacifico'] text-2xl text-primary luxury-glow">EliteTrack™</div>
+              </div>
               <nav className="hidden md:flex space-x-8">
                 <a href="#inicio" className="text-gray-200 hover:text-primary transition-all duration-300 font-medium text-sm uppercase tracking-wider">Início</a>
                 <a href="#como-funciona" className="text-gray-200 hover:text-primary transition-all duration-300 font-medium text-sm uppercase tracking-wider">Como Funciona</a>
@@ -291,7 +294,8 @@ export function LandingPage() {
                   <span className="text-primary luxury-glow font-light">Transparência Absoluta</span>
                 </h1>
                 <p className="text-lg md:text-xl text-gray-300 mb-8 leading-relaxed max-w-2xl font-light">
-                  Monitore a blindagem do seu veículo com precisão absoluta. Tecnologia avançada para uma experiência premium incomparável.
+                  Acompanhe cada etapa da blindagem em tempo real, com fotos, status, documentos e histórico completo.<br />
+                  Tecnologia avançada para uma experiência premium incomparável.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 mb-6">
                   <button 
@@ -318,13 +322,13 @@ export function LandingPage() {
                   <div className="flex items-center space-x-3">
                     <i className="ri-qr-code-line text-2xl text-primary"></i>
                     <div className="text-left">
-                      <span className="font-semibold block">Consultar Histórico</span>
-                      <span className="text-xs text-gray-400">QR Code ou código do projeto</span>
+                      <span className="font-semibold block">Consultar Histórico do Seu Veículo</span>
+                      <span className="text-xs text-gray-400">Acesse o status, fotos e documentos da sua blindagem com o código do seu projeto exclusivo ou aponte a câmera no QR Code do veículo.</span>
                     </div>
                   </div>
                   <i className="ri-arrow-right-line text-xl text-primary group-hover:translate-x-1 transition-transform"></i>
                 </button>
-                <p className="text-xs text-gray-500 uppercase tracking-widest font-light">Experiência premium • Máxima discrição</p>
+                <p className="text-xs text-gray-500 uppercase tracking-widest font-light mt-4">Experiência premium<br />Máxima discrição</p>
               </div>
             </div>
           </div>
@@ -336,7 +340,7 @@ export function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16 fade-in">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">Como Funciona</h2>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">Processo simplificado em três etapas para máxima transparência</p>
+            <p className="text-xl text-gray-400 max-w-2xl mx-auto">Um processo simples, transparente e totalmente monitorado do início à entrega</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             <div className="glass-effect cinematic-blur p-10 rounded-3xl fade-in hover:bg-white/15 transition-all duration-500 transform hover:scale-105 premium-shadow group">
@@ -344,21 +348,21 @@ export function LandingPage() {
                 <i className="ri-calendar-check-line text-3xl text-primary"></i>
               </div>
               <h3 className="text-3xl font-bold mb-6 text-white">1. Agende</h3>
-              <p className="text-gray-300 leading-relaxed text-lg">Solicite seu orçamento e agende a blindagem com nossa equipe especializada. Processo 100% personalizado para clientes exigentes.</p>
+              <p className="text-gray-300 leading-relaxed text-lg">Solicite seu orçamento e agende a blindagem com nossa equipe especializada.<br />Todo o processo já nasce integrado ao EliteTrack™, garantindo rastreabilidade total desde o primeiro dia.</p>
             </div>
             <div className="glass-effect cinematic-blur p-10 rounded-3xl fade-in hover:bg-white/15 transition-all duration-500 transform hover:scale-105 premium-shadow group delay-0-2s">
               <div className="w-20 h-20 flex items-center justify-center bg-primary/25 rounded-3xl mb-8 luxury-glow group-hover:bg-primary/35 transition-all duration-300">
                 <i className="ri-eye-line text-3xl text-primary"></i>
               </div>
               <h3 className="text-3xl font-bold mb-6 text-white">2. Acompanhe em Tempo Real</h3>
-              <p className="text-gray-300 leading-relaxed text-lg">Monitore cada etapa da blindagem através do EliteTrack™. Atualizações instantâneas e documentação completa em tempo real.</p>
+              <p className="text-gray-300 leading-relaxed text-lg">Acompanhe cada etapa da blindagem com atualizações em tempo real, fotos do processo e registros técnicos diretamente aqui, em nossa plataforma EliteTrack™.</p>
             </div>
             <div className="glass-effect cinematic-blur p-10 rounded-3xl fade-in hover:bg-white/15 transition-all duration-500 transform hover:scale-105 premium-shadow group delay-0-4s">
               <div className="w-20 h-20 flex items-center justify-center bg-primary/25 rounded-3xl mb-8 luxury-glow group-hover:bg-primary/35 transition-all duration-300">
                 <i className="ri-shield-check-line text-3xl text-primary"></i>
               </div>
               <h3 className="text-3xl font-bold mb-6 text-white">3. Receba com Confiança</h3>
-              <p className="text-gray-300 leading-relaxed text-lg">Entrega com certificação completa e garantia total. Seu veículo blindado com a máxima qualidade Elite Blindagem.</p>
+              <p className="text-gray-300 leading-relaxed text-lg">Seu veículo é entregue com certificação completa, documentação organizada e histórico permanente do processo com a máxima qualidade Elite Blindagens.</p>
             </div>
           </div>
         </div>
@@ -380,42 +384,42 @@ export function LandingPage() {
                 <i className="ri-search-eye-line text-3xl text-primary"></i>
               </div>
               <h3 className="text-2xl font-bold mb-6 text-white">Transparência Absoluta</h3>
-              <p className="text-gray-300 text-lg leading-relaxed">Visibilidade completa de cada etapa do processo de blindagem em tempo real com tecnologia avançada.</p>
+              <p className="text-gray-300 text-lg leading-relaxed">Você sabe exatamente o que está sendo feito no seu veículo, em cada etapa, sem depender de terceiros.</p>
             </div>
             <div className="glass-effect p-8 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group delay-0-1s">
               <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mb-6 group-hover:bg-primary/30 transition-colors">
                 <i className="ri-notification-3-line text-2xl text-primary"></i>
               </div>
               <h3 className="text-xl font-bold mb-4">Atualizações em Tempo Real</h3>
-              <p className="text-gray-400">Notificações instantâneas sobre o progresso do seu veículo.</p>
+              <p className="text-gray-400">Receba notificações automáticas sempre que seu projeto avançar.</p>
             </div>
             <div className="glass-effect p-8 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group delay-0-2s">
               <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mb-6 group-hover:bg-primary/30 transition-colors">
                 <i className="ri-file-shield-2-line text-2xl text-primary"></i>
               </div>
               <h3 className="text-xl font-bold mb-4">Documentos Centralizados</h3>
-              <p className="text-gray-400">Todos os documentos e certificações organizados em um só lugar.</p>
+              <p className="text-gray-400">Todos os laudos, notas fiscais, certificados e registros técnicos em um único lugar.</p>
             </div>
             <div className="glass-effect p-8 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group delay-0-3s">
               <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mb-6 group-hover:bg-primary/30 transition-colors">
                 <i className="ri-vip-crown-line text-2xl text-primary"></i>
               </div>
               <h3 className="text-xl font-bold mb-4">Experiência Premium</h3>
-              <p className="text-gray-400">Interface elegante e intuitiva projetada para clientes exigentes.</p>
+              <p className="text-gray-400">Uma plataforma elegante, intuitiva e pensada para clientes exigentes.</p>
             </div>
             <div className="glass-effect p-8 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group delay-0-4s">
               <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mb-6 group-hover:bg-primary/30 transition-colors">
                 <i className="ri-rocket-line text-2xl text-primary"></i>
               </div>
               <h3 className="text-xl font-bold mb-4">Liderança Tecnológica</h3>
-              <p className="text-gray-400">Primeira plataforma de rastreamento de blindagem do Brasil.</p>
+              <p className="text-gray-400">A primeira plataforma do Brasil dedicada exclusivamente à rastreabilidade da blindagem automotiva.</p>
             </div>
             <div className="glass-effect p-8 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group delay-0-5s">
               <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mb-6 group-hover:bg-primary/30 transition-colors">
                 <i className="ri-lock-line text-2xl text-primary"></i>
               </div>
               <h3 className="text-xl font-bold mb-4">Segurança Total</h3>
-              <p className="text-gray-400">Dados protegidos com criptografia de nível bancário.</p>
+              <p className="text-gray-400">Seus dados protegidos com criptografia de padrão bancário e compliance LGPD.</p>
             </div>
           </div>
         </div>
@@ -426,7 +430,7 @@ export function LandingPage() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16 fade-in">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">Acompanhe em Tempo Real</h2>
-            <p className="text-xl text-gray-400">Veja como funciona o monitoramento do seu veículo</p>
+            <p className="text-xl text-gray-400">Veja exatamente o que está acontecendo com seu carro agora</p>
           </div>
           <div className="glass-effect p-8 rounded-3xl fade-in">
             <div className="flex items-center justify-between mb-8">
@@ -501,7 +505,7 @@ export function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16 fade-in">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">Documentos & Rastreabilidade</h2>
-            <p className="text-xl text-gray-400">Toda documentação organizada e acessível</p>
+            <p className="text-xl text-gray-400">Tudo documentado. Tudo rastreável. Tudo seu. Toda documentação organizada e acessível.</p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="glass-effect p-6 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group cursor-pointer">
@@ -545,28 +549,28 @@ export function LandingPage() {
           </div>
           <div className="grid md:grid-cols-4 gap-8">
             <div className="text-center fade-in">
-              <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mx-auto mb-4">
+              <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mx-auto mb-4 border border-primary/30">
                 <i className="ri-shield-check-line text-2xl text-primary"></i>
               </div>
               <h3 className="font-semibold mb-2">ISO 9001</h3>
               <p className="text-sm text-gray-400">Gestão de qualidade certificada</p>
             </div>
             <div className="text-center fade-in delay-0-1s">
-              <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mx-auto mb-4">
+              <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mx-auto mb-4 border border-primary/30">
                 <i className="ri-lock-line text-2xl text-primary"></i>
               </div>
               <h3 className="font-semibold mb-2">Dados Seguros</h3>
               <p className="text-sm text-gray-400">Criptografia de nível bancário</p>
             </div>
             <div className="text-center fade-in delay-0-2s">
-              <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mx-auto mb-4">
+              <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mx-auto mb-4 border border-primary/30">
                 <i className="ri-eye-off-line text-2xl text-primary"></i>
               </div>
               <h3 className="font-semibold mb-2">Privacidade</h3>
               <p className="text-sm text-gray-400">LGPD compliance total</p>
             </div>
             <div className="text-center fade-in delay-0-3s">
-              <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mx-auto mb-4">
+              <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mx-auto mb-4 border border-primary/30">
                 <i className="ri-medal-line text-2xl text-primary"></i>
               </div>
               <h3 className="font-semibold mb-2">Excelência</h3>
@@ -616,7 +620,7 @@ export function LandingPage() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16 fade-in">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">Comece sua Experiência Elite</h2>
-            <p className="text-xl text-gray-400">Entre em contato e descubra a blindagem do futuro</p>
+            <p className="text-xl text-gray-400">Entre em contato e tenha controle total sobre a blindagem do seu veículo, do início à entrega com o máximo de transparência e qualidade.</p>
           </div>
           <div className="glass-effect p-8 rounded-3xl fade-in">
             <form className="space-y-6" onSubmit={handleFormSubmit}>

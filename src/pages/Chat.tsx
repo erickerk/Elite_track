@@ -31,7 +31,7 @@ interface Conversation {
 export function Chat() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  useChat()
+  const { setUserId } = useChat()
   const { unreadCount, addNotification } = useNotifications()
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { projects: allProjects } = useProjects()
@@ -44,6 +44,14 @@ export function Chat() {
   const [activeConversation, setActiveConversation] = useState('today')
   const [showFAQ, setShowFAQ] = useState(false)
   const [showImageModal, setShowImageModal] = useState<{ src: string; caption: string } | null>(null)
+
+  // Definir userId no ChatContext quando o usuário estiver disponível
+  // Após aplicar a migração SQL, as conversas serão carregadas automaticamente do Supabase
+  useEffect(() => {
+    if (user?.id) {
+      setUserId(user.id)
+    }
+  }, [user?.id, setUserId])
 
   const [conversations, setConversations] = useState<{ [key: string]: Conversation }>({
     'today': {
@@ -251,7 +259,14 @@ export function Chat() {
               </button>
               <div className="font-['Pacifico'] text-2xl text-primary luxury-glow cursor-pointer" onClick={() => navigate('/dashboard')}>EliteTrack™</div>
             </div>
-            <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => navigate('/profile')}
+                className="md:hidden w-10 h-10 bg-red-500/20 hover:bg-red-500/30 rounded-full flex items-center justify-center transition-colors"
+                title="Perfil e Sair"
+              >
+                <i className="ri-logout-box-line text-red-400"></i>
+              </button>
               <button className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
                   <i className="ri-notification-3-line text-primary text-sm"></i>
@@ -261,7 +276,7 @@ export function Chat() {
                 )}
               </button>
               <div className="flex items-center space-x-3">
-                <div className="text-right">
+                <div className="text-right hidden sm:block">
                   <div className="text-sm font-medium">{user?.name}</div>
                   <div className="text-xs text-gray-400">{project.vehicle.brand} {project.vehicle.model}</div>
                 </div>

@@ -117,7 +117,14 @@ export function Timeline() {
               </button>
               <div className="font-['Pacifico'] text-2xl text-primary luxury-glow cursor-pointer" onClick={() => navigate('/dashboard')}>EliteTrack™</div>
             </div>
-            <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => navigate('/profile')}
+                className="md:hidden w-10 h-10 bg-red-500/20 hover:bg-red-500/30 rounded-full flex items-center justify-center transition-colors"
+                title="Perfil e Sair"
+              >
+                <i className="ri-logout-box-line text-red-400"></i>
+              </button>
               <div className="relative">
                 <button 
                   onClick={() => setShowNotifications(!showNotifications)}
@@ -136,7 +143,7 @@ export function Timeline() {
                 />
               </div>
               <div className="flex items-center space-x-3">
-                <div className="text-right">
+                <div className="text-right hidden sm:block">
                   <div className="text-sm font-medium">{user?.name}</div>
                   <div className="text-xs text-gray-400">{project.vehicle.brand} {project.vehicle.model}</div>
                 </div>

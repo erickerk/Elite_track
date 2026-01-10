@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from 'react'
 import type { RegistrationInvite, InviteStatus } from '../types'
-import { mockProjects } from '../data/mockData'
+// PRODUÇÃO: Convites sincronizados com Supabase
 
 interface InviteContextType {
   invites: RegistrationInvite[]
@@ -28,38 +28,8 @@ const generateToken = (): string => {
   return segments.join('-')
 }
 
-// Mock inicial de convites
-const initialInvites: RegistrationInvite[] = [
-  {
-    id: 'INV-001',
-    token: 'ABCD-1234-EFGH-5678',
-    projectId: 'PRJ-2025-001',
-    vehiclePlate: 'ABC-1234',
-    vehicleInfo: 'Mercedes-Benz GLE 450 2025 - Preto Obsidiana',
-    ownerName: 'Ricardo Mendes',
-    ownerEmail: 'ricardo@email.com',
-    ownerPhone: '(11) 99999-9999',
-    status: 'used',
-    createdAt: '2025-01-10T10:00:00',
-    expiresAt: '2025-01-17T10:00:00',
-    usedAt: '2025-01-10T14:30:00',
-    usedBy: '1',
-    createdBy: 'admin@elite.com',
-  },
-  {
-    id: 'INV-002',
-    token: 'WXYZ-9876-QRST-4321',
-    projectId: 'PRJ-2025-002',
-    vehiclePlate: 'DEF-5678',
-    vehicleInfo: 'BMW X5 M50i 2025 - Branco Mineral',
-    ownerName: 'Fernanda Costa',
-    ownerEmail: 'fernanda@email.com',
-    status: 'pending',
-    createdAt: '2025-01-28T09:00:00',
-    expiresAt: '2025-02-04T09:00:00',
-    createdBy: 'admin@elite.com',
-  },
-]
+// PRODUÇÃO: Convites carregados do Supabase
+const initialInvites: RegistrationInvite[] = []
 
 export function InviteProvider({ children }: { children: ReactNode }) {
   const [invites, setInvites] = useState<RegistrationInvite[]>(() => {
@@ -72,21 +42,21 @@ export function InviteProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('elite-invites', JSON.stringify(newInvites))
   }
 
-  const createInvite = (projectId: string, ownerData: { name: string; email?: string; phone?: string }): RegistrationInvite => {
-    const project = mockProjects.find(p => p.id === projectId)
-    if (!project) {
-      throw new Error('Projeto não encontrado')
-    }
-
+  const createInvite = (projectId: string, ownerData: { name: string; email?: string; phone?: string }, project?: { vehicle: { plate: string; brand: string; model: string; year: number; color: string } }): RegistrationInvite => {
     const now = new Date()
     const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) // 7 dias
+
+    const vehiclePlate = project?.vehicle?.plate || 'N/A'
+    const vehicleInfo = project 
+      ? `${project.vehicle.brand} ${project.vehicle.model} ${project.vehicle.year} - ${project.vehicle.color}`
+      : 'Veículo não especificado'
 
     const newInvite: RegistrationInvite = {
       id: `INV-${Date.now()}`,
       token: generateToken(),
       projectId,
-      vehiclePlate: project.vehicle.plate,
-      vehicleInfo: `${project.vehicle.brand} ${project.vehicle.model} ${project.vehicle.year} - ${project.vehicle.color}`,
+      vehiclePlate,
+      vehicleInfo,
       ownerName: ownerData.name,
       ownerEmail: ownerData.email,
       ownerPhone: ownerData.phone,
