@@ -3,7 +3,7 @@ import QRCode from 'qrcode'
 import { useNavigate } from 'react-router-dom'
  
 import { 
-  CheckCircle, Clock, AlertCircle, Car, QrCode, Bell,
+  CheckCircle, Clock, AlertCircle, Car, QrCode, Bell, Shield,
   FileText, CreditCard, MessageCircle, Settings, Search, 
   Users, Home, Image, LogOut, ChevronRight, Plus, X, Save, Edit3, Calendar,
   DollarSign, Paperclip, Send, Eye, Download, Filter, ExternalLink, Camera,
@@ -1599,14 +1599,12 @@ ${loginUrl}
                 <div className="relative z-10">
                   {/* Header com Logo Elite */}
                   <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-2">
-                      <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-                        <span className="font-['Pacifico'] text-black text-lg">E</span>
-                      </div>
-                      <div>
-                        <div className="font-['Pacifico'] text-2xl text-primary">Elite</div>
-                        <div className="text-[10px] text-gray-400 -mt-1">BLINDAGENS</div>
-                      </div>
+                    <div className="flex items-center gap-3">
+                      <img 
+                        src="/logo-elite.png" 
+                        alt="Elite Blindagens" 
+                        className="h-12 w-auto object-contain"
+                      />
                     </div>
                     <div className="text-right">
                       <CreditCard className="w-8 h-8 text-primary" />
@@ -3010,14 +3008,14 @@ ${loginUrl}
               <h3 className="font-semibold text-primary mb-4">Dados do Cliente</h3>
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
-                  <label className="block text-sm text-gray-400 mb-2">Nome Completo *</label>
+                  <label className="block text-sm text-gray-400 mb-2">Nome / Razão Social *</label>
                   <input 
                     type="text" 
                     value={newCarData.clientName}
                     onChange={(e) => setNewCarData({...newCarData, clientName: e.target.value})}
                     className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
                     title="Nome do cliente"
-                    placeholder="Nome completo do cliente"
+                    placeholder="Nome completo ou Razão Social"
                   />
                 </div>
                 <div>
@@ -3040,6 +3038,28 @@ ${loginUrl}
                     className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
                     title="Telefone do cliente"
                     placeholder="(11) 99999-9999"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">CPF/CNPJ</label>
+                  <input 
+                    type="text" 
+                    value={newCarData.clientCpfCnpj}
+                    onChange={(e) => setNewCarData({...newCarData, clientCpfCnpj: e.target.value})}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                    title="CPF ou CNPJ do cliente"
+                    placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm text-gray-400 mb-2">Endereço</label>
+                  <input 
+                    type="text" 
+                    value={newCarData.clientAddress}
+                    onChange={(e) => setNewCarData({...newCarData, clientAddress: e.target.value})}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                    title="Endereço do cliente"
+                    placeholder="Rua, número, bairro, cidade - UF"
                   />
                 </div>
               </div>
@@ -3111,7 +3131,179 @@ ${loginUrl}
                     onChange={(e) => setNewCarData({...newCarData, chassis: e.target.value.toUpperCase()})}
                     className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white uppercase"
                     title="Número do chassi"
-                    placeholder="9BWXXXXXXXXXXXXXXX"
+                    placeholder="****1234"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Versão</label>
+                  <input 
+                    type="text" 
+                    value={newCarData.version}
+                    onChange={(e) => setNewCarData({...newCarData, version: e.target.value})}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                    title="Versão do veículo"
+                    placeholder="Ex: Sport, Premium"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">KM Check-in</label>
+                  <input 
+                    type="text" 
+                    value={newCarData.kmCheckin}
+                    onChange={(e) => setNewCarData({...newCarData, kmCheckin: e.target.value})}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                    title="Quilometragem de entrada"
+                    placeholder="Ex: 15.000"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Tipo de Veículo</label>
+                  <select 
+                    value={newCarData.vehicleType}
+                    onChange={(e) => setNewCarData({...newCarData, vehicleType: e.target.value})}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                    title="Tipo do veículo"
+                  >
+                    <option value="SUV">SUV</option>
+                    <option value="Sedan">Sedan</option>
+                    <option value="Hatch">Hatch</option>
+                    <option value="Pickup">Pickup</option>
+                    <option value="Van">Van</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Especificações de Blindagem */}
+            <div>
+              <h3 className="font-semibold text-primary mb-4 flex items-center gap-2">
+                <Shield className="w-5 h-5" />
+                Especificações de Blindagem
+              </h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Linha de Blindagem</label>
+                  <select 
+                    value={newCarData.blindingLine}
+                    onChange={(e) => setNewCarData({...newCarData, blindingLine: e.target.value})}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                    title="Linha de blindagem"
+                  >
+                    <option value="UltraLite Armor™">UltraLite Armor™ (Premium)</option>
+                    <option value="SafeCore™">SafeCore™ (Smart Balance)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Nível de Proteção</label>
+                  <select 
+                    value={newCarData.protectionLevel}
+                    onChange={(e) => setNewCarData({...newCarData, protectionLevel: e.target.value})}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                    title="Nível de proteção"
+                  >
+                    <option value="NIJ III-A">NIJ III-A</option>
+                    <option value="NIJ III">NIJ III</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Uso</label>
+                  <select 
+                    value={newCarData.usageType}
+                    onChange={(e) => setNewCarData({...newCarData, usageType: e.target.value})}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                    title="Tipo de uso"
+                  >
+                    <option value="Executivo">Executivo</option>
+                    <option value="Civil">Civil</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Fabricante Vidros</label>
+                  <select 
+                    value={newCarData.glassManufacturer}
+                    onChange={(e) => setNewCarData({...newCarData, glassManufacturer: e.target.value})}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                    title="Fabricante dos vidros"
+                  >
+                    <option value="SafeMax">SafeMax</option>
+                    <option value="Argus">Argus</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Espessura Vidros (mm)</label>
+                  <input 
+                    type="text" 
+                    value={newCarData.glassThickness}
+                    onChange={(e) => setNewCarData({...newCarData, glassThickness: e.target.value})}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                    title="Espessura dos vidros em mm"
+                    placeholder="21"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Garantia Vidros (anos)</label>
+                  <input 
+                    type="text" 
+                    value={newCarData.glassWarrantyYears}
+                    onChange={(e) => setNewCarData({...newCarData, glassWarrantyYears: e.target.value})}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                    title="Garantia dos vidros em anos"
+                    placeholder="10"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Camadas Aramida</label>
+                  <input 
+                    type="text" 
+                    value={newCarData.aramidLayers}
+                    onChange={(e) => setNewCarData({...newCarData, aramidLayers: e.target.value})}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                    title="Número de camadas de aramida"
+                    placeholder="8-11"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Fabricante Opacos</label>
+                  <select 
+                    value={newCarData.opaqueManufacturer}
+                    onChange={(e) => setNewCarData({...newCarData, opaqueManufacturer: e.target.value})}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                    title="Fabricante dos materiais opacos"
+                  >
+                    <option value="NextOne">NextOne</option>
+                    <option value="Tensylon">Tensylon</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Responsáveis Técnicos */}
+            <div>
+              <h3 className="font-semibold text-primary mb-4 flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Responsáveis Técnicos
+              </h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Responsável Técnico</label>
+                  <input 
+                    type="text" 
+                    value={newCarData.technicalResponsible}
+                    onChange={(e) => setNewCarData({...newCarData, technicalResponsible: e.target.value})}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                    title="Nome do responsável técnico"
+                    placeholder="Nome | Cargo"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Supervisor Técnico</label>
+                  <input 
+                    type="text" 
+                    value={newCarData.supervisorName}
+                    onChange={(e) => setNewCarData({...newCarData, supervisorName: e.target.value})}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                    title="Nome do supervisor técnico"
+                    placeholder="Nome | Cargo"
                   />
                 </div>
               </div>

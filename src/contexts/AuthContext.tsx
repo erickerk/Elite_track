@@ -121,11 +121,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('elite-requires-password-change')
   }
 
-  const updateUser = (userData: Partial<User>) => {
+  const updateUser = async (userData: Partial<User>) => {
     if (user) {
       const updatedUser = { ...user, ...userData } as User
       setUser(updatedUser)
       localStorage.setItem('elite-user', JSON.stringify(updatedUser))
+      
+      // Salvar no Supabase se configurado
+      if (isSupabaseConfigured() && supabase) {
+        try {
+          const { error } = await (supabase as any)
+            .from('users_elitetrack')
+            .update({
+              name: updatedUser.name,
+              email: updatedUser.email,
+              phone: updatedUser.phone,
+              avatar: updatedUser.avatar,
+            })
+            .eq('id', user.id)
+          
+          if (error) {
+            console.error('[Auth] Erro ao salvar perfil no Supabase:', error)
+          } else {
+            console.log('[Auth] Perfil salvo no Supabase com sucesso')
+          }
+        } catch (err) {
+          console.error('[Auth] Erro ao atualizar usuário no Supabase:', err)
+        }
+      }
     }
   }
 

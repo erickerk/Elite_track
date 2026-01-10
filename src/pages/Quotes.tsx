@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
-  Calculator, Car, Shield, Send, CheckCircle,
+  Calculator, Car, Send, CheckCircle,
   ChevronRight, Clock
 } from 'lucide-react'
 import { Modal } from '../components/ui/Modal'
@@ -221,8 +221,7 @@ export function Quotes() {
                 <i className="ri-arrow-left-line text-white"></i>
               </button>
               <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigate('/dashboard')}>
-                <Shield className="w-6 h-6 text-primary" />
-                <span className="font-['Pacifico'] text-xl text-primary">EliteTrack™</span>
+                <img src="/logo-elite.png" alt="Elite Blindagens" className="h-10 w-auto object-contain" />
               </div>
             </div>
             <h1 className="text-lg font-semibold">Solicitar Orçamento</h1>

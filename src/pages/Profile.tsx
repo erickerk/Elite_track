@@ -177,7 +177,9 @@ export function Profile() {
           <div className="max-w-7xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-6">
-                <div className="font-['Pacifico'] text-2xl text-primary luxury-glow cursor-pointer" onClick={() => navigate('/dashboard')}>EliteTrack™</div>
+                <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/dashboard')}>
+                  <img src="/logo-elite.png" alt="Elite Blindagens" className="h-10 w-auto object-contain" />
+                </div>
                 <nav className="hidden md:flex items-center space-x-6">
                   <span onClick={() => navigate('/timeline')} className="text-white/60 hover:text-white transition-colors text-sm font-medium cursor-pointer">Timeline</span>
                   <span onClick={() => navigate('/chat')} className="text-white/60 hover:text-white transition-colors text-sm font-medium cursor-pointer">Suporte</span>

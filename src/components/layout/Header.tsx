@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bell, Menu, Moon, Sun, LogOut, User, Settings } from 'lucide-react'
-import { motion } from 'framer-motion'
 import { Avatar } from '../ui/Avatar'
 import { NotificationPanel } from '../ui/NotificationPanel'
 import { useTheme } from '../../contexts/ThemeContext'
@@ -50,17 +49,11 @@ export function Header({ onMenuClick }: HeaderProps) {
           </button>
           
           <div className="flex items-center gap-3">
-            <motion.div
-              initial={{ rotate: -10 }}
-              animate={{ rotate: 0 }}
-              className="w-10 h-10 rounded-xl bg-gradient-gold flex items-center justify-center"
-            >
-              <span className="text-carbon-900 font-bold text-lg">E</span>
-            </motion.div>
-            <div className="hidden sm:block">
-              <h1 className="text-lg font-bold gold-text">EliteTrack</h1>
-              <p className="text-micro text-gray-400">Elite Blindagens</p>
-            </div>
+            <img 
+              src="/logo-elite.png" 
+              alt="Elite Blindagens" 
+              className="h-10 w-auto object-contain"
+            />
           </div>
         </div>
 
@@ -90,14 +83,12 @@ export function Header({ onMenuClick }: HeaderProps) {
             >
               <Bell className="w-5 h-5 text-gold" />
               {unreadCount > 0 && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
+                <span
                   className="absolute -top-1 -right-1 w-5 h-5 bg-status-error rounded-full
-                           flex items-center justify-center text-micro text-white font-bold"
+                           flex items-center justify-center text-micro text-white font-bold animate-pulse"
                 >
                   {unreadCount > 9 ? '9+' : unreadCount}
-                </motion.span>
+                </span>
               )}
             </button>
             <NotificationPanel 

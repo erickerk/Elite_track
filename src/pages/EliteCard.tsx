@@ -4,6 +4,7 @@ import { cn } from '../lib/utils'
 import { useAuth } from '../contexts/AuthContext'
 import { useNotifications } from '../contexts/NotificationContext'
 import { useProjects } from '../contexts/ProjectContext'
+import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import jsPDF from 'jspdf'
 
 export function EliteCard() {
@@ -50,11 +51,44 @@ export function EliteCard() {
     }
   }
 
-  const handleRescueRequest = () => {
+  const handleRescueRequest = async () => {
     if (!rescueLocation) {
       addNotification({ type: 'error', title: 'Erro', message: 'Informe sua localização para solicitar o guincho.' })
       return
     }
+    
+    // Salvar no Supabase se configurado
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const rescueData = {
+          project_id: project?.id,
+          client_name: user?.name,
+          client_email: user?.email,
+          client_phone: user?.phone,
+          vehicle: project ? `${project.vehicle.brand} ${project.vehicle.model}` : '',
+          vehicle_plate: project?.vehicle.plate,
+          rescue_type: rescueType,
+          location: rescueLocation,
+          notes: rescueNotes,
+          status: 'pending',
+          priority: 'high',
+          created_at: new Date().toISOString(),
+        }
+        
+        const { error } = await (supabase as any)
+          .from('rescue_requests')
+          .insert(rescueData)
+        
+        if (error) {
+          console.error('[EliteRescue] Erro ao salvar:', error)
+        } else {
+          console.log('[EliteRescue] Solicitação salva no Supabase')
+        }
+      } catch (err) {
+        console.error('[EliteRescue] Erro:', err)
+      }
+    }
+    
     addNotification({ type: 'success', title: 'Elite Rescue Acionado!', message: `Guincho a caminho! Previsão de chegada: 30-45 minutos. Localização: ${rescueLocation}` })
     setShowRescueModal(false)
     setRescueLocation('')
@@ -65,9 +99,27 @@ export function EliteCard() {
     setIsGettingLocation(true)
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        async (position) => {
           const { latitude, longitude } = position.coords
-          setRescueLocation(`Lat: ${latitude.toFixed(6)}, Lng: ${longitude.toFixed(6)}`)
+          try {
+            // Tentar obter endereço via API de geocodificação reversa
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`)
+            const data = await response.json()
+            if (data && data.address) {
+              const addr = data.address
+              const street = addr.road || addr.street || ''
+              const number = addr.house_number || ''
+              const neighborhood = addr.suburb || addr.neighbourhood || addr.district || ''
+              const city = addr.city || addr.town || addr.municipality || ''
+              const state = addr.state || ''
+              const fullAddress = [street, number, neighborhood, city, state].filter(Boolean).join(', ')
+              setRescueLocation(fullAddress || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`)
+            } else {
+              setRescueLocation(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`)
+            }
+          } catch {
+            setRescueLocation(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`)
+          }
           setIsGettingLocation(false)
           addNotification({ type: 'success', title: 'Localização Obtida', message: 'Sua localização foi capturada com sucesso.' })
         },
@@ -398,7 +450,7 @@ export function EliteCard() {
               </div>
               <h3 className="text-xl font-bold mb-1 group-hover:text-red-400 transition-colors">Elite Rescue</h3>
               <p className="text-gray-400 text-sm">Guincho 24/7</p>
-              <p className="text-red-400 text-xs mt-2 font-semibold">{eliteCard?.rescuePhone || '0800-ELITE-SOS'}</p>
+              <p className="text-red-400 text-xs mt-2 font-semibold">{eliteCard?.rescuePhone || '(11) 99999-9999'}</p>
             </button>
 
             {/* Abrir Ticket */}
@@ -565,7 +617,7 @@ export function EliteCard() {
                   <i className="ri-phone-line text-red-400 text-xl"></i>
                   <div>
                     <p className="font-semibold text-red-400">Emergência?</p>
-                    <p className="text-sm text-gray-400">Ligue: <span className="text-red-400 font-bold">{eliteCard?.rescuePhone || '0800-ELITE-SOS'}</span></p>
+                    <p className="text-sm text-gray-400">WhatsApp: <a href="https://wa.me/5511999999999" target="_blank" rel="noopener noreferrer" className="text-red-400 font-bold hover:underline">{eliteCard?.rescuePhone || '(11) 99999-9999'}</a></p>
                   </div>
                 </div>
               </div>

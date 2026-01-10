@@ -31,3 +31,20 @@ nul
 *.key
 secrets/
 credentials/
+
+# Scripts de migração com possíveis secrets
+migrate*.mjs
+migrate*.js
+migrate*.py
+migrate*.sh
+apply_*.mjs
+fix_*.mjs
+create_*.mjs
+get_*.mjs
+setup_*.mjs
+verify_*.mjs
+qa_*.mjs
+final_*.mjs
+cleanup_*.mjs
+run_migration.py
+exec_migration.sql
