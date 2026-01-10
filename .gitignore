@@ -47,4 +47,9 @@ qa_*.mjs
 final_*.mjs
 cleanup_*.mjs
 run_migration.py
+run_setup.mjs
 exec_migration.sql
+
+# Arquivos de documentação que podem conter secrets
+SECURITY_FIXES.md
+SETUP_TABLES.md
