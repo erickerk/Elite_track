@@ -37,6 +37,39 @@ interface ExecutorAction {
   projectName?: string
 }
 
+interface Schedule {
+  id: string
+  project_id?: string
+  client_name: string
+  client_email?: string
+  client_phone?: string
+  vehicle: string
+  scheduled_date: string
+  scheduled_time: string
+  type: 'revisao' | 'entrega' | 'vistoria'
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed'
+  notes?: string
+  created_by?: string
+  created_at?: string
+  updated_at?: string
+}
+
+interface ClientInfo {
+  id: string
+  name: string
+  email: string
+  phone: string
+  vehiclesCount: number
+  hasAccessed: boolean
+  lastAccess?: string
+  projects: Array<{
+    id: string
+    vehicle: string
+    status: string
+    qrCode?: string
+  }>
+}
+
 const exportToExcelGeneric = (data: Record<string, unknown>[], filename: string) => {
   const headers = Object.keys(data[0] || {})
   const csvContent = [
@@ -54,26 +87,16 @@ const exportToExcelGeneric = (data: Record<string, unknown>[], filename: string)
 
 type AdminTab = 'dashboard' | 'executors' | 'clients' | 'projects' | 'quotes' | 'schedule' | 'leads' | 'invites' | 'settings'
 
-interface ClientInfo {
-  id: string
-  name: string
-  email: string
-  phone: string
-  vehiclesCount: number
-  lastAccess?: string
-  hasAccessed: boolean
-  projects: { id: string; vehicle: string; status: string; qrCode: string }[]
-}
-
 export function AdminDashboard() {
   const { user, logout } = useAuth()
   const { addNotification } = useNotifications()
   const { projects } = useProjects()
   const { quotes, getPendingQuotes } = useQuotes()
-  const { leads, exportToExcel, removeLead, clearAllLeads } = useLeads()
+  const { leads } = useLeads()
   
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard')
   const [executors, setExecutors] = useState<ExecutorUser[]>([])
+  const [schedules, setSchedules] = useState<Schedule[]>([])
   const [loadingExecutors, setLoadingExecutors] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [showNewExecutorModal, setShowNewExecutorModal] = useState(false)
@@ -134,9 +157,35 @@ export function AdminDashboard() {
     }
   }, [])
 
+  // Carregar agendamentos do Supabase
+  const loadSchedules = useCallback(async () => {
+    if (!isSupabaseConfigured() || !supabase) {
+      return
+    }
+    
+    try {
+      const { data, error } = await (supabase as any)
+        .from('schedules')
+        .select('*')
+        .order('scheduled_date', { ascending: true })
+        .order('scheduled_time', { ascending: true })
+      
+      if (error) {
+        console.error('[AdminDashboard] Erro ao carregar agendamentos:', error)
+        return
+      }
+      
+      setSchedules(data || [])
+      console.log('[AdminDashboard] ✓ Agendamentos carregados:', data?.length || 0)
+    } catch (err) {
+      console.error('[AdminDashboard] Erro inesperado ao carregar agendamentos:', err)
+    }
+  }, [])
+
   useEffect(() => {
     loadExecutors()
-  }, [loadExecutors])
+    loadSchedules()
+  }, [loadExecutors, loadSchedules])
 
   // Carregar histórico de ações do executor
   const loadExecutorActions = useCallback(async (executorId: string) => {
@@ -278,14 +327,37 @@ export function AdminDashboard() {
     }
   }
 
-  const handleToggleExecutorStatus = (executor: ExecutorUser) => {
+  const handleToggleExecutorStatus = async (executor: ExecutorUser) => {
+    const newStatus = executor.status === 'active' ? 'inactive' : 'active'
+    
+    // Atualizar no Supabase
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { error } = await (supabase as any)
+          .from('users_elitetrack')
+          .update({ is_active: newStatus === 'active' })
+          .eq('id', executor.id)
+        
+        if (error) {
+          console.error('[AdminDashboard] Erro ao atualizar status:', error)
+          addNotification({ type: 'error', title: 'Erro', message: 'Não foi possível atualizar o status.' })
+          return
+        }
+      } catch (err) {
+        console.error('[AdminDashboard] Erro inesperado:', err)
+        addNotification({ type: 'error', title: 'Erro', message: 'Erro inesperado ao atualizar status.' })
+        return
+      }
+    }
+    
+    // Atualizar estado local
     setExecutors(prev => prev.map(e => 
-      e.id === executor.id ? { ...e, status: e.status === 'active' ? 'inactive' : 'active' } : e
+      e.id === executor.id ? { ...e, status: newStatus } : e
     ))
     addNotification({ 
       type: 'success', 
       title: 'Status Atualizado', 
-      message: `${executor.name} foi ${executor.status === 'active' ? 'desativado' : 'ativado'}.` 
+      message: `${executor.name} foi ${newStatus === 'active' ? 'ativado' : 'desativado'}.` 
     })
   }
 
@@ -343,12 +415,6 @@ export function AdminDashboard() {
   }
 
   const pendingQuotes = getPendingQuotes()
-  
-  const mockSchedule = [
-    { id: '1', clientName: 'Ricardo Mendes', vehicle: 'Mercedes GLE 450', date: '2025-01-15', time: '09:00', type: 'revisao', status: 'confirmed' },
-    { id: '2', clientName: 'Fernanda Costa', vehicle: 'BMW X5', date: '2025-01-16', time: '14:00', type: 'entrega', status: 'pending' },
-    { id: '3', clientName: 'João Paulo Santos', vehicle: 'Audi Q7', date: '2025-01-18', time: '10:00', type: 'revisao', status: 'confirmed' },
-  ]
 
   // Filtros aplicados
   const filteredQuotes = useMemo(() => {
@@ -356,13 +422,13 @@ export function AdminDashboard() {
   }, [quotes, quoteFilter])
 
   const filteredSchedule = useMemo(() => {
-    return mockSchedule.filter(s => {
+    return schedules.filter(s => {
       if (scheduleFilter === 'all') return true
       if (scheduleFilter === 'revisao' || scheduleFilter === 'entrega') return s.type === scheduleFilter
       if (scheduleFilter === 'confirmed' || scheduleFilter === 'pending') return s.status === scheduleFilter
       return true
     })
-  }, [scheduleFilter])
+  }, [schedules, scheduleFilter])
 
   const filteredClientsList = useMemo(() => {
     let result = clients.filter(c =>
@@ -404,12 +470,14 @@ export function AdminDashboard() {
 
   const handleExportSchedule = () => {
     const data = filteredSchedule.map(s => ({
-      Cliente: s.clientName,
+      Cliente: s.client_name,
+      Email: s.client_email || '',
+      Telefone: s.client_phone || '',
       Veículo: s.vehicle,
-      Data: new Date(s.date).toLocaleDateString('pt-BR'),
-      Horário: s.time,
-      Tipo: s.type === 'revisao' ? 'Revisão' : 'Entrega',
-      Status: s.status === 'confirmed' ? 'Confirmado' : 'Pendente'
+      Data: new Date(s.scheduled_date).toLocaleDateString('pt-BR'),
+      Horário: s.scheduled_time,
+      Tipo: s.type === 'revisao' ? 'Revisão' : s.type === 'entrega' ? 'Entrega' : 'Vistoria',
+      Status: s.status === 'confirmed' ? 'Confirmado' : s.status === 'pending' ? 'Pendente' : s.status === 'cancelled' ? 'Cancelado' : 'Concluído'
     }))
     exportToExcelGeneric(data, 'agenda')
     addNotification({ type: 'success', title: 'Exportação', message: `${data.length} agendamentos exportados!` })
@@ -439,11 +507,8 @@ export function AdminDashboard() {
       <aside className="hidden lg:flex flex-col w-64 bg-carbon-900 border-r border-white/10">
         <div className="p-6 border-b border-white/10">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary/60 rounded-xl flex items-center justify-center">
-              <Shield className="w-5 h-5 text-black" />
-            </div>
+            <img src="/logo-elite.png" alt="Elite Blindagens" className="h-10 w-auto" />
             <div>
-              <h1 className="font-['Pacifico'] text-xl text-primary">EliteTrack™</h1>
               <span className="text-xs text-gray-500">Painel Admin</span>
             </div>
           </div>
@@ -499,8 +564,7 @@ export function AdminDashboard() {
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="lg:hidden flex items-center space-x-3">
-                <Shield className="w-6 h-6 text-primary" />
-                <span className="font-['Pacifico'] text-lg text-primary">EliteTrack™</span>
+                <img src="/logo-elite.png" alt="Elite Blindagens" className="h-6 w-auto" />
               </div>
               <div className="hidden lg:block">
                 <h2 className="text-xl font-bold">
@@ -832,10 +896,24 @@ export function AdminDashboard() {
                               </button>
                               <button
                                 onClick={() => handleToggleExecutorStatus(executor)}
-                                className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
-                                title={executor.status === 'active' ? 'Desativar' : 'Ativar'}
+                                className={cn(
+                                  "px-3 py-2 rounded-lg font-medium text-xs transition-colors flex items-center space-x-1",
+                                  executor.status === 'active' 
+                                    ? "bg-red-500/20 text-red-400 hover:bg-red-500/30" 
+                                    : "bg-green-500/20 text-green-400 hover:bg-green-500/30"
+                                )}
                               >
-                                {executor.status === 'active' ? <EyeOff className="w-4 h-4 text-gray-400" /> : <Eye className="w-4 h-4 text-green-400" />}
+                                {executor.status === 'active' ? (
+                                  <>
+                                    <EyeOff className="w-4 h-4" />
+                                    <span>Inativar</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Eye className="w-4 h-4" />
+                                    <span>Ativar</span>
+                                  </>
+                                )}
                               </button>
                               <button
                                 onClick={() => handleDeleteExecutor(executor)}
@@ -1349,11 +1427,11 @@ export function AdminDashboard() {
                       scheduleFilter === f ? "bg-primary text-black" : "bg-white/10 text-gray-400 hover:bg-white/20"
                     )}
                   >
-                    {f === 'all' ? `Todos (${mockSchedule.length})` : 
-                     f === 'revisao' ? `Revisões (${mockSchedule.filter(s => s.type === 'revisao').length})` : 
-                     f === 'entrega' ? `Entregas (${mockSchedule.filter(s => s.type === 'entrega').length})` :
-                     f === 'confirmed' ? `Confirmados (${mockSchedule.filter(s => s.status === 'confirmed').length})` :
-                     `Pendentes (${mockSchedule.filter(s => s.status === 'pending').length})`}
+                    {f === 'all' ? `Todos (${schedules.length})` : 
+                     f === 'revisao' ? `Revisões (${schedules.filter(s => s.type === 'revisao').length})` : 
+                     f === 'entrega' ? `Entregas (${schedules.filter(s => s.type === 'entrega').length})` :
+                     f === 'confirmed' ? `Confirmados (${schedules.filter(s => s.status === 'confirmed').length})` :
+                     `Pendentes (${schedules.filter(s => s.status === 'pending').length})`}
                   </button>
                 ))}
               </div>
@@ -1373,10 +1451,10 @@ export function AdminDashboard() {
                           )} />
                         </div>
                         <div>
-                          <h4 className="font-semibold">{item.clientName}</h4>
+                          <h4 className="font-semibold">{item.client_name}</h4>
                           <p className="text-sm text-gray-400">{item.vehicle}</p>
                           <p className="text-xs text-gray-500">
-                            {new Date(item.date).toLocaleDateString('pt-BR')} às {item.time}
+                            {new Date(item.scheduled_date).toLocaleDateString('pt-BR')} às {item.scheduled_time}
                           </p>
                         </div>
                       </div>

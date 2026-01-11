@@ -115,7 +115,7 @@ export function Timeline() {
               >
                 <i className="ri-arrow-left-line text-white"></i>
               </button>
-              <div className="font-['Pacifico'] text-2xl text-primary luxury-glow cursor-pointer" onClick={() => navigate('/dashboard')}>EliteTrack™</div>
+              <img src="/logo-elite.png" alt="Elite Blindagens" className="h-8 w-auto cursor-pointer" onClick={() => navigate('/dashboard')} />
             </div>
             <div className="flex items-center space-x-4">
               <button

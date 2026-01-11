@@ -376,7 +376,7 @@ export function EliteCard() {
               <div className="relative z-10">
                 <div className="flex justify-between items-start mb-8">
                   <div>
-                    <div className="font-['Pacifico'] text-3xl text-primary mb-1">Elite</div>
+                    <img src="/logo-elite.png" alt="Elite Blindagens" className="h-10 w-auto mb-1" />
                     <div className="text-sm text-gray-400">MEMBER CARD</div>
                   </div>
                   <div className="text-right">

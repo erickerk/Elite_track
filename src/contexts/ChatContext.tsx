@@ -104,6 +104,44 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     loadConversations()
   }, [userId])
 
+  // Real-time subscription para sincronização de mensagens entre perfis
+  useEffect(() => {
+    if (!isSupabaseConfigured() || !db) return
+
+    // Subscrever a novas mensagens em tempo real
+    const channel = db.channel('chat-realtime')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'chat_messages' },
+        (payload: any) => {
+          console.log('[Chat] Nova mensagem recebida:', payload.new)
+          const newMessage = dbMessageToMessage(payload.new)
+          
+          setConversations(prev =>
+            prev.map(conv => {
+              if (conv.id === payload.new.conversation_id) {
+                // Verificar se a mensagem já existe (evitar duplicatas)
+                const exists = conv.messages.some(m => m.id === newMessage.id)
+                if (exists) return conv
+                
+                return {
+                  ...conv,
+                  messages: [...conv.messages, newMessage],
+                  unreadCount: conv.unreadCount + 1,
+                }
+              }
+              return conv
+            })
+          )
+        }
+      )
+      .subscribe()
+
+    return () => {
+      channel.unsubscribe()
+    }
+  }, [])
+
   const totalUnreadCount = conversations.reduce((acc, conv) => acc + conv.unreadCount, 0)
 
   const setActiveConversation = useCallback((id: string | null) => {

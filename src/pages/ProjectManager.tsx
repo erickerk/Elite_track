@@ -204,6 +204,7 @@ export function ProjectManager() {
           const savedPhoto = await uploadStepPhoto(
             file,
             selectedStep.id,
+            project.id,
             'during',
             `Foto da etapa ${selectedStep.title}`,
             user?.id
@@ -280,22 +281,20 @@ export function ProjectManager() {
   return (
     <div className="min-h-screen bg-black text-white font-['Inter']">
       {/* Header */}
-      <header className="glass-effect border-b border-white/10 sticky top-0 z-50">
+      <header className="glass-effect border-b border-carbon-700 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <button 
-                onClick={() => navigate('/dashboard')}
-                className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center hover:bg-white/20 transition-colors"
-                title="Voltar ao Dashboard"
-                aria-label="Voltar ao Dashboard"
+                onClick={() => navigate(-1)} 
+                className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center transition-colors"
+                title="Voltar"
               >
-                <i className="ri-arrow-left-line text-lg"></i>
+                <i className="ri-arrow-left-line text-white"></i>
               </button>
-              <div>
-                <h1 className="text-xl font-bold text-primary">Gerenciar Projeto</h1>
-                <p className="text-sm text-gray-400">{project.id}</p>
-              </div>
+              <img src="/logo-elite.png" alt="Elite Blindagens" className="h-8 w-auto cursor-pointer" onClick={() => navigate('/dashboard')} />
+              <h1 className="text-xl font-bold text-primary">Gerenciar Projeto</h1>
+              <p className="text-sm text-gray-400">{project.id}</p>
             </div>
             <div className="flex items-center space-x-3">
               <span className="text-sm text-gray-400">{user?.name}</span>

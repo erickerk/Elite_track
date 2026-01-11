@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { NotificationProvider } from './contexts/NotificationContext'
@@ -16,6 +17,39 @@ import {
   LandingPage, EliteCard, Delivery, ProjectManager, SplashScreen,
   Quotes, ClientDocuments, Achievements, Register, InviteManagement, ChangePassword
 } from './pages'
+
+// Limpar cache ao iniciar aplicação
+const clearAppCache = async () => {
+  try {
+    // Limpar cache do navegador
+    if ('caches' in window) {
+      const cacheNames = await caches.keys()
+      await Promise.all(cacheNames.map(name => caches.delete(name)))
+      console.log('[App] Cache do navegador limpo')
+    }
+    
+    // Limpar Service Worker cache
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations()
+      for (const registration of registrations) {
+        await registration.unregister()
+        console.log('[App] Service Worker desregistrado')
+      }
+    }
+    
+    // Forçar reload sem cache se necessário
+    const lastClearTime = localStorage.getItem('lastCacheClear')
+    const now = Date.now()
+    const oneHour = 60 * 60 * 1000
+    
+    if (!lastClearTime || (now - parseInt(lastClearTime)) > oneHour) {
+      localStorage.setItem('lastCacheClear', now.toString())
+      console.log('[App] Cache limpo - versão atualizada carregada')
+    }
+  } catch (error) {
+    console.error('[App] Erro ao limpar cache:', error)
+  }
+}
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, requiresPasswordChange } = useAuth()
@@ -251,6 +285,11 @@ function AppRoutes() {
 }
 
 export default function App() {
+  // Limpar cache ao iniciar
+  useEffect(() => {
+    clearAppCache()
+  }, [])
+
   return (
     <BrowserRouter>
       <ThemeProvider>

@@ -1701,14 +1701,7 @@ ${loginUrl}
                 <span>Ver Timeline do Projeto</span>
               </button>
 
-              <button
-                onClick={() => setShowLaudoModal(true)}
-                className="w-full bg-white/10 text-white py-3 rounded-xl font-semibold flex items-center justify-center space-x-2 hover:bg-white/20 transition-colors"
-              >
-                <FileText className="w-5 h-5" />
-                <span>Editar Laudo Técnico</span>
-              </button>
-            </div>
+                          </div>
           )}
 
           {/* Chat Tab */}
@@ -4524,7 +4517,7 @@ ${loginUrl}
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
               <div className="relative z-10">
                 <div className="flex items-center justify-between mb-6">
-                  <div className="font-['Pacifico'] text-2xl text-primary">Elite</div>
+                  <img src="/logo-elite.png" alt="Elite Blindagens" className="h-8 w-auto" />
                   <CreditCard className="w-8 h-8 text-primary" />
                 </div>
                 <div className="space-y-4">

@@ -108,6 +108,7 @@ export async function uploadToStorage(
 
 export async function saveStepPhoto(
   stepId: string,
+  projectId: string,
   photoUrl: string,
   photoType: 'before' | 'during' | 'after' = 'during',
   description?: string,
@@ -117,6 +118,7 @@ export async function saveStepPhoto(
     console.warn('[PhotoUpload] Supabase não configurado - foto não persistida na tabela')
     return {
       step_id: stepId,
+      project_id: projectId,
       photo_url: photoUrl,
       photo_type: photoType,
       description,
@@ -126,10 +128,11 @@ export async function saveStepPhoto(
   }
 
   try {
-    const { data, error } = await (supabase as any)
+    const { data, error} = await (supabase as any)
       .from('step_photos')
       .insert({
         step_id: stepId,
+        project_id: projectId,
         photo_url: photoUrl,
         photo_type: photoType,
         description,
@@ -360,6 +363,7 @@ export async function getQuoteAttachments(quoteId: string): Promise<QuoteAttachm
 export async function uploadStepPhoto(
   file: File,
   stepId: string,
+  projectId: string,
   photoType: 'before' | 'during' | 'after' = 'during',
   description?: string,
   uploadedBy?: string
@@ -373,7 +377,7 @@ export async function uploadStepPhoto(
   }
 
   // Salvar na tabela
-  return await saveStepPhoto(stepId, photoUrl, photoType, description, uploadedBy)
+  return await saveStepPhoto(stepId, projectId, photoUrl, photoType, description, uploadedBy)
 }
 
 export async function uploadChatFile(

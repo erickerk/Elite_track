@@ -1,0 +1,355 @@
+import type { Project, Notification, TimelineStep, User } from '../types'
+
+// Clientes serão carregados do Supabase
+export const mockClients: User[] = []
+
+// Timeline será gerado automaticamente ao criar projetos
+export const mockTimeline: TimelineStep[] = []
+
+// Projeto será criado via Supabase
+export const mockProject: Project | null = null
+
+// Timeline padrão para novos projetos (usado pelo executor ao criar projetos)
+export const createDefaultTimeline = (startDate: string, status: 'pending' | 'in_progress' = 'pending'): TimelineStep[] => {
+  const steps = [
+    { title: 'Check-in do Veículo', description: 'Veículo recebido e documentado. Inspeção inicial realizada com registro fotográfico completo.' },
+    { title: 'Desmontagem', description: 'Remoção completa de painéis internos, forros, bancos e componentes para acesso às áreas de blindagem.' },
+    { title: 'Instalação dos Vidros', description: 'Instalação dos vidros balísticos certificados com espessura de 21mm a 42mm conforme nível de proteção.' },
+    { title: 'Instalação da Manta Opaca', description: 'Aplicação de mantas aramidas (Kevlar) e aço balístico em portas, colunas A/B/C, teto e assoalho.' },
+    { title: 'Montagem', description: 'Remontagem de todos os componentes internos: painéis, forros, bancos e sistemas elétricos.' },
+    { title: 'Acabamento', description: 'Ajustes finos de acabamento, vedações, borrachas e alinhamento de portas e vidros.' },
+    { title: 'Vistoria', description: 'Inspeção de qualidade completa por supervisor técnico certificado.' },
+    { title: 'Laudo EliteShield™', description: 'Emissão do laudo técnico oficial com registro de materiais, lotes e certificações.' },
+    { title: 'Testes', description: 'Testes de rodagem, funcionamento de vidros elétricos, travas e sistemas de segurança.' },
+    { title: 'Higienização', description: 'Limpeza completa interna e externa, polimento e preparação para entrega.' },
+    { title: 'Pronto para Entrega', description: 'Veículo finalizado, documentação preparada e agendamento com cliente para retirada.' },
+  ]
+  
+  const baseDate = new Date(startDate)
+  return steps.map((step, index) => {
+    const estimatedDate = new Date(baseDate)
+    estimatedDate.setDate(baseDate.getDate() + (index * 3))
+    
+    return {
+      id: String(index + 1),
+      title: step.title,
+      description: step.description,
+      status: status === 'pending' ? 'pending' : (index === 0 ? 'pending' : 'pending'),
+      estimatedDate: estimatedDate.toISOString(),
+      photos: [],
+    } as TimelineStep
+  })
+}
+
+export const mockProjects: Project[] = [
+  /*{
+    id: 'PRJ-2025-002',
+    vehicle: {
+      id: 'VH-002',
+      brand: 'BMW',
+      model: 'X5 M50i',
+      year: 2024,
+      color: 'Branco Alpine',
+      plate: 'DEF-5678',
+      images: [
+        'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800',
+        'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800',
+      ],
+      blindingLevel: 'Nível III-A',
+    },
+    user: mockClients[1],
+    status: 'in_progress',
+    progress: 60,
+    timeline: createDefaultTimeline('2025-01-15').map((step, index) => ({
+      ...step,
+      status: index < 5 ? 'completed' as const : index === 5 ? 'in_progress' as const : 'pending' as const,
+      date: index < 5 ? step.estimatedDate : undefined,
+      technician: index < 6 ? 'Carlos Silva' : undefined,
+      photos: index < 5 ? ['https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400'] : [],
+    })),
+    startDate: '2025-01-15',
+    estimatedDelivery: '2025-02-15',
+    qrCode: 'ELITE-PRJ-2025-002-QR',
+  },
+  {
+    id: 'PRJ-2025-003',
+    vehicle: {
+      id: 'VH-003',
+      brand: 'Audi',
+      model: 'Q7 55 TFSI',
+      year: 2023,
+      color: 'Cinza Daytona',
+      plate: 'GHI-9012',
+      images: [
+        'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800',
+      ],
+      blindingLevel: 'Nível III',
+    },
+    user: mockClients[2],
+    status: 'completed',
+    progress: 100,
+    timeline: createDefaultTimeline('2025-01-02').map(step => ({
+      ...step,
+      status: 'completed' as const,
+      date: step.estimatedDate,
+      technician: 'Carlos Silva',
+      photos: ['https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=400'],
+    })),
+    startDate: '2025-01-02',
+    estimatedDelivery: '2025-01-20',
+    actualDelivery: '2025-01-20',
+    qrCode: 'ELITE-PRJ-2025-003-QR',
+    owners: [
+      {
+        id: 'OWN-001',
+        name: 'João Paulo Santos',
+        cpf: '***.***.***-**',
+        phone: '(11) 91234-5678',
+        email: 'joao@email.com',
+        ownershipStart: '2025-01-20',
+        isCurrent: true,
+      },
+      {
+        id: 'OWN-002',
+        name: 'Roberto Almeida Costa',
+        cpf: '***.***.***-**',
+        ownershipStart: '2023-03-15',
+        ownershipEnd: '2025-01-19',
+        isCurrent: false,
+      },
+    ],
+    maintenanceHistory: [
+      {
+        id: 'MAINT-001',
+        date: '2025-11-15',
+        type: 'inspection',
+        description: 'Inspeção preventiva de 6 meses - Verificação completa do sistema de blindagem',
+        technician: 'Carlos Silva',
+        cost: 0,
+        warrantyService: true,
+        notes: 'Sistema de blindagem em perfeito estado. Nenhuma irregularidade detectada.',
+      },
+      {
+        id: 'MAINT-002',
+        date: '2025-08-10',
+        type: 'part_replacement',
+        description: 'Substituição de vedação do vidro traseiro direito',
+        partsReplaced: [
+          {
+            name: 'Vedação de vidro balístico',
+            partNumber: 'VB-TR-D-001',
+            quantity: 1,
+            reason: 'Desgaste natural após 6 meses de uso',
+          },
+        ],
+        technician: 'Fernando Costa',
+        cost: 450.00,
+        warrantyService: true,
+        notes: 'Peça substituída sob garantia. Vedação testada e aprovada.',
+      },
+      {
+        id: 'MAINT-003',
+        date: '2025-05-22',
+        type: 'repair',
+        description: 'Ajuste no sistema elétrico dos vidros blindados',
+        partsReplaced: [
+          {
+            name: 'Motor de vidro reforçado',
+            partNumber: 'MVR-002',
+            quantity: 1,
+            reason: 'Motor original não suportava peso do vidro balístico',
+          },
+        ],
+        technician: 'Roberto Almeida',
+        cost: 1200.00,
+        warrantyService: false,
+        notes: 'Serviço pago pelo cliente. Motor substituído por versão industrial.',
+        photos: ['https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=400'],
+      },
+      {
+        id: 'MAINT-004',
+        date: '2024-07-10',
+        type: 'maintenance',
+        description: 'Manutenção preventiva anual - Revisão completa',
+        technician: 'Carlos Silva',
+        cost: 0,
+        warrantyService: true,
+        notes: 'Proprietário anterior: Roberto Almeida Costa. Revisão completa realizada.',
+      },
+    ],
+    blindingSpecs: {
+      level: 'Nível III',
+      certification: 'ABNT NBR 15000',
+      certificationNumber: 'CERT-2025-003-ELITE',
+      validUntil: '2029-01-20',
+      materials: [
+        {
+          name: 'Manta Aramida Kevlar',
+          type: 'Proteção Balística',
+          thickness: '12mm',
+          certification: 'NIJ 0108.01',
+          area: 'Portas, Colunas A/B/C, Teto',
+        },
+        {
+          name: 'Aço Balístico Hardox 500',
+          type: 'Reforço Estrutural',
+          thickness: '3mm',
+          certification: 'EN 1063',
+          area: 'Assoalho, Firewall',
+        },
+        {
+          name: 'Vidro Laminado Multilayer',
+          type: 'Proteção Transparente',
+          thickness: '42mm',
+          certification: 'EN 1063 BR4',
+          area: 'Para-brisa, Laterais, Traseiro',
+        },
+        {
+          name: 'Polietileno UHMWPE',
+          type: 'Absorção de Impacto',
+          thickness: '8mm',
+          certification: 'NIJ Level IIIA',
+          area: 'Painéis Internos',
+        },
+      ],
+      glassType: 'Vidro Laminado Multilayer com Policarbonato',
+      glassThickness: '42mm (para-brisa) / 38mm (laterais)',
+      bodyProtection: [
+        'Portas dianteiras e traseiras',
+        'Colunas A, B e C',
+        'Teto completo',
+        'Assoalho reforçado',
+        'Firewall blindado',
+        'Tanque de combustível protegido',
+        'Bateria com proteção balística',
+      ],
+      additionalFeatures: [
+        'Sistema de run-flat nos pneus',
+        'Sirene e giroflex ocultos',
+        'Sistema de comunicação de emergência',
+        'Extintor de incêndio automático',
+        'Fechaduras elétricas reforçadas',
+        'Vidros com acionamento elétrico reforçado',
+      ],
+      warranty: '5 anos de garantia contra defeitos de fabricação',
+      technicalResponsible: 'Eng. Carlos Roberto Silva - CREA 123456/SP',
+      installationDate: '2025-01-20',
+      totalWeight: '+280kg adicionados ao peso original',
+    },
+    deliveryChecklist: [
+      { id: 'DC001', item: 'Laudo EliteShield™ impresso e digital', checked: true, category: 'documents' },
+      { id: 'DC002', item: 'Certificado ABNT NBR 15000', checked: true, category: 'documents' },
+      { id: 'DC003', item: 'Manual do proprietário blindado', checked: true, category: 'documents' },
+      { id: 'DC004', item: 'Termo de garantia assinado', checked: true, category: 'documents' },
+      { id: 'DC005', item: 'Nota fiscal de serviço', checked: true, category: 'documents' },
+      { id: 'DC006', item: 'Veículo higienizado internamente', checked: true, category: 'vehicle' },
+      { id: 'DC007', item: 'Veículo polido externamente', checked: true, category: 'vehicle' },
+      { id: 'DC008', item: 'Vidros funcionando corretamente', checked: true, category: 'vehicle' },
+      { id: 'DC009', item: 'Travas e fechaduras testadas', checked: true, category: 'vehicle' },
+      { id: 'DC010', item: 'Sistema elétrico verificado', checked: true, category: 'vehicle' },
+      { id: 'DC011', item: 'Pneus run-flat calibrados', checked: true, category: 'accessories' },
+      { id: 'DC012', item: 'Kit de emergência Elite', checked: true, category: 'accessories' },
+      { id: 'DC013', item: 'Cartão Elite Member entregue', checked: true, category: 'accessories' },
+      { id: 'DC014', item: 'Chaves reserva entregues', checked: true, category: 'accessories' },
+      { id: 'DC015', item: 'Cliente orientado sobre uso', checked: true, category: 'final' },
+      { id: 'DC016', item: 'Test drive realizado', checked: true, category: 'final' },
+      { id: 'DC017', item: 'Fotos de entrega registradas', checked: true, category: 'final' },
+      { id: 'DC018', item: 'Termo de recebimento assinado', checked: true, category: 'final' },
+    ],
+    deliverySchedule: {
+      date: '2025-01-20',
+      time: '10:00',
+      location: 'Elite Blindagens - Sede Principal',
+      contactPerson: 'Carlos Silva',
+      contactPhone: '(11) 3456-7890',
+      confirmed: true,
+      notes: 'Cliente chegou pontualmente. Entrega realizada com sucesso.',
+    },
+    deliveryMedia: {
+      finalVideo: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      finalPhotos: [
+        'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800',
+        'https://images.unsplash.com/photo-1617531653332-bd46c24f2068?w=800',
+        'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800',
+        'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800',
+      ],
+      certificateUrl: '/documents/certificate-PRJ-2025-003.pdf',
+      manualUrl: '/documents/manual-blindagem.pdf',
+    },
+    eliteCard: {
+      cardNumber: 'ELITE-2025-003-PLATINUM',
+      issueDate: '2025-01-20',
+      expiryDate: '2029-01-20',
+      memberSince: '2025-01-02',
+      benefits: [
+        'Suporte 24/7 prioritário',
+        'Elite Rescue (guincho) ilimitado',
+        'Revisões anuais gratuitas por 2 anos',
+        'Desconto de 15% em serviços adicionais',
+        'Acesso VIP à área de clientes',
+        'Seguro de vidros blindados incluso',
+      ],
+      rescuePhone: '0800-ELITE-SOS',
+      supportPhone: '(11) 3456-7890',
+    },
+    tickets: [
+      {
+        id: 'TKT-001',
+        title: 'Dúvida sobre manutenção dos vidros',
+        description: 'Gostaria de saber qual a frequência recomendada para verificação dos vidros blindados.',
+        status: 'resolved',
+        priority: 'low',
+        category: 'general',
+        createdAt: '2025-01-25T10:00:00',
+        updatedAt: '2025-01-25T14:30:00',
+        messages: [
+          { id: 'MSG001', sender: 'client', message: 'Qual a frequência de verificação dos vidros?', timestamp: '2025-01-25T10:00:00' },
+          { id: 'MSG002', sender: 'support', message: 'Recomendamos verificação semestral. Agende sua revisão conosco!', timestamp: '2025-01-25T14:30:00' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'PRJ-2025-004',
+    vehicle: {
+      id: 'VH-004',
+      brand: 'Range Rover',
+      model: 'Sport HSE',
+      year: 2025,
+      color: 'Verde British Racing',
+      plate: 'JKL-3456',
+      images: [
+        'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=800',
+      ],
+      blindingLevel: 'Nível II',
+    },
+    user: mockClients[3],
+    status: 'in_progress',
+    progress: 18,
+    timeline: createDefaultTimeline('2025-01-25').map((step, index) => {
+      if (index === 0) {
+        return {
+          ...step,
+          status: 'completed' as const,
+          date: '2025-01-25T09:00:00',
+          technician: 'Roberto Almeida',
+          photos: ['https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=400'],
+        }
+      }
+      if (index === 1) {
+        return {
+          ...step,
+          status: 'in_progress' as const,
+          technician: 'Roberto Almeida',
+        }
+      }
+      return step
+    }),
+    startDate: '2025-01-25',
+    estimatedDelivery: '2025-02-20',
+    qrCode: 'ELITE-PRJ-2025-004-QR',
+  },*/
+]
+
+// Notificações serão carregadas do Supabase
+export const mockNotifications: Notification[] = []

@@ -1,10 +1,12 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { 
   Camera, Upload, X, Check, Image as ImageIcon, 
   Folder, Tag, Clock, ChevronDown, Car, Lock, Shield
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import type { Project, TimelineStep } from '../../types'
+import { uploadToStorage } from '../../services/photoUploadService'
+import { saveStepPhoto, getStepPhotos, subscribeToProjectPhotos } from '../../services/realtimeSync'
 
 interface ExecutorPhotosProps {
   project: Project
@@ -83,29 +85,91 @@ export function ExecutorPhotos({ project, onUploadPhoto }: ExecutorPhotosProps) 
   const [photoDescription, setPhotoDescription] = useState('')
   const [photoCategory, setPhotoCategory] = useState('details')
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
+  const [supabasePhotos, setSupabasePhotos] = useState<Record<string, any[]>>({})
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Verificar se o projeto está concluído (bloqueado para edição)
   const isProjectLocked = project.status === 'completed' || project.status === 'delivered'
+
+  // Carregar fotos do Supabase e subscrever a atualizações em tempo real
+  useEffect(() => {
+    const loadPhotos = async () => {
+      const photosMap: Record<string, any[]> = {}
+      for (const step of project.timeline) {
+        const photos = await getStepPhotos(step.id)
+        if (photos.length > 0) {
+          photosMap[step.id] = photos
+        }
+      }
+      setSupabasePhotos(photosMap)
+    }
+    
+    loadPhotos()
+
+    // Subscrever a atualizações em tempo real
+    const unsubscribe = subscribeToProjectPhotos(
+      project.id,
+      (newPhoto) => {
+        // Atualizar fotos quando uma nova é inserida
+        setSupabasePhotos(prev => ({
+          ...prev,
+          [newPhoto.step_id]: [...(prev[newPhoto.step_id] || []), newPhoto]
+        }))
+      }
+    )
+
+    return () => {
+      unsubscribe()
+    }
+  }, [project.id, project.timeline])
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
       const url = URL.createObjectURL(file)
       setPreviewUrl(url)
+      setSelectedFile(file)
     }
   }
 
-  const handleUpload = () => {
-    if (selectedStep && previewUrl) {
-      onUploadPhoto(selectedStep.id, photoCategory, photoDescription)
-      resetUploadForm()
+  const handleUpload = async () => {
+    if (selectedStep && previewUrl && selectedFile) {
+      setIsUploading(true)
+      
+      try {
+        // Upload para Supabase Storage
+        const photoUrl = await uploadToStorage(selectedFile, 'step-photos', `step_${selectedStep.id}`)
+        
+        if (photoUrl) {
+          // Salvar referência na tabela step_photos
+          await saveStepPhoto(
+            selectedStep.id,
+            project.id,
+            photoUrl,
+            photoCategory,
+            selectedStep.title,
+            photoDescription,
+            'executor'
+          )
+          
+          // Também chamar o callback original para atualização local
+          onUploadPhoto(selectedStep.id, photoCategory, photoDescription)
+        }
+      } catch (error) {
+        console.error('[ExecutorPhotos] Erro no upload:', error)
+      } finally {
+        setIsUploading(false)
+        resetUploadForm()
+      }
     }
   }
 
   const resetUploadForm = () => {
     setShowUploadModal(false)
     setPreviewUrl(null)
+    setSelectedFile(null)
     setPhotoDescription('')
     setPhotoCategory('details')
     if (fileInputRef.current) {
@@ -118,14 +182,26 @@ export function ExecutorPhotos({ project, onUploadPhoto }: ExecutorPhotosProps) 
     setShowUploadModal(true)
   }
 
-  const allPhotos = project.timeline.flatMap(step => 
-    step.photos.map((photo, idx) => ({
+  // Combinar fotos locais com fotos do Supabase
+  const allPhotos = project.timeline.flatMap(step => {
+    const localPhotos = step.photos.map((photo, idx) => ({
       url: photo,
       stepId: step.id,
       stepTitle: step.title,
-      index: idx
+      index: idx,
+      source: 'local' as const
     }))
-  )
+    
+    const cloudPhotos = (supabasePhotos[step.id] || []).map((photo, idx) => ({
+      url: photo.photo_url,
+      stepId: step.id,
+      stepTitle: step.title,
+      index: idx + localPhotos.length,
+      source: 'supabase' as const
+    }))
+    
+    return [...localPhotos, ...cloudPhotos]
+  })
 
   return (
     <div className="space-y-6">
@@ -354,11 +430,20 @@ export function ExecutorPhotos({ project, onUploadPhoto }: ExecutorPhotosProps) 
                 </button>
                 <button
                   onClick={handleUpload}
-                  disabled={!previewUrl}
+                  disabled={!previewUrl || isUploading}
                   className="flex-1 bg-primary text-black py-4 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                 >
-                  <Upload className="w-5 h-5" />
-                  <span>Enviar Foto</span>
+                  {isUploading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                      <span>Enviando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-5 h-5" />
+                      <span>Enviar Foto</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>

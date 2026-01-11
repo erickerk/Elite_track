@@ -92,7 +92,7 @@ export function Login() {
         <div className="relative z-10 w-full max-w-md">
           {/* Logo */}
           <div className="text-center mb-8 fade-in visible">
-            <div className="font-['Pacifico'] text-4xl text-primary luxury-glow mb-2">EliteTrack™</div>
+            <img src="/logo-elite.png" alt="Elite Blindagens" className="h-20 w-auto mx-auto mb-4" />
             <p className="text-gray-400 text-sm">Acesso ao Sistema de Transparência</p>
           </div>
 
