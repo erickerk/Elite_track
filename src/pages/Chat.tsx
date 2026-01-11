@@ -57,96 +57,20 @@ export function Chat() {
     'today': {
       id: 'today',
       title: 'Hoje',
-      preview: 'Dúvida sobre o cronograma de entrega do veículo...',
-      messageCount: 3,
-      time: '14:30',
-      priority: 'high',
-      messages: [
-        {
-          id: '1',
-          type: 'support',
-          author: 'Mariana Santos',
-          role: 'Especialista Elite',
-          message: `Olá ${user?.name?.split(' ')[0] || 'Cliente'}! Sou a Mariana da equipe Elite Suporte. Como posso ajudá-lo hoje com seu ${project.vehicle.brand} ${project.vehicle.model}?`,
-          time: '14:25',
-          avatar: 'ri-customer-service-2-line'
-        },
-        {
-          id: '2',
-          type: 'client',
-          message: 'Oi Mariana! Gostaria de saber sobre o cronograma. Quando posso esperar que o processo seja finalizado?',
-          time: '14:27'
-        },
-        {
-          id: '3',
-          type: 'support',
-          author: 'Mariana Santos',
-          role: 'Especialista Elite',
-          message: `Perfeita pergunta! Baseado no progresso atual, temos uma previsão de conclusão para <strong>${new Date(project.estimatedDelivery).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' })}</strong>. Seu ${project.vehicle.brand} está atualmente na fase de instalação da manta balística (${project.progress}% concluído).`,
-          time: '14:28',
-          avatar: 'ri-customer-service-2-line',
-          attachment: 'timeline'
-        }
-      ]
+      preview: 'Inicie uma conversa com nosso suporte',
+      messageCount: 0,
+      time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      priority: 'medium',
+      messages: []
     },
     'yesterday': {
       id: 'yesterday',
       title: 'Ontem',
-      preview: 'Pergunta sobre o processo de instalação da manta...',
-      messageCount: 7,
-      time: '16:45',
-      priority: 'medium',
-      messages: [
-        {
-          id: '1',
-          type: 'support',
-          author: 'Carlos Mendes',
-          role: 'Técnico Especialista',
-          message: `Boa tarde ${user?.name?.split(' ')[0] || 'Cliente'}! Aqui é o Carlos, responsável pela instalação da manta balística do seu ${project.vehicle.brand}.`,
-          time: '16:40',
-          avatar: 'ri-user-settings-line'
-        },
-        {
-          id: '2',
-          type: 'client',
-          message: 'Oi Carlos! Como está o progresso da instalação?',
-          time: '16:42'
-        },
-        {
-          id: '3',
-          type: 'support',
-          author: 'Carlos Mendes',
-          role: 'Técnico Especialista',
-          message: 'Estamos com excelente progresso! Concluímos a instalação nas portas frontais e começamos nas traseiras hoje. Tudo dentro do cronograma.',
-          time: '16:45',
-          avatar: 'ri-user-settings-line'
-        }
-      ]
-    },
-    'dec10': {
-      id: 'dec10',
-      title: '10 Dez',
-      preview: 'Solicitação de fotos adicionais do processo...',
-      messageCount: 12,
-      time: '10:20',
+      preview: 'Sem mensagens',
+      messageCount: 0,
+      time: '00:00',
       priority: 'low',
-      messages: [
-        {
-          id: '1',
-          type: 'client',
-          message: 'Olá! Seria possível enviar mais fotos do processo?',
-          time: '10:15'
-        },
-        {
-          id: '2',
-          type: 'support',
-          author: 'Mariana Santos',
-          role: 'Especialista Elite',
-          message: 'Claro! Vou solicitar à equipe técnica que adicione mais fotos na galeria. Você será notificado assim que estiverem disponíveis.',
-          time: '10:20',
-          avatar: 'ri-customer-service-2-line'
-        }
-      ]
+      messages: []
     }
   })
 

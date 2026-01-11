@@ -143,14 +143,22 @@ export function EliteCard() {
     doc.setFillColor(212, 175, 55)
     doc.rect(0, 0, 85.6, 2, 'F')
     
+    // Logo Elite Blindagens
+    doc.setFillColor(212, 175, 55)
+    doc.roundedRect(4, 6, 12, 12, 1, 1, 'F')
     doc.setFont('helvetica', 'bold')
-    doc.setFontSize(14)
-    doc.setTextColor(212, 175, 55)
-    doc.text('Elite', 5, 12)
+    doc.setFontSize(16)
+    doc.setTextColor(26, 26, 26)
+    doc.text('E', 8, 14.5)
     
-    doc.setFontSize(8)
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(10)
+    doc.setTextColor(212, 175, 55)
+    doc.text('ELITE BLINDAGENS', 18, 13)
+    
+    doc.setFontSize(6)
     doc.setTextColor(150, 150, 150)
-    doc.text('MEMBER CARD', 5, 16)
+    doc.text('MEMBER CARD', 18, 16)
     
     doc.setFontSize(10)
     doc.setTextColor(255, 255, 255)
@@ -450,7 +458,7 @@ export function EliteCard() {
               </div>
               <h3 className="text-xl font-bold mb-1 group-hover:text-red-400 transition-colors">Elite Rescue</h3>
               <p className="text-gray-400 text-sm">Guincho 24/7</p>
-              <p className="text-red-400 text-xs mt-2 font-semibold">{eliteCard?.rescuePhone || '(11) 99999-9999'}</p>
+              <p className="text-red-400 text-xs mt-2 font-semibold">{eliteCard?.rescuePhone || '(11) 9.1312-3071'}</p>
             </button>
 
             {/* Abrir Ticket */}
@@ -617,7 +625,7 @@ export function EliteCard() {
                   <i className="ri-phone-line text-red-400 text-xl"></i>
                   <div>
                     <p className="font-semibold text-red-400">Emergência?</p>
-                    <p className="text-sm text-gray-400">WhatsApp: <a href="https://wa.me/5511999999999" target="_blank" rel="noopener noreferrer" className="text-red-400 font-bold hover:underline">{eliteCard?.rescuePhone || '(11) 99999-9999'}</a></p>
+                    <p className="text-sm text-gray-400">WhatsApp: <a href="https://wa.me/5511913123071" target="_blank" rel="noopener noreferrer" className="text-red-400 font-bold hover:underline">{eliteCard?.rescuePhone || '(11) 9.1312-3071'}</a></p>
                   </div>
                 </div>
               </div>

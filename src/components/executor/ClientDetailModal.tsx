@@ -1,4 +1,4 @@
-import { X, Users, Car, FileText, Phone, Mail, Shield, Download, Eye, MessageCircle } from 'lucide-react'
+import { X, Users, Car, FileText, Mail, Shield, Download, Eye, MessageCircle } from 'lucide-react'
 import { Modal } from '../ui/Modal'
 import type { Project } from '../../types'
 import { cn } from '../../lib/utils'
@@ -39,10 +39,6 @@ export function ClientDetailModal({
     window.open(`mailto:${client.user.email}?subject=Elite Blindagens - ${client.vehicle.brand} ${client.vehicle.model}`, '_blank')
   }
 
-  const handleCall = () => {
-    window.open(`tel:${client.user.phone}`, '_blank')
-  }
-
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
       <div className="p-6 max-h-[85vh] overflow-y-auto">
@@ -76,18 +72,18 @@ export function ClientDetailModal({
             <span className="font-medium">WhatsApp</span>
           </button>
           <button
+            onClick={() => window.open(`https://wa.me/55${client.user.phone?.replace(/\D/g, '')}`, '_blank')}
+            className="flex items-center justify-center gap-2 p-3 bg-green-500/20 text-green-400 rounded-xl hover:bg-green-500/30 transition-colors"
+          >
+            <MessageCircle className="w-5 h-5" />
+            <span className="font-medium">WhatsApp</span>
+          </button>
+          <button
             onClick={handleEmail}
             className="flex items-center justify-center gap-2 p-3 bg-blue-500/20 text-blue-400 rounded-xl hover:bg-blue-500/30 transition-colors"
           >
             <Mail className="w-5 h-5" />
             <span className="font-medium">Email</span>
-          </button>
-          <button
-            onClick={handleCall}
-            className="flex items-center justify-center gap-2 p-3 bg-primary/20 text-primary rounded-xl hover:bg-primary/30 transition-colors"
-          >
-            <Phone className="w-5 h-5" />
-            <span className="font-medium">Ligar</span>
           </button>
         </div>
 

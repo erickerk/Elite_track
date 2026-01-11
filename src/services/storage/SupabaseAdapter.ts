@@ -124,6 +124,12 @@ export class SupabaseProjectStorage implements IProjectStorage {
           estimatedDate: s.estimated_date || undefined,
           technician: s.technician || undefined,
           photos: stepPhotos.map((sp: any) => sp.photo_url),
+          photoDetails: stepPhotos.map((sp: any) => ({
+            url: sp.photo_url,
+            type: sp.photo_type || 'during',
+            stage: sp.stage || s.title,
+            createdAt: sp.created_at,
+          })),
           notes: s.notes || undefined,
         }
       })
@@ -189,6 +195,12 @@ export class SupabaseProjectStorage implements IProjectStorage {
         estimatedDate: s.estimated_date || undefined,
         technician: s.technician || undefined,
         photos: stepPhotos.map((sp: any) => sp.photo_url),
+        photoDetails: stepPhotos.map((sp: any) => ({
+          url: sp.photo_url,
+          type: sp.photo_type || 'during',
+          stage: sp.stage || s.title,
+          createdAt: sp.created_at,
+        })),
         notes: s.notes || undefined,
       }
     })

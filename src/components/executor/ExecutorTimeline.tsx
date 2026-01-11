@@ -1,10 +1,13 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { 
   CheckCircle, Clock, AlertCircle, ChevronDown, ChevronUp,
-  Camera, Upload, Play, Pause, Save, X, Edit3, Plus, Car, Lock, Shield, Calendar
+  Camera, Upload, Play, Pause, Save, X, Edit3, Plus, Car, Lock, Shield, Calendar, Loader2
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import type { Project, TimelineStep } from '../../types'
+import { uploadToStorage } from '../../services/photoUploadService'
+import { saveStepPhoto } from '../../services/realtimeSync'
+import { useProjects } from '../../contexts/ProjectContext'
 
 interface ExecutorTimelineProps {
   project: Project
@@ -280,6 +283,7 @@ const photoTypes = [
 ]
 
 export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdateProjectDates }: ExecutorTimelineProps) {
+  const { refreshProjects } = useProjects()
   const [expandedStep, setExpandedStep] = useState<string | null>(
     project.timeline.find(s => s.status === 'in_progress')?.id || null
   )
@@ -289,6 +293,12 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
   const [descriptions, setDescriptions] = useState<Record<string, string>>({})
   const [showPhotoModal, setShowPhotoModal] = useState<string | null>(null)
   const [selectedPhotoType, setSelectedPhotoType] = useState<string>('during')
+  
+  // Estados para upload de fotos
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadingStepId, setUploadingStepId] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
   
   // Estados para modal de data de previsão obrigatória
   const [showDateModal, setShowDateModal] = useState(false)
@@ -395,9 +405,65 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
     setEditingNotes(null)
   }
 
+  // Handler para abrir galeria
   const handleAddPhoto = (stepId: string) => {
-    onAddPhoto(stepId, selectedPhotoType)
+    setUploadingStepId(stepId)
+    fileInputRef.current?.click()
+  }
+  
+  // Handler para abrir câmera
+  const handleTakePhoto = (stepId: string) => {
+    setUploadingStepId(stepId)
+    cameraInputRef.current?.click()
+  }
+
+  // Handler para processar arquivo selecionado e fazer upload real
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !uploadingStepId) return
+
+    const step = project.timeline.find(s => s.id === uploadingStepId)
+    if (!step) return
+
+    setIsUploading(true)
     setShowPhotoModal(null)
+
+    try {
+      // Upload para Supabase Storage
+      const photoUrl = await uploadToStorage(file, 'step-photos', `step_${uploadingStepId}`)
+
+      if (photoUrl) {
+        // Salvar referência na tabela step_photos
+        await saveStepPhoto(
+          uploadingStepId,
+          project.id,
+          photoUrl,
+          selectedPhotoType,
+          step.title,
+          `Foto ${selectedPhotoType} - ${step.title}`,
+          'executor'
+        )
+
+        // Chamar callback original para notificação
+        onAddPhoto(uploadingStepId, selectedPhotoType)
+        console.log('[Timeline] Foto enviada com sucesso:', photoUrl)
+        
+        // Forçar atualização imediata dos projetos para exibir a foto sem F5
+        await refreshProjects()
+      }
+    } catch (error) {
+      console.error('[Timeline] Erro no upload:', error)
+    } finally {
+      setIsUploading(false)
+      setUploadingStepId(null)
+      setSelectedPhotoType('during')
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+      if (cameraInputRef.current) {
+        cameraInputRef.current.value = ''
+      }
+    }
   }
 
   const getStatusConfig = (status: string) => {
@@ -431,6 +497,37 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
 
   return (
     <div className="space-y-4">
+      {/* Input file oculto para upload de fotos da galeria */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/heic"
+        onChange={handleFileSelect}
+        className="hidden"
+        aria-label="Selecionar foto da galeria"
+      />
+      
+      {/* Input file oculto para tirar foto com câmera */}
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        {...({'capture': 'environment'} as any)}
+        onChange={handleFileSelect}
+        className="hidden"
+        aria-label="Tirar foto com câmera"
+      />
+      
+      {/* Indicador de upload em andamento */}
+      {isUploading && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-xl p-6 flex items-center gap-4">
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            <span className="text-white font-medium">Enviando foto...</span>
+          </div>
+        </div>
+      )}
+      
       {/* Cabeçalho do Veículo Selecionado */}
       <VehicleHeader project={project} isLocked={isProjectLocked} onUpdateDates={onUpdateProjectDates} />
 
@@ -642,16 +739,20 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
                     </div>
                     {step.photos.length > 0 ? (
                       <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
-                        {step.photos.map((photo, idx) => (
-                          <div key={idx} className="relative aspect-video rounded-xl overflow-hidden group">
-                            <img src={photo} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <span className="text-xs text-white bg-black/50 px-2 py-1 rounded">
-                                Foto {idx + 1}
-                              </span>
+                        {(step.photoDetails || step.photos.map(url => ({ url, type: 'during', stage: step.title }))).map((photo: any, idx: number) => {
+                          const photoUrl = typeof photo === 'string' ? photo : photo.url
+                          const photoType = typeof photo === 'string' ? 'durante' : (photo.type === 'before' ? 'Antes' : photo.type === 'during' ? 'Durante' : photo.type === 'after' ? 'Depois' : photo.type === 'detail' || photo.type === 'details' ? 'Detalhe' : photo.type === 'material' ? 'Material' : photo.type)
+                          const photoStage = typeof photo === 'string' ? step.title : photo.stage
+                          return (
+                            <div key={idx} className="relative aspect-video rounded-xl overflow-hidden group">
+                              <img src={photoUrl} alt={`${photoStage} - ${photoType}`} className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2">
+                                <span className="text-xs text-white font-semibold truncate">{photoStage}</span>
+                                <span className="text-xs text-primary">{photoType}</span>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          )
+                        })}
                         {!isProjectLocked && (
                           <button
                             onClick={(e) => { e.stopPropagation(); setShowPhotoModal(step.id); }}
@@ -779,13 +880,22 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
                       ))}
                     </div>
 
-                    <button
-                      onClick={() => handleAddPhoto(step.id)}
-                      className="w-full bg-primary text-black py-4 rounded-xl font-semibold flex items-center justify-center space-x-2"
-                    >
-                      <Upload className="w-5 h-5" />
-                      <span>Selecionar Foto</span>
-                    </button>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        onClick={() => handleTakePhoto(step.id)}
+                        className="bg-blue-600 text-white py-4 rounded-xl font-semibold flex items-center justify-center space-x-2 hover:bg-blue-700"
+                      >
+                        <Camera className="w-5 h-5" />
+                        <span>Tirar Foto</span>
+                      </button>
+                      <button
+                        onClick={() => handleAddPhoto(step.id)}
+                        className="bg-primary text-black py-4 rounded-xl font-semibold flex items-center justify-center space-x-2 hover:bg-primary/90"
+                      >
+                        <Upload className="w-5 h-5" />
+                        <span>Galeria</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}

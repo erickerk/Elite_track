@@ -125,6 +125,16 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
               loadProjectsFromSupabase()
             }
           )
+          
+          // Listener para tabela step_photos (CRUCIAL para sincronização de fotos)
+          subscriptionRef.current.on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'step_photos' },
+            (payload: any) => {
+              console.log('[ProjectContext] ✓ Real-time foto:', payload.eventType, payload.new?.stage)
+              loadProjectsFromSupabase()
+            }
+          )
 
           // Subscribe com tratamento de status
           subscriptionRef.current.subscribe((status: string, err?: Error) => {

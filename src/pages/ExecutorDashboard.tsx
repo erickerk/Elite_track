@@ -22,6 +22,7 @@ import { useQuotes } from '../contexts/QuoteContext'
 import { cn } from '../lib/utils'
 import type { Project, SupportTicket } from '../types'
 import { supportTicketStorage } from '../services/storage'
+import { EliteShieldLaudo } from '../components/laudo/EliteShieldLaudo'
 
 // Componente ProgressBar sem inline style
 function ProgressBar({ progress }: { progress: number }) {
@@ -187,7 +188,17 @@ export function ExecutorDashboard() {
   const { projects: globalProjects, addProject: addGlobalProject, updateProject: updateGlobalProject } = useProjects()
   const { quotes, updateQuoteStatus, getPendingQuotes, createQuoteFromExecutor } = useQuotes()
 
-  const [activeTab, setActiveTab] = useState<TabType>('dashboard')
+  // Persistir tab ativa no localStorage para manter após refresh
+  const [activeTab, setActiveTab] = useState<TabType>(() => {
+    const savedTab = localStorage.getItem('executor_active_tab')
+    return (savedTab as TabType) || 'dashboard'
+  })
+  
+  // Salvar tab ativa no localStorage quando mudar
+  const handleSetActiveTab = (tab: TabType) => {
+    setActiveTab(tab)
+    localStorage.setItem('executor_active_tab', tab)
+  }
   const [showQuoteModal, setShowQuoteModal] = useState(false)
   const [selectedQuote, setSelectedQuote] = useState<typeof quotes[0] | null>(null)
   const [quoteExactPrice, setQuoteExactPrice] = useState('')
@@ -1001,7 +1012,7 @@ ${loginUrl}
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => handleSetActiveTab(item.id)}
                 className={cn(
                   "w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all",
                   isActive 
@@ -1126,7 +1137,7 @@ ${loginUrl}
 
                 {/* Chat Badge (Mobile) */}
                 <button
-                  onClick={() => setActiveTab('chat')}
+                  onClick={() => handleSetActiveTab('chat')}
                   className="lg:hidden relative w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center hover:bg-white/20 transition-colors"
                   title="Chat"
                   aria-label="Chat com clientes"
@@ -1173,7 +1184,7 @@ ${loginUrl}
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => handleSetActiveTab(item.id)}
                 className={cn(
                   "flex items-center space-x-2 px-4 py-2 rounded-xl whitespace-nowrap transition-all",
                   isActive 
@@ -1373,7 +1384,7 @@ ${loginUrl}
                         Enviar QR Codes
                       </button>
                       <button
-                        onClick={() => setActiveTab('timeline')}
+                        onClick={() => handleSetActiveTab('timeline')}
                         className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-black px-4 py-2 rounded-xl font-semibold text-sm transition-colors"
                       >
                         <Clock className="w-4 h-4" />
@@ -1529,64 +1540,43 @@ ${loginUrl}
             />
           )}
 
-          {/* Laudo Tab */}
+          {/* Laudo Tab - EliteShield™ */}
           {activeTab === 'laudo' && selectedProject && (
-            <div className="max-w-4xl mx-auto space-y-6">
-              <div className="bg-white/5 rounded-3xl p-6 border border-white/10">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-bold">Laudo EliteShield™</h3>
+            <div className="max-w-4xl mx-auto space-y-4">
+              {/* Barra de Ações */}
+              <div className="flex items-center justify-between bg-white/5 rounded-2xl p-4 border border-white/10">
+                <div className="flex items-center gap-3">
+                  <Shield className="w-6 h-6 text-primary" />
+                  <div>
+                    <h3 className="font-bold">Laudo EliteShield™</h3>
+                    <p className="text-xs text-gray-400">Laudo técnico completo de blindagem</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => window.open(`/verify/${selectedProject.vehicle.plate}`, '_blank')}
+                    className="flex items-center gap-2 bg-white/10 text-white px-4 py-2 rounded-xl font-semibold text-sm hover:bg-white/20 transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Abrir em Nova Aba
+                  </button>
                   <button
                     onClick={() => setShowLaudoModal(true)}
-                    className="flex items-center space-x-2 bg-primary text-black px-4 py-2 rounded-xl font-semibold"
+                    className="flex items-center gap-2 bg-primary text-black px-4 py-2 rounded-xl font-semibold text-sm"
                   >
-                    <Edit3 className="w-5 h-5" />
-                    <span>Editar Laudo</span>
+                    <Edit3 className="w-4 h-4" />
+                    Editar Laudo
                   </button>
                 </div>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h4 className="font-semibold text-primary">Especificações Técnicas</h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between py-2 border-b border-white/10">
-                        <span className="text-gray-400">Nível de Proteção</span>
-                        <span className="font-medium">IIIA</span>
-                      </div>
-                      <div className="flex justify-between py-2 border-b border-white/10">
-                        <span className="text-gray-400">Certificação</span>
-                        <span className="font-medium">ABNT NBR 15000</span>
-                      </div>
-                      <div className="flex justify-between py-2 border-b border-white/10">
-                        <span className="text-gray-400">Tipo de Vidro</span>
-                        <span className="font-medium">Laminado Multi-camadas</span>
-                      </div>
-                      <div className="flex justify-between py-2 border-b border-white/10">
-                        <span className="text-gray-400">Espessura</span>
-                        <span className="font-medium">21mm</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    <h4 className="font-semibold text-primary">Informações do Projeto</h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between py-2 border-b border-white/10">
-                        <span className="text-gray-400">Veículo</span>
-                        <span className="font-medium">{selectedProject.vehicle.brand} {selectedProject.vehicle.model}</span>
-                      </div>
-                      <div className="flex justify-between py-2 border-b border-white/10">
-                        <span className="text-gray-400">Placa</span>
-                        <span className="font-medium">{selectedProject.vehicle.plate}</span>
-                      </div>
-                      <div className="flex justify-between py-2 border-b border-white/10">
-                        <span className="text-gray-400">Cliente</span>
-                        <span className="font-medium">{selectedProject.user.name}</span>
-                      </div>
-                      <div className="flex justify-between py-2 border-b border-white/10">
-                        <span className="text-gray-400">Garantia</span>
-                        <span className="font-medium">5 anos</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              </div>
+
+              {/* Componente EliteShieldLaudo */}
+              <div className="rounded-2xl overflow-hidden border border-white/10">
+                <EliteShieldLaudo 
+                  project={selectedProject}
+                  showExportButton={true}
+                  compact={true}
+                />
               </div>
             </div>
           )}
@@ -1694,7 +1684,7 @@ ${loginUrl}
               </div>
 
               <button
-                onClick={() => setActiveTab('timeline')}
+                onClick={() => handleSetActiveTab('timeline')}
                 className="w-full bg-white/10 text-white py-3 rounded-xl font-semibold flex items-center justify-center space-x-2 hover:bg-white/20 transition-colors"
               >
                 <Clock className="w-5 h-5" />
@@ -1706,7 +1696,7 @@ ${loginUrl}
 
           {/* Chat Tab */}
           {activeTab === 'chat' && (
-            <ExecutorChat onBack={() => setActiveTab('dashboard')} />
+            <ExecutorChat onBack={() => handleSetActiveTab('dashboard')} />
           )}
 
           {/* Schedule Tab - Agenda de Revisões */}
@@ -1720,10 +1710,11 @@ ${loginUrl}
                 <div className="flex items-center gap-3 flex-wrap">
                   {/* Filtro por Tipo */}
                   <select
+                    title="Filtrar agendamentos por tipo"
+                    aria-label="Filtrar agendamentos por tipo"
                     value={scheduleFilterType}
                     onChange={(e) => setScheduleFilterType(e.target.value)}
                     className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white"
-                    title="Filtrar por tipo"
                   >
                     <option value="all">Todos os Tipos</option>
                     <option value="revisao">Revisões</option>
@@ -1731,10 +1722,11 @@ ${loginUrl}
                   </select>
                   {/* Filtro por Status */}
                   <select
+                    title="Filtrar agendamentos por status"
+                    aria-label="Filtrar agendamentos por status"
                     value={scheduleFilterStatus}
                     onChange={(e) => setScheduleFilterStatus(e.target.value)}
                     className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white"
-                    title="Filtrar por status"
                   >
                     <option value="all">Todos os Status</option>
                     <option value="confirmed">Confirmados</option>
@@ -2255,7 +2247,7 @@ ${loginUrl}
                       Documentos Essenciais
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* CNH - Dinâmico baseado nos dados do projeto */}
+                      {/* CNH - Só mostra como enviado se tiver documento real no Supabase */}
                       <div className="bg-white/5 border border-white/10 rounded-xl p-4">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-3">
@@ -2267,44 +2259,21 @@ ${loginUrl}
                               <p className="text-xs text-gray-400">Carteira de Habilitação</p>
                             </div>
                           </div>
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            selectedProject.status === 'pending' 
-                              ? 'bg-yellow-500/20 text-yellow-400' 
-                              : 'bg-green-500/20 text-green-400'
-                          }`}>
-                            {selectedProject.status === 'pending' ? 'Pendente' : 'Enviado'}
+                          <span className="px-2 py-1 rounded-full text-xs bg-gray-500/20 text-gray-400">
+                            Não enviado
                           </span>
                         </div>
                         <div className="flex gap-2">
-                          {selectedProject.status === 'pending' ? (
-                            <button 
-                              onClick={() => addNotification({ type: 'warning', title: 'Pendente', message: 'Solicite ao cliente o envio da CNH' })}
-                              className="flex-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 py-2 rounded-lg text-sm font-medium transition-colors"
-                            >
-                              <i className="ri-alert-line mr-1"></i> Solicitar
-                            </button>
-                          ) : (
-                            <>
-                              <button 
-                                onClick={() => addNotification({ type: 'info', title: 'CNH', message: 'Documento disponível para visualização' })}
-                                className="flex-1 bg-primary/20 hover:bg-primary/30 text-primary py-2 rounded-lg text-sm font-medium transition-colors"
-                              >
-                                <i className="ri-eye-line mr-1"></i> Visualizar
-                              </button>
-                              <button 
-                                onClick={() => addNotification({ type: 'success', title: 'Download', message: 'CNH baixado com sucesso!' })}
-                                className="px-3 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg text-sm transition-colors"
-                                title="Baixar CNH"
-                                aria-label="Baixar CNH"
-                              >
-                                <i className="ri-download-line"></i>
-                              </button>
-                            </>
-                          )}
+                          <button 
+                            onClick={() => addNotification({ type: 'info', title: 'Documento pendente', message: 'Solicite ao cliente o envio da CNH via chat ou WhatsApp' })}
+                            className="flex-1 bg-gray-500/20 hover:bg-gray-500/30 text-gray-400 py-2 rounded-lg text-sm font-medium transition-colors"
+                          >
+                            <i className="ri-upload-line mr-1"></i> Solicitar ao Cliente
+                          </button>
                         </div>
                       </div>
 
-                      {/* CRLV - Dinâmico baseado nos dados do projeto */}
+                      {/* CRLV - Só mostra como enviado se tiver documento real no Supabase */}
                       <div className="bg-white/5 border border-white/10 rounded-xl p-4">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-3">
@@ -2316,40 +2285,17 @@ ${loginUrl}
                               <p className="text-xs text-gray-400">Documento do Veículo</p>
                             </div>
                           </div>
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            selectedProject.status === 'pending' 
-                              ? 'bg-yellow-500/20 text-yellow-400' 
-                              : 'bg-green-500/20 text-green-400'
-                          }`}>
-                            {selectedProject.status === 'pending' ? 'Pendente' : 'Enviado'}
+                          <span className="px-2 py-1 rounded-full text-xs bg-gray-500/20 text-gray-400">
+                            Não enviado
                           </span>
                         </div>
                         <div className="flex gap-2">
-                          {selectedProject.status === 'pending' ? (
-                            <button 
-                              onClick={() => addNotification({ type: 'warning', title: 'Pendente', message: 'Solicite ao cliente o envio do CRLV' })}
-                              className="flex-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 py-2 rounded-lg text-sm font-medium transition-colors"
-                            >
-                              <i className="ri-alert-line mr-1"></i> Solicitar
-                            </button>
-                          ) : (
-                            <>
-                              <button 
-                                onClick={() => addNotification({ type: 'info', title: 'CRLV', message: 'Documento disponível para visualização' })}
-                                className="flex-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 py-2 rounded-lg text-sm font-medium transition-colors"
-                              >
-                                <i className="ri-eye-line mr-1"></i> Visualizar
-                              </button>
-                              <button 
-                                onClick={() => addNotification({ type: 'success', title: 'Download', message: 'CRLV baixado com sucesso!' })}
-                                className="px-3 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg text-sm transition-colors"
-                                title="Baixar CRLV"
-                                aria-label="Baixar CRLV"
-                              >
-                                <i className="ri-download-line"></i>
-                              </button>
-                            </>
-                          )}
+                          <button 
+                            onClick={() => addNotification({ type: 'info', title: 'Documento pendente', message: 'Solicite ao cliente o envio do CRLV via chat ou WhatsApp' })}
+                            className="flex-1 bg-gray-500/20 hover:bg-gray-500/30 text-gray-400 py-2 rounded-lg text-sm font-medium transition-colors"
+                          >
+                            <i className="ri-upload-line mr-1"></i> Solicitar ao Cliente
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -2369,13 +2315,6 @@ ${loginUrl}
                           WhatsApp
                         </button>
                         <button 
-                          onClick={() => window.open(`tel:${selectedProject.user.phone}`, '_blank')}
-                          className="flex items-center gap-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                        >
-                          <i className="ri-phone-line"></i>
-                          Ligar
-                        </button>
-                        <button 
                           onClick={() => window.open(`mailto:${selectedProject.user.email}`, '_blank')}
                           className="flex items-center gap-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                         >
@@ -2389,21 +2328,21 @@ ${loginUrl}
                   {/* Quick Actions */}
                   <div className="mt-6 flex gap-3">
                     <button 
-                      onClick={() => setActiveTab('timeline')}
+                      onClick={() => handleSetActiveTab('timeline')}
                       className="flex-1 bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
                     >
                       <Clock className="w-4 h-4" />
                       Ver Timeline
                     </button>
                     <button 
-                      onClick={() => setActiveTab('photos')}
+                      onClick={() => handleSetActiveTab('photos')}
                       className="flex-1 bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
                     >
                       <Image className="w-4 h-4" />
                       Ver Fotos
                     </button>
                     <button 
-                      onClick={() => setActiveTab('laudo')}
+                      onClick={() => handleSetActiveTab('laudo')}
                       className="flex-1 bg-primary text-black px-4 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
                     >
                       <FileText className="w-4 h-4" />
@@ -2503,11 +2442,11 @@ ${loginUrl}
                   <div>
                     <label className="block text-xs text-gray-400 mb-1">Status</label>
                     <select
+                      title="Filtrar tickets por status"
+                      aria-label="Filtrar tickets por status"
                       value={ticketFilterStatus}
                       onChange={(e) => setTicketFilterStatus(e.target.value)}
                       className="w-full bg-white/10 border border-white/10 rounded-xl px-3 py-2 text-sm focus:border-primary focus:outline-none"
-                      title="Filtrar por status do ticket"
-                      aria-label="Status do ticket"
                     >
                       <option value="all">Todos</option>
                       <option value="open">Abertos</option>
@@ -2520,11 +2459,11 @@ ${loginUrl}
                   <div>
                     <label className="block text-xs text-gray-400 mb-1">Mês</label>
                     <select
+                      title="Filtrar tickets por mês"
+                      aria-label="Filtrar tickets por mês"
                       value={ticketFilterMonth}
                       onChange={(e) => setTicketFilterMonth(e.target.value)}
                       className="w-full bg-white/10 border border-white/10 rounded-xl px-3 py-2 text-sm focus:border-primary focus:outline-none"
-                      title="Filtrar por mês de criação"
-                      aria-label="Mês do ticket"
                     >
                       <option value="all">Todos os meses</option>
                       <option value="1">Janeiro</option>
@@ -2546,11 +2485,11 @@ ${loginUrl}
                   <div>
                     <label className="block text-xs text-gray-400 mb-1">Cliente</label>
                     <select
+                      title="Filtrar tickets por cliente"
+                      aria-label="Filtrar tickets por cliente"
                       value={ticketFilterClient}
                       onChange={(e) => setTicketFilterClient(e.target.value)}
                       className="w-full bg-white/10 border border-white/10 rounded-xl px-3 py-2 text-sm focus:border-primary focus:outline-none"
-                      title="Filtrar por cliente"
-                      aria-label="Cliente do ticket"
                     >
                       <option value="all">Todos os clientes</option>
                       {[...new Set(tickets.map(t => t.clientName))].map(client => (
@@ -2678,10 +2617,11 @@ ${loginUrl}
                   </span>
                   {/* Filtro de Status */}
                   <select
+                    title="Filtrar orçamentos por status"
+                    aria-label="Filtrar orçamentos por status"
                     value={quoteFilterStatus}
                     onChange={(e) => setQuoteFilterStatus(e.target.value)}
                     className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white"
-                    title="Filtrar por status"
                   >
                     <option value="all">Todos os Status</option>
                     <option value="pending">Pendentes</option>
@@ -2833,7 +2773,7 @@ ${loginUrl}
                               onClick={(e) => {
                                 e.stopPropagation()
                                 addNotification({ type: 'success', title: 'Iniciar Projeto', message: 'Redirecionando para criar projeto...' })
-                                setActiveTab('dashboard')
+                                handleSetActiveTab('dashboard')
                                 setShowNewCarModal(true)
                               }}
                             >
@@ -2859,7 +2799,7 @@ ${loginUrl}
               </p>
               <div className="flex space-x-4">
                 <button
-                  onClick={() => setActiveTab('dashboard')}
+                  onClick={() => handleSetActiveTab('dashboard')}
                   className="bg-white/10 text-white px-6 py-3 rounded-xl font-semibold"
                 >
                   Ver Projetos
@@ -2897,11 +2837,12 @@ ${loginUrl}
           <div className="grid md:grid-cols-2 gap-4 mb-6">
             <div>
               <label className="block text-sm text-gray-400 mb-2">Nível de Proteção</label>
-              <select 
+              <select
+                title="Nível de proteção"
+                aria-label="Selecionar nível de proteção" 
                 value={laudoData.level} 
                 onChange={(e) => setLaudoData({...laudoData, level: e.target.value})}
                 className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
-                title="Nível de proteção"
               >
                 <option value="II">II</option>
                 <option value="IIIA">IIIA</option>
@@ -3151,11 +3092,12 @@ ${loginUrl}
                 </div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">Tipo de Veículo</label>
-                  <select 
+                  <select
+                    title="Tipo de veículo"
+                    aria-label="Selecionar tipo de veículo" 
                     value={newCarData.vehicleType}
                     onChange={(e) => setNewCarData({...newCarData, vehicleType: e.target.value})}
                     className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
-                    title="Tipo do veículo"
                   >
                     <option value="SUV">SUV</option>
                     <option value="Sedan">Sedan</option>
@@ -3176,11 +3118,12 @@ ${loginUrl}
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">Linha de Blindagem</label>
-                  <select 
+                  <select
+                    title="Linha de blindagem"
+                    aria-label="Selecionar linha de blindagem" 
                     value={newCarData.blindingLine}
                     onChange={(e) => setNewCarData({...newCarData, blindingLine: e.target.value})}
                     className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
-                    title="Linha de blindagem"
                   >
                     <option value="UltraLite Armor™">UltraLite Armor™ (Premium)</option>
                     <option value="SafeCore™">SafeCore™ (Smart Balance)</option>
@@ -3188,11 +3131,12 @@ ${loginUrl}
                 </div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">Nível de Proteção</label>
-                  <select 
+                  <select
+                    title="Nível de proteção"
+                    aria-label="Selecionar nível de proteção" 
                     value={newCarData.protectionLevel}
                     onChange={(e) => setNewCarData({...newCarData, protectionLevel: e.target.value})}
                     className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
-                    title="Nível de proteção"
                   >
                     <option value="NIJ III-A">NIJ III-A</option>
                     <option value="NIJ III">NIJ III</option>
@@ -3200,11 +3144,12 @@ ${loginUrl}
                 </div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">Uso</label>
-                  <select 
+                  <select
+                    title="Uso"
+                    aria-label="Selecionar tipo de uso" 
                     value={newCarData.usageType}
                     onChange={(e) => setNewCarData({...newCarData, usageType: e.target.value})}
                     className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
-                    title="Tipo de uso"
                   >
                     <option value="Executivo">Executivo</option>
                     <option value="Civil">Civil</option>
@@ -3212,11 +3157,12 @@ ${loginUrl}
                 </div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">Fabricante Vidros</label>
-                  <select 
+                  <select
+                    title="Fabricante de vidros"
+                    aria-label="Selecionar fabricante de vidros" 
                     value={newCarData.glassManufacturer}
                     onChange={(e) => setNewCarData({...newCarData, glassManufacturer: e.target.value})}
                     className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
-                    title="Fabricante dos vidros"
                   >
                     <option value="SafeMax">SafeMax</option>
                     <option value="Argus">Argus</option>
@@ -3257,11 +3203,12 @@ ${loginUrl}
                 </div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">Fabricante Opacos</label>
-                  <select 
+                  <select
+                    title="Fabricante de materiais opacos"
+                    aria-label="Selecionar fabricante de materiais opacos" 
                     value={newCarData.opaqueManufacturer}
                     onChange={(e) => setNewCarData({...newCarData, opaqueManufacturer: e.target.value})}
                     className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
-                    title="Fabricante dos materiais opacos"
                   >
                     <option value="NextOne">NextOne</option>
                     <option value="Tensylon">Tensylon</option>
@@ -3834,6 +3781,45 @@ ${loginUrl}
             </button>
           </div>
 
+          {/* Selecionar Cliente Existente */}
+          <div>
+            <h3 className="font-semibold text-primary mb-3">Selecionar Cliente</h3>
+            <div className="mb-4">
+              <label className="block text-sm text-gray-400 mb-2">Cliente Existente (opcional)</label>
+              <select
+                title="Selecionar cliente existente"
+                aria-label="Selecionar cliente existente" 
+                onChange={(e) => {
+                  const selectedProjectId = e.target.value
+                  if (selectedProjectId) {
+                    const project = globalProjects.find(p => p.id === selectedProjectId)
+                    if (project) {
+                      setNewQuoteData({
+                        ...newQuoteData,
+                        clientName: project.user.name,
+                        clientEmail: project.user.email,
+                        clientPhone: project.user.phone || '',
+                        vehicleBrand: project.vehicle.brand,
+                        vehicleModel: project.vehicle.model,
+                        vehicleYear: project.vehicle.year?.toString() || '',
+                        vehiclePlate: project.vehicle.plate || '',
+                      })
+                      addNotification({ type: 'success', title: 'Cliente Selecionado', message: `Dados de ${project.user.name} carregados automaticamente` })
+                    }
+                  }
+                }}
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+              >
+                <option value="" className="bg-gray-800">-- Selecione um cliente existente ou preencha manualmente --</option>
+                {globalProjects.map(p => (
+                  <option key={p.id} value={p.id} className="bg-gray-800">
+                    {p.user.name} - {p.vehicle.brand} {p.vehicle.model} ({p.vehicle.plate})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           {/* Dados do Cliente */}
           <div>
             <h3 className="font-semibold text-primary mb-3">Dados do Cliente</h3>
@@ -3924,11 +3910,12 @@ ${loginUrl}
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm text-gray-400 mb-2">Tipo de Serviço</label>
-                <select 
+                <select
+                  title="Tipo de serviço"
+                  aria-label="Selecionar tipo de serviço" 
                   value={newQuoteData.serviceType}
                   onChange={(e) => setNewQuoteData({...newQuoteData, serviceType: e.target.value as typeof newQuoteData.serviceType})}
                   className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
-                  title="Tipo de serviço"
                 >
                   <option value="new-blinding">Nova Blindagem</option>
                   <option value="glass-replacement">Troca de Vidro</option>
@@ -3940,11 +3927,12 @@ ${loginUrl}
               </div>
               <div>
                 <label className="block text-sm text-gray-400 mb-2">Nível de Blindagem</label>
-                <select 
+                <select
+                  title="Nível de blindagem"
+                  aria-label="Selecionar nível de blindagem" 
                   value={newQuoteData.blindingLevel}
                   onChange={(e) => setNewQuoteData({...newQuoteData, blindingLevel: e.target.value})}
                   className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
-                  title="Nível de blindagem"
                 >
                   <option value="II">Nível II</option>
                   <option value="III-A">Nível III-A</option>
@@ -4476,7 +4464,7 @@ ${loginUrl}
                 onClick={() => {
                   setShowPublicPreview(false)
                   // Navegar para edição do projeto
-                  setActiveTab('timeline')
+                  handleSetActiveTab('timeline')
                 }}
                 className="flex-1 bg-primary hover:bg-primary/90 text-black py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
               >

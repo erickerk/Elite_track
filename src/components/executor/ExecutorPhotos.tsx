@@ -7,6 +7,7 @@ import { cn } from '../../lib/utils'
 import type { Project, TimelineStep } from '../../types'
 import { uploadToStorage } from '../../services/photoUploadService'
 import { saveStepPhoto, getStepPhotos, subscribeToProjectPhotos } from '../../services/realtimeSync'
+import { useProjects } from '../../contexts/ProjectContext'
 
 interface ExecutorPhotosProps {
   project: Project
@@ -80,6 +81,7 @@ const photoCategories = [
 ]
 
 export function ExecutorPhotos({ project, onUploadPhoto }: ExecutorPhotosProps) {
+  const { refreshProjects } = useProjects()
   const [selectedStep, setSelectedStep] = useState<TimelineStep | null>(null)
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [photoDescription, setPhotoDescription] = useState('')
@@ -153,6 +155,9 @@ export function ExecutorPhotos({ project, onUploadPhoto }: ExecutorPhotosProps) 
             photoDescription,
             'executor'
           )
+          
+          // Forçar atualização imediata dos projetos para exibir a foto sem F5
+          await refreshProjects()
           
           // Também chamar o callback original para atualização local
           onUploadPhoto(selectedStep.id, photoCategory, photoDescription)

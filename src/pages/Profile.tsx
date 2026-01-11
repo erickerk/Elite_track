@@ -439,9 +439,9 @@ export function Profile() {
                       <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center"><i className="ri-phone-line text-primary text-xl"></i></div>
                       <div><div className="font-semibold">0800 765 4321</div><div className="text-sm text-gray-400">Ligação gratuita</div></div>
                     </a>
-                    <a href="https://wa.me/5511999999999" target="_blank" rel="noopener noreferrer" className="p-4 bg-white/5 hover:bg-white/10 rounded-xl flex items-center space-x-4 transition-colors">
+                    <a href="https://wa.me/5511913123071" target="_blank" rel="noopener noreferrer" className="p-4 bg-white/5 hover:bg-white/10 rounded-xl flex items-center space-x-4 transition-colors">
                       <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center"><i className="ri-whatsapp-line text-green-400 text-xl"></i></div>
-                      <div><div className="font-semibold">WhatsApp</div><div className="text-sm text-gray-400">(11) 99999-9999</div></div>
+                      <div><div className="font-semibold">WhatsApp</div><div className="text-sm text-gray-400">(11) 9.1312-3071</div></div>
                     </a>
                     <a href="mailto:suporte@eliteblindagens.com.br" className="p-4 bg-white/5 hover:bg-white/10 rounded-xl flex items-center space-x-4 transition-colors">
                       <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center"><i className="ri-mail-line text-blue-400 text-xl"></i></div>

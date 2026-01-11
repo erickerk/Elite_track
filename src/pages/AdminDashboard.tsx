@@ -1379,7 +1379,7 @@ export function AdminDashboard() {
                           <span className="text-sm text-yellow-400">⏳ Aguardando aprovação do cliente</span>
                           <button
                             onClick={() => {
-                              const phone = '11999999999'
+                              const phone = '11913123071'
                               const msg = `Olá ${quote.clientName}! Verificamos que seu orçamento de blindagem ainda está pendente. Valor: ${quote.estimatedPrice}. Posso ajudar com alguma dúvida?`
                               window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(msg)}`, '_blank')
                             }}

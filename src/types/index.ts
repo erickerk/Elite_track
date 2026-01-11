@@ -34,6 +34,13 @@ export interface Vehicle {
   blindingLevel: string
 }
 
+export interface StepPhoto {
+  url: string
+  type: 'before' | 'during' | 'after' | 'detail' | 'details' | 'material'
+  stage: string
+  createdAt?: string
+}
+
 export interface TimelineStep {
   id: string
   title: string
@@ -43,6 +50,7 @@ export interface TimelineStep {
   estimatedDate?: string
   technician?: string
   photos: string[]
+  photoDetails?: StepPhoto[]
   notes?: string
 }
 

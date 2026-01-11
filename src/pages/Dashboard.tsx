@@ -35,9 +35,9 @@ export function Dashboard() {
 
   // Informações de contato da empresa
   const companyInfo = {
-    whatsapp: '5511999999999',
-    phone: '(11) 3333-4444',
-    whatsappDisplay: '(11) 99999-9999',
+    whatsapp: '5511913123071',
+    phone: '(11) 9.1312-3071',
+    whatsappDisplay: '(11) 9.1312-3071',
     name: 'Elite Blindagens'
   }
 
