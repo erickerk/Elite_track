@@ -6,25 +6,21 @@
  */
 
 import { useState } from 'react'
-import { 
-  Shield, CheckCircle, Clock, Car, Calendar, Download, QrCode,
-  ChevronDown, ChevronUp, Camera, User, FileText, Award, Settings,
-  Layers, Eye, AlertTriangle, Wrench, Phone
-} from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { 
-  LAUDO_TEXTOS, 
-  LINHAS_BLINDAGEM, 
-  NIVEIS_PROTECAO,
-  ETAPAS_PROCESSO,
-  TESTES_VERIFICACOES,
-  GARANTIAS_PADRAO,
-  ESPECIFICACOES_TECNICAS,
-  CORES_LAUDO,
-  gerarDadosLaudo,
-  type DadosLaudo
-} from '../../config/eliteshield-laudo-template'
+  Shield, User, FileText, CheckCircle, Clock, 
+  Camera, Eye, Layers, Settings, QrCode, ChevronDown, ChevronUp,
+  Car, Download
+} from 'lucide-react'
 import type { Project } from '../../types'
+import { 
+  gerarDadosLaudo,
+  LAUDO_TEXTOS, 
+  LINHAS_BLINDAGEM,
+  ESPECIFICACOES_TECNICAS,
+  GARANTIAS_PADRAO,
+  TESTES_VERIFICACOES
+} from '../../config/eliteshield-laudo-template'
 
 interface EliteShieldLaudoProps {
   project: Project
@@ -60,10 +56,22 @@ export function EliteShieldLaudo({
       {/* TELA 1 - CAPA DO ELITESHIELD */}
       {/* ================================================================ */}
       <section className="relative p-6 border-b border-[#D4AF37]/30">
-        {/* Logo e Header */}
+        {/* Logo Elite Blindagens */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-[#D4AF37] to-[#F4D03F] rounded-2xl flex items-center justify-center">
-            <Shield className="w-10 h-10 text-black" />
+          <div className="w-24 h-24 mx-auto mb-4">
+            <img 
+              src="/src/assets/logo-elite.png" 
+              alt="Elite Blindagens Logo"
+              className="w-full h-full object-contain"
+              onError={(e) => {
+                // Fallback para ícone se imagem não carregar
+                e.currentTarget.style.display = 'none'
+                e.currentTarget.nextElementSibling?.classList.remove('hidden')
+              }}
+            />
+            <div className="hidden w-20 h-20 mx-auto bg-gradient-to-br from-[#D4AF37] to-[#F4D03F] rounded-2xl flex items-center justify-center">
+              <Shield className="w-10 h-10 text-black" />
+            </div>
           </div>
           <h1 className="text-3xl font-bold text-[#D4AF37] tracking-wider">
             {LAUDO_TEXTOS.titulo}
@@ -77,7 +85,7 @@ export function EliteShieldLaudo({
             <img 
               src={dados.fotos.veiculo} 
               alt={`${dados.veiculo.marca} ${dados.veiculo.modelo}`}
-              className="w-full h-48 object-cover"
+              className="w-full h-40 object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
             <div className="absolute bottom-4 left-4">
@@ -294,13 +302,13 @@ export function EliteShieldLaudo({
           "mt-4 transition-all",
           expandedSection === 'fotos' || !compact ? 'block' : 'hidden'
         )}>
-          {/* Grid de Fotos por Etapa */}
-          {project.timeline?.filter(step => step.photos && step.photos.length > 0).map((step, idx) => (
+          {/* Grid de Fotos por Etapa - Padrão Uniforme */}
+          {project.timeline?.filter(step => step.photos && step.photos.length > 0).map((step) => (
             <div key={step.id} className="mb-4">
               <h4 className="text-sm text-[#D4AF37] mb-2">{step.title}</h4>
-              <div className="grid grid-cols-2 gap-2">
-                {step.photos?.slice(0, 4).map((photo, photoIdx) => (
-                  <div key={photoIdx} className="relative aspect-video rounded-lg overflow-hidden border border-[#D4AF37]/20">
+              <div className="grid grid-cols-3 gap-2">
+                {step.photos?.slice(0, 6).map((photo, photoIdx) => (
+                  <div key={photoIdx} className="relative aspect-square rounded-lg overflow-hidden border border-[#D4AF37]/20">
                     <img src={photo} alt={`${step.title} - Foto ${photoIdx + 1}`} className="w-full h-full object-cover" />
                     <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-2 py-1">
                       <p className="text-xs text-gray-300 truncate">{step.title}</p>
@@ -419,7 +427,7 @@ export function EliteShieldLaudo({
       {/* ================================================================ */}
       <section className="p-6 border-b border-[#D4AF37]/30">
         <SectionHeader 
-          icon={Award} 
+          icon={User} 
           title="Responsáveis Técnicos" 
           expanded={expandedSection === 'responsaveis'}
           onToggle={() => toggleSection('responsaveis')}
@@ -433,18 +441,12 @@ export function EliteShieldLaudo({
             <p className="text-sm text-gray-400 mb-1">Responsável Técnico</p>
             <p className="font-semibold">{dados.responsaveis.tecnico.nome}</p>
             <p className="text-xs text-gray-500">{dados.responsaveis.tecnico.cargo}</p>
-            <div className="mt-3 h-12 border border-dashed border-[#D4AF37]/30 rounded flex items-center justify-center text-gray-500 text-sm">
-              [ Assinatura Digital ]
-            </div>
           </div>
 
           <div className="p-4 bg-white/5 rounded-xl border border-[#D4AF37]/20">
             <p className="text-sm text-gray-400 mb-1">Supervisor Técnico</p>
             <p className="font-semibold">{dados.responsaveis.supervisor.nome}</p>
             <p className="text-xs text-gray-500">{dados.responsaveis.supervisor.cargo}</p>
-            <div className="mt-3 h-12 border border-dashed border-[#D4AF37]/30 rounded flex items-center justify-center text-gray-500 text-sm">
-              [ Assinatura Digital ]
-            </div>
           </div>
         </div>
       </section>

@@ -11,6 +11,7 @@ import { Download, ArrowLeft, Shield } from 'lucide-react'
 import { useProjects } from '../contexts/ProjectContext'
 import { EliteShieldLaudo } from '../components/laudo/EliteShieldLaudo'
 import { useNotifications } from '../contexts/NotificationContext'
+import { generateEliteShieldPDF } from '../utils/pdfGenerator'
 
 export function EliteShield() {
   const navigate = useNavigate()
@@ -19,7 +20,7 @@ export function EliteShield() {
   const project = projects[0]
   const [isExporting, setIsExporting] = useState(false)
 
-  // Função para exportar PDF usando o laudo padrão
+  // Função para exportar PDF completo usando pdfGenerator
   const handleExportPDF = async () => {
     if (!project) {
       addNotification({
@@ -38,17 +39,27 @@ export function EliteShield() {
     })
 
     try {
-      // Aqui você pode implementar a geração de PDF usando jsPDF
-      // Por ora, vamos apenas notificar sucesso
-      setTimeout(() => {
-        addNotification({
-          type: 'success',
-          title: 'PDF Gerado',
-          message: 'Laudo EliteShield gerado com sucesso!'
-        })
-        setIsExporting(false)
-      }, 1500)
+      // Gerar PDF com todas as informações e QR code funcional
+      const pdfBlob = await generateEliteShieldPDF(project)
+      
+      // Download do PDF
+      const url = URL.createObjectURL(pdfBlob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `Laudo_EliteShield_${project.vehicle.plate}_${new Date().getTime()}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+
+      addNotification({
+        type: 'success',
+        title: 'PDF Gerado',
+        message: 'Laudo EliteShield gerado com sucesso!'
+      })
+      setIsExporting(false)
     } catch (error) {
+      console.error('Erro ao gerar PDF:', error)
       addNotification({
         type: 'error',
         title: 'Erro ao gerar PDF',
