@@ -42,10 +42,10 @@ export function EliteShieldLaudo({
     setExpandedSection(expandedSection === section ? null : section)
   }
 
-  // Calcular progresso
-  const etapasCompletas = project.timeline?.filter(s => s.status === 'completed').length || 0
-  const totalEtapas = project.timeline?.length || 7
-  const progresso = Math.round((etapasCompletas / totalEtapas) * 100)
+  // Calcular progresso (não utilizado atualmente)
+  // const etapasCompletas = project.timeline?.filter(s => s.status === 'completed').length || 0
+  // const totalEtapas = project.timeline?.length || 7
+  // const progresso = Math.round((etapasCompletas / totalEtapas) * 100)
 
   // Status do laudo
   const isFinished = project.status === 'completed' || project.status === 'delivered'

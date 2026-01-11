@@ -6,6 +6,25 @@ import { useNotifications } from '../contexts/NotificationContext'
 import { useProjects } from '../contexts/ProjectContext'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import jsPDF from 'jspdf'
+import logoElite from '../assets/logo-elite.png'
+
+// Função para carregar imagem como Data URL
+async function loadImageAsDataURL(src: string): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = img.width
+      canvas.height = img.height
+      const ctx = canvas.getContext('2d')
+      ctx?.drawImage(img, 0, 0)
+      resolve(canvas.toDataURL('image/png'))
+    }
+    img.onerror = () => resolve('')
+    img.src = src
+  })
+}
 
 export function EliteCard() {
   const navigate = useNavigate()
@@ -134,8 +153,15 @@ export function EliteCard() {
     }
   }
 
-  const generatePDF = async (): Promise<Blob> => {
-    const doc = new jsPDF('landscape', 'mm', [85.6, 53.98])
+  const generatePDF = async () => {
+    const doc = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: [85.6, 53.98]
+    })
+    
+    // Carregar logo Elite
+    const logoDataUrl = await loadImageAsDataURL(logoElite)
     
     doc.setFillColor(26, 26, 26)
     doc.rect(0, 0, 85.6, 53.98, 'F')
@@ -143,22 +169,27 @@ export function EliteCard() {
     doc.setFillColor(212, 175, 55)
     doc.rect(0, 0, 85.6, 2, 'F')
     
-    // Logo Elite Blindagens
-    doc.setFillColor(212, 175, 55)
-    doc.roundedRect(4, 6, 12, 12, 1, 1, 'F')
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(16)
-    doc.setTextColor(26, 26, 26)
-    doc.text('E', 8, 14.5)
+    // Logo Elite Blindagens - usar imagem real
+    if (logoDataUrl) {
+      doc.addImage(logoDataUrl, 'PNG', 4, 5, 14, 14)
+    } else {
+      // Fallback: retângulo com E
+      doc.setFillColor(212, 175, 55)
+      doc.roundedRect(4, 6, 12, 12, 1, 1, 'F')
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(16)
+      doc.setTextColor(26, 26, 26)
+      doc.text('E', 8, 14.5)
+    }
     
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(10)
     doc.setTextColor(212, 175, 55)
-    doc.text('ELITE BLINDAGENS', 18, 13)
+    doc.text('ELITE BLINDAGENS', 20, 11)
     
     doc.setFontSize(6)
     doc.setTextColor(150, 150, 150)
-    doc.text('MEMBER CARD', 18, 16)
+    doc.text('MEMBER CARD', 20, 15)
     
     doc.setFontSize(10)
     doc.setTextColor(255, 255, 255)

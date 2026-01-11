@@ -168,37 +168,77 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       if (isTempUser) {
-        // Criar usuário definitivo na tabela users_elitetrack
-        const { data, error } = await (supabase as any)
+        // Verificar se o usuário já existe no banco pelo email
+        const { data: existingUser, error: checkError } = await (supabase as any)
           .from('users_elitetrack')
-          .insert({
-            name: user.name,
-            email: user.email.toLowerCase().trim(),
-            phone: user.phone || null,
-            role: 'client',
-            password_hash: newPassword,
-            created_by: null,
-            is_active: true,
-          })
-          .select()
-          .single()
+          .select('id, name, email, phone, role')
+          .eq('email', user.email.toLowerCase().trim())
+          .maybeSingle()
 
-        if (error) {
-          console.error('[Auth] Erro ao criar usuário definitivo para cliente:', error)
-          throw new Error('Erro ao salvar nova senha do cliente')
+        if (checkError) {
+          console.error('[Auth] Erro ao verificar usuário existente:', checkError)
         }
 
-        const persistedUser: User = {
-          id: (data as any).id,
-          name: (data as any).name,
-          email: (data as any).email,
-          phone: (data as any).phone || '',
-          role: (data as any).role === 'super_admin' ? 'admin' : (data as any).role,
+        let persistedUser: User
+
+        if (existingUser) {
+          // Usuário já existe - fazer UPDATE da senha
+          console.log('[Auth] Usuário já existe, atualizando senha:', existingUser.email)
+          const { error: updateError } = await (supabase as any)
+            .from('users_elitetrack')
+            .update({ 
+              password_hash: newPassword, 
+              updated_at: new Date().toISOString(),
+              is_active: true 
+            })
+            .eq('id', existingUser.id)
+
+          if (updateError) {
+            console.error('[Auth] Erro ao atualizar senha do cliente existente:', updateError)
+            throw new Error('Erro ao atualizar senha do cliente')
+          }
+
+          persistedUser = {
+            id: existingUser.id,
+            name: existingUser.name,
+            email: existingUser.email,
+            phone: existingUser.phone || '',
+            role: existingUser.role === 'super_admin' ? 'admin' : existingUser.role,
+          }
+          console.log('[Auth] ✓ Senha atualizada para cliente existente:', persistedUser.email)
+        } else {
+          // Usuário não existe - criar novo
+          const { data, error } = await (supabase as any)
+            .from('users_elitetrack')
+            .insert({
+              name: user.name,
+              email: user.email.toLowerCase().trim(),
+              phone: user.phone || null,
+              role: 'client',
+              password_hash: newPassword,
+              created_by: null,
+              is_active: true,
+            })
+            .select()
+            .single()
+
+          if (error) {
+            console.error('[Auth] Erro ao criar usuário definitivo para cliente:', error)
+            throw new Error('Erro ao salvar nova senha do cliente')
+          }
+
+          persistedUser = {
+            id: (data as any).id,
+            name: (data as any).name,
+            email: (data as any).email,
+            phone: (data as any).phone || '',
+            role: (data as any).role === 'super_admin' ? 'admin' : (data as any).role,
+          }
+          console.log('[Auth] ✓ Cliente criado a partir de senha temporária:', persistedUser.email)
         }
 
         setUser(persistedUser)
         localStorage.setItem('elite-user', JSON.stringify(persistedUser))
-        console.log('[Auth] ✓ Cliente criado a partir de senha temporária:', persistedUser.email)
       } else {
         // Usuário já existente (executor, admin ou client já persistido)
         const { error } = await (supabase as any)

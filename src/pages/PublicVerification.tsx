@@ -14,12 +14,10 @@ import { useAuth } from '../contexts/AuthContext'
 import { useProjects } from '../contexts/ProjectContext'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import type { Project, Vehicle, TimelineStep } from '../types'
-import { COMPANY_INFO } from '../constants/companyInfo'
 import { EliteShieldLaudo } from '../components/laudo/EliteShieldLaudo'
 import { 
   LAUDO_TEXTOS, 
   GARANTIAS_PADRAO,
-  ESPECIFICACOES_TECNICAS,
   gerarDadosLaudo 
 } from '../config/eliteshield-laudo-template'
 
@@ -231,7 +229,7 @@ export function PublicVerification() {
 
       let row = 0
       let col = 0
-      vehicleData.forEach(([label, value], idx) => {
+      vehicleData.forEach(([label, value]) => {
         const x = margin + 5 + (col * 90)
         const y = yPos + 10 + (row * 14)
         pdf.setTextColor(...grayColor)

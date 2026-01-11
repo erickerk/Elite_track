@@ -4,6 +4,7 @@ import { cn } from '../lib/utils'
 import { useAuth } from '../contexts/AuthContext'
 import { useNotifications } from '../contexts/NotificationContext'
 import { useProjects } from '../contexts/ProjectContext'
+import { supabase } from '../lib/supabase'
 
 type TabType = 'personal' | 'security' | 'notifications' | 'vehicle' | 'support' | 'privacy'
 
@@ -87,10 +88,47 @@ export function Profile() {
     addNotification({ type, title: type === 'success' ? 'Sucesso' : 'Informação', message })
   }
 
-  const savePersonalData = () => {
-    if (updateUser) updateUser({ ...user, name: personalData.name, email: personalData.email, phone: personalData.phone })
-    showNotification('Dados pessoais salvos com sucesso!', 'success')
-    setHasUnsavedChanges(false)
+  const savePersonalData = async () => {
+    if (!user) return
+
+    try {
+      // Salvar todos os campos no Supabase
+      const { error } = await (supabase as any)
+        .from('users_elitetrack')
+        .update({
+          name: personalData.name,
+          email: personalData.email.toLowerCase().trim(),
+          phone: personalData.phone,
+          cpf: personalData.cpf,
+          rg: personalData.rg,
+          profession: personalData.profession,
+          address: personalData.address,
+          address_number: personalData.number,
+          address_complement: personalData.complement,
+          neighborhood: personalData.neighborhood,
+          city: personalData.city,
+          cep: personalData.cep,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id)
+
+      if (error) {
+        console.error('[Profile] Erro ao salvar dados:', error)
+        showNotification('Erro ao salvar dados no servidor', 'error')
+        return
+      }
+
+      // Atualizar estado local
+      if (updateUser) {
+        updateUser({ ...user, name: personalData.name, email: personalData.email, phone: personalData.phone })
+      }
+      
+      showNotification('Dados pessoais salvos com sucesso!', 'success')
+      setHasUnsavedChanges(false)
+    } catch (err) {
+      console.error('[Profile] Erro ao salvar:', err)
+      showNotification('Erro ao salvar dados', 'error')
+    }
   }
 
   const handleLogout = () => { logout(); navigate('/login') }
@@ -276,10 +314,10 @@ export function Profile() {
                   <div className="space-y-4">
                     <div><label className="block text-sm font-medium text-gray-400 mb-2">Nome Completo</label><input type="text" value={personalData.name} onChange={(e) => { setPersonalData({...personalData, name: e.target.value}); setHasUnsavedChanges(true); }} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-primary/50" title="Nome completo" placeholder="Seu nome completo" /></div>
                     <div className="grid grid-cols-2 gap-4">
-                      <div><label className="block text-sm font-medium text-gray-400 mb-2">CPF</label><input type="text" value={personalData.cpf} readOnly className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white/60 text-sm" title="CPF" placeholder="000.000.000-00" /></div>
-                      <div><label className="block text-sm font-medium text-gray-400 mb-2">RG</label><input type="text" value={personalData.rg} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm" title="RG" placeholder="00.000.000-0" /></div>
+                      <div><label className="block text-sm font-medium text-gray-400 mb-2">CPF</label><input type="text" value={personalData.cpf} onChange={(e) => { setPersonalData({...personalData, cpf: e.target.value}); setHasUnsavedChanges(true); }} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-primary/50" title="CPF" placeholder="000.000.000-00" /></div>
+                      <div><label className="block text-sm font-medium text-gray-400 mb-2">RG</label><input type="text" value={personalData.rg} onChange={(e) => { setPersonalData({...personalData, rg: e.target.value}); setHasUnsavedChanges(true); }} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-primary/50" title="RG" placeholder="00.000.000-0" /></div>
                     </div>
-                    <div><label className="block text-sm font-medium text-gray-400 mb-2">Profissão</label><input type="text" value={personalData.profession} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm" title="Profissão" placeholder="Sua profissão" /></div>
+                    <div><label className="block text-sm font-medium text-gray-400 mb-2">Profissão</label><input type="text" value={personalData.profession} onChange={(e) => { setPersonalData({...personalData, profession: e.target.value}); setHasUnsavedChanges(true); }} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-primary/50" title="Profissão" placeholder="Sua profissão" /></div>
                   </div>
                 </div>
                 <div className="glass-effect cinematic-blur rounded-3xl p-6 profile-section">

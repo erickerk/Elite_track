@@ -35,7 +35,7 @@ export async function createNotification(
   }
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('notifications')
       .insert({
         user_id: userId,
@@ -48,7 +48,7 @@ export async function createNotification(
       .single()
 
     if (error) throw error
-    return data
+    return data as PersistentNotification
   } catch (error) {
     console.error('[NotificationService] Erro ao criar notificação:', error)
     return null
@@ -68,7 +68,7 @@ export async function getUserNotifications(
   }
 
   try {
-    let query = supabase
+    let query = (supabase as any)
       .from('notifications')
       .select('*')
       .eq('user_id', userId)
@@ -95,7 +95,7 @@ export async function markAsRead(notificationId: string): Promise<boolean> {
   if (!isSupabaseConfigured()) return false
 
   try {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('notifications')
       .update({ read: true, updated_at: new Date().toISOString() })
       .eq('id', notificationId)
@@ -115,7 +115,7 @@ export async function markAllAsRead(userId: string): Promise<boolean> {
   if (!isSupabaseConfigured()) return false
 
   try {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('notifications')
       .update({ read: true, updated_at: new Date().toISOString() })
       .eq('user_id', userId)
@@ -136,7 +136,7 @@ export async function deleteNotification(notificationId: string): Promise<boolea
   if (!isSupabaseConfigured()) return false
 
   try {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('notifications')
       .delete()
       .eq('id', notificationId)
@@ -158,7 +158,7 @@ export function subscribeToNotifications(
 ): (() => void) | null {
   if (!isSupabaseConfigured()) return null
 
-  const channel = supabase
+  const channel = (supabase as any)
     .channel(`notifications:${userId}`)
     .on(
       'postgres_changes',
@@ -168,7 +168,7 @@ export function subscribeToNotifications(
         table: 'notifications',
         filter: `user_id=eq.${userId}`
       },
-      (payload) => {
+      (payload: any) => {
         callback(payload.new as PersistentNotification)
       }
     )
@@ -202,7 +202,7 @@ export async function notifyMultipleUsers(
       read: false
     }))
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('notifications')
       .insert(notifications)
       .select()
@@ -225,7 +225,7 @@ export async function cleanOldNotifications(userId: string): Promise<number> {
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('notifications')
       .delete()
       .eq('user_id', userId)

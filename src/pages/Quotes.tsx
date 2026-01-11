@@ -18,7 +18,6 @@ interface QuoteOption {
   name: string
   description: string
   features: string[]
-  priceRange: string
   estimatedDays: number
   popular?: boolean
 }
@@ -28,7 +27,6 @@ interface ServiceOption {
   name: string
   description: string
   icon: string
-  priceRange: string
   estimatedDays: number
 }
 
@@ -44,13 +42,13 @@ const serviceTypes = [
 
 // Opções de serviços específicos
 const serviceOptions: ServiceOption[] = [
-  { id: 'glass-front', name: 'Vidro Dianteiro (Para-brisa)', description: 'Substituição do para-brisa blindado', icon: '🪟', priceRange: 'R$ 8.000 - R$ 15.000', estimatedDays: 3 },
-  { id: 'glass-side', name: 'Vidro Lateral', description: 'Substituição de vidro lateral blindado', icon: '🪟', priceRange: 'R$ 4.000 - R$ 8.000', estimatedDays: 2 },
-  { id: 'glass-rear', name: 'Vidro Traseiro', description: 'Substituição do vidro traseiro blindado', icon: '🪟', priceRange: 'R$ 6.000 - R$ 12.000', estimatedDays: 3 },
-  { id: 'door-front', name: 'Porta Dianteira', description: 'Substituição de porta dianteira blindada', icon: '🚪', priceRange: 'R$ 12.000 - R$ 25.000', estimatedDays: 5 },
-  { id: 'door-rear', name: 'Porta Traseira', description: 'Substituição de porta traseira blindada', icon: '🚪', priceRange: 'R$ 10.000 - R$ 20.000', estimatedDays: 5 },
-  { id: 'maintenance-general', name: 'Manutenção Geral', description: 'Ajustes e reparos diversos', icon: '🔧', priceRange: 'R$ 500 - R$ 3.000', estimatedDays: 1 },
-  { id: 'revision-annual', name: 'Revisão Anual', description: 'Verificação completa da blindagem', icon: '🔍', priceRange: 'R$ 800 - R$ 1.500', estimatedDays: 1 },
+  { id: 'glass-front', name: 'Vidro Dianteiro (Para-brisa)', description: 'Substituição do para-brisa blindado', icon: '🪟', estimatedDays: 3 },
+  { id: 'glass-side', name: 'Vidro Lateral', description: 'Substituição de vidro lateral blindado', icon: '🪟', estimatedDays: 2 },
+  { id: 'glass-rear', name: 'Vidro Traseiro', description: 'Substituição do vidro traseiro blindado', icon: '🪟', estimatedDays: 3 },
+  { id: 'door-front', name: 'Porta Dianteira', description: 'Substituição de porta dianteira blindada', icon: '🚪', estimatedDays: 5 },
+  { id: 'door-rear', name: 'Porta Traseira', description: 'Substituição de porta traseira blindada', icon: '🚪', estimatedDays: 5 },
+  { id: 'maintenance-general', name: 'Manutenção Geral', description: 'Ajustes e reparos diversos', icon: '🔧', estimatedDays: 1 },
+  { id: 'revision-annual', name: 'Revisão Anual', description: 'Verificação completa da blindagem', icon: '🔍', estimatedDays: 1 },
 ]
 
 const blindingOptions: QuoteOption[] = [
@@ -60,7 +58,6 @@ const blindingOptions: QuoteOption[] = [
     name: 'Proteção Básica',
     description: 'Ideal para uso urbano e proteção contra armas de baixo calibre.',
     features: ['Vidros 15mm', 'Manta parcial', 'Garantia 3 anos', 'Certificação ABNT'],
-    priceRange: 'R$ 45.000 - R$ 65.000',
     estimatedDays: 15,
   },
   {
@@ -69,7 +66,6 @@ const blindingOptions: QuoteOption[] = [
     name: 'Proteção Avançada',
     description: 'Proteção completa contra armas de médio calibre. Mais vendido.',
     features: ['Vidros 21mm', 'Manta completa', 'Garantia 5 anos', 'Certificação ABNT', 'Overlap reforçado'],
-    priceRange: 'R$ 80.000 - R$ 120.000',
     estimatedDays: 20,
     popular: true,
   },
@@ -79,7 +75,6 @@ const blindingOptions: QuoteOption[] = [
     name: 'Proteção Máxima',
     description: 'Proteção contra armas de grosso calibre e rifles.',
     features: ['Vidros 32mm', 'Manta reforçada', 'Garantia 7 anos', 'Certificação internacional', 'Blindagem de piso', 'Run-flat'],
-    priceRange: 'R$ 150.000 - R$ 250.000',
     estimatedDays: 30,
   },
 ]
@@ -278,10 +273,7 @@ export function Quotes() {
                     </div>
                     <div className="text-sm text-gray-400">
                       <p>Nível: {quote.blindingLevel} • {new Date(quote.createdAt).toLocaleDateString('pt-BR')}</p>
-                      {quote.estimatedPrice && (
-                        <p className="text-primary mt-1 font-semibold">Valor: {quote.estimatedPrice}</p>
-                      )}
-                      {quote.estimatedDays && (
+                                            {quote.estimatedDays && (
                         <p className="text-gray-500">Prazo: {quote.estimatedDays} dias</p>
                       )}
                     </div>
@@ -730,14 +722,14 @@ export function Quotes() {
               <div className="bg-white/5 rounded-xl p-4 mb-6">
                 {selectedServiceType === 'new-blinding' && selectedOption && (
                   <>
-                    <div className="text-3xl font-bold text-primary mb-1">{selectedOption.priceRange}</div>
-                    <div className="text-sm text-gray-400">Nível {selectedOption.level} - {selectedOption.name}</div>
+                    <div className="text-xl font-bold text-primary mb-1">Nível {selectedOption.level} - {selectedOption.name}</div>
+                    <div className="text-sm text-gray-400">Prazo estimado: {selectedOption.estimatedDays} dias</div>
                   </>
                 )}
                 {selectedServiceType !== 'new-blinding' && selectedServiceType !== 'other' && getSelectedServiceOption() && (
                   <>
-                    <div className="text-3xl font-bold text-primary mb-1">{getSelectedServiceOption()?.priceRange}</div>
-                    <div className="text-sm text-gray-400">{getSelectedServiceOption()?.name}</div>
+                    <div className="text-xl font-bold text-primary mb-1">{getSelectedServiceOption()?.name}</div>
+                    <div className="text-sm text-gray-400">Prazo estimado: {getSelectedServiceOption()?.estimatedDays} dias</div>
                   </>
                 )}
                 {selectedServiceType === 'other' && (
@@ -785,10 +777,10 @@ export function Quotes() {
               </div>
             </div>
 
-            {/* Valor e Prazo */}
+            {/* Prazo */}
             <div className="bg-primary/10 border border-primary/30 rounded-xl p-6 text-center">
-              <div className="text-4xl font-bold text-primary mb-2">{selectedQuoteDetail.estimatedPrice}</div>
-              <div className="text-sm text-gray-400">Prazo estimado: <span className="text-white font-semibold">{selectedQuoteDetail.estimatedDays} dias úteis</span></div>
+              <div className="text-2xl font-bold text-primary mb-2">Prazo estimado</div>
+              <div className="text-3xl font-bold text-white">{selectedQuoteDetail.estimatedDays} dias úteis</div>
             </div>
 
             {/* Observações do Executor */}

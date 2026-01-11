@@ -1,7 +1,41 @@
 import jsPDF from 'jspdf'
+import QRCode from 'qrcode'
 import type { Project } from '../types'
 import { gerarDadosLaudo } from '../config/eliteshield-laudo-template'
 import { COMPANY_INFO } from '../constants/companyInfo'
+import logoElite from '../assets/logo-elite.png'
+
+// Função para gerar QR Code como Data URL
+async function generateQRCodeDataURL(text: string): Promise<string> {
+  try {
+    return await QRCode.toDataURL(text, {
+      width: 150,
+      margin: 1,
+      color: { dark: '#D4AF37', light: '#000000' }
+    })
+  } catch (err) {
+    console.error('Erro ao gerar QR Code:', err)
+    return ''
+  }
+}
+
+// Função para carregar imagem como Data URL
+async function loadImageAsDataURL(src: string): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = img.width
+      canvas.height = img.height
+      const ctx = canvas.getContext('2d')
+      ctx?.drawImage(img, 0, 0)
+      resolve(canvas.toDataURL('image/png'))
+    }
+    img.onerror = () => resolve('')
+    img.src = src
+  })
+}
 
 export async function generateEliteShieldPDF(project: Project): Promise<Blob> {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
@@ -15,13 +49,27 @@ export async function generateEliteShieldPDF(project: Project): Promise<Blob> {
   const black = [0, 0, 0]
   const gray = [128, 128, 128]
 
-  doc.setFillColor(gold[0], gold[1], gold[2])
-  doc.roundedRect(pw/2 - 15, y, 30, 30, 3, 3, 'F')
+  // Gerar QR Code real com URL de verificação
+  const verifyUrl = `${window.location.origin}/verify/${project.id}`
+  const qrCodeDataUrl = await generateQRCodeDataURL(verifyUrl)
+  
+  // Carregar logo Elite
+  const logoDataUrl = await loadImageAsDataURL(logoElite)
+
+  // Logo Elite no topo esquerdo
+  if (logoDataUrl) {
+    doc.addImage(logoDataUrl, 'PNG', m, y, 25, 25)
+  }
+  
+  // Título ao lado do logo
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(20)
-  doc.setTextColor(black[0], black[1], black[2])
-  doc.text('E', pw/2, y + 20, { align: 'center' })
-  y += 40
+  doc.setFontSize(18)
+  doc.setTextColor(gold[0], gold[1], gold[2])
+  doc.text('ELITE BLINDAGENS', m + 30, y + 10)
+  doc.setFontSize(10)
+  doc.setTextColor(gray[0], gray[1], gray[2])
+  doc.text('Excelência em Blindagem Veicular', m + 30, y + 17)
+  y += 35
 
   doc.setFontSize(24)
   doc.setTextColor(gold[0], gold[1], gold[2])
@@ -104,18 +152,29 @@ export async function generateEliteShieldPDF(project: Project): Promise<Blob> {
   y += 20
   const qs = 50
   const qx = (pw - qs) / 2
-  doc.setDrawColor(gold[0], gold[1], gold[2])
-  doc.setLineWidth(2)
-  doc.rect(qx, y, qs, qs)
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(10)
-  doc.setTextColor(black[0], black[1], black[2])
-  doc.text('QR CODE', pw/2, y + qs/2, { align: 'center' })
+  
+  // QR Code REAL gerado pela biblioteca qrcode
+  if (qrCodeDataUrl) {
+    doc.addImage(qrCodeDataUrl, 'PNG', qx, y, qs, qs)
+  } else {
+    // Fallback: desenhar retângulo se QR não carregar
+    doc.setDrawColor(gold[0], gold[1], gold[2])
+    doc.setLineWidth(2)
+    doc.rect(qx, y, qs, qs)
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(10)
+    doc.setTextColor(black[0], black[1], black[2])
+    doc.text('QR CODE', pw/2, y + qs/2, { align: 'center' })
+  }
   y += qs + 10
 
+  // URL de verificação abaixo do QR
   doc.setFontSize(8)
   doc.setTextColor(gold[0], gold[1], gold[2])
-  doc.text(dados.qrCode || project.qrCode || `PRJ-${project.id}`, pw/2, y, { align: 'center' })
+  doc.text(`Verificar: ${verifyUrl}`, pw/2, y, { align: 'center' })
+  y += 5
+  doc.setTextColor(gray[0], gray[1], gray[2])
+  doc.text(`ID: ${project.id}`, pw/2, y, { align: 'center' })
 
   return doc.output('blob')
 }

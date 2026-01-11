@@ -92,7 +92,20 @@ export function AdminDashboard() {
   const { addNotification } = useNotifications()
   const { projects } = useProjects()
   const { quotes, getPendingQuotes } = useQuotes()
-  const { leads } = useLeads()
+  const { leads, clearAllLeads, removeLead } = useLeads()
+  
+  const exportToExcel = () => {
+    const data = leads.map(l => ({
+      Nome: l.name,
+      Email: l.email,
+      Telefone: l.phone,
+      'Quer Especialista': l.wantsSpecialist ? 'Sim' : 'Não',
+      Origem: l.source,
+      Data: new Date(l.createdAt).toLocaleDateString('pt-BR')
+    }))
+    exportToExcelGeneric(data, 'leads')
+    addNotification({ type: 'success', title: 'Exportação', message: `${data.length} leads exportados!` })
+  }
   
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard')
   const [executors, setExecutors] = useState<ExecutorUser[]>([])

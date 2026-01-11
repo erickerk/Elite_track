@@ -9,6 +9,7 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase'
 export interface StepPhoto {
   id?: string
   step_id: string
+  project_id?: string
   photo_url: string
   photo_type: 'before' | 'during' | 'after'
   description?: string

@@ -18,6 +18,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useNotifications } from '../contexts/NotificationContext'
 import { useChat } from '../contexts/ChatContext'
 import { useProjects } from '../contexts/ProjectContext'
+import { supabase } from '../lib/supabase'
 import { useQuotes } from '../contexts/QuoteContext'
 import { cn } from '../lib/utils'
 import type { Project, SupportTicket } from '../types'
@@ -185,7 +186,7 @@ export function ExecutorDashboard() {
   const { user, logout, registerTempPassword } = useAuth()
   const { unreadCount, addNotification } = useNotifications()
   const { totalUnreadCount: chatUnreadCount } = useChat()
-  const { projects: globalProjects, addProject: addGlobalProject, updateProject: updateGlobalProject } = useProjects()
+  const { projects: globalProjects, addProject: addGlobalProject, updateProject: updateGlobalProject, refreshProjects } = useProjects()
   const { quotes, updateQuoteStatus, getPendingQuotes, createQuoteFromExecutor } = useQuotes()
 
   // Persistir tab ativa no localStorage para manter após refresh
@@ -265,6 +266,12 @@ export function ExecutorDashboard() {
     glassThickness: '21mm',
     warranty: '5 anos',
     technicalResponsible: user?.name || '',
+    // Campos reais sincronizados
+    deliveryDate: '',
+    startDate: '',
+    completionDate: '',
+    warrantyExpiration: '',
+    technicalResponsibleRole: 'Engenheiro de Blindagem',
   })
   const [newCarData, setNewCarData] = useState({
     // Cliente
@@ -611,14 +618,67 @@ export function ExecutorDashboard() {
     navigate('/login')
   }
 
-  const handleSaveLaudo = () => {
-    addNotification({
-      type: 'success',
-      title: 'Laudo Salvo',
-      message: 'As informações do laudo foram atualizadas com sucesso.',
-      projectId: selectedProject?.id,
-    })
-    setShowLaudoModal(false)
+  const handleSaveLaudo = async () => {
+    if (!selectedProject) {
+      addNotification({
+        type: 'error',
+        title: 'Erro',
+        message: 'Nenhum projeto selecionado.',
+      })
+      return
+    }
+
+    try {
+      // Salvar no Supabase - tabela projects
+      const { error } = await (supabase as any)
+        .from('projects')
+        .update({
+          laudo_data: {
+            level: laudoData.level,
+            certification: laudoData.certification,
+            certificationNumber: laudoData.certificationNumber,
+            glassType: laudoData.glassType,
+            glassThickness: laudoData.glassThickness,
+            warranty: laudoData.warranty,
+            technicalResponsible: laudoData.technicalResponsible,
+            technicalResponsibleRole: laudoData.technicalResponsibleRole,
+            deliveryDate: laudoData.deliveryDate,
+            startDate: laudoData.startDate,
+            completionDate: laudoData.completionDate,
+            warrantyExpiration: laudoData.warrantyExpiration,
+          },
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', selectedProject.id)
+
+      if (error) {
+        console.error('Erro ao salvar laudo:', error)
+        addNotification({
+          type: 'error',
+          title: 'Erro ao Salvar',
+          message: 'Não foi possível salvar as informações do laudo.',
+        })
+        return
+      }
+
+      // Atualizar projetos localmente
+      await refreshProjects()
+
+      addNotification({
+        type: 'success',
+        title: 'Laudo Salvo',
+        message: 'As informações do laudo foram salvas no banco de dados.',
+        projectId: selectedProject.id,
+      })
+      setShowLaudoModal(false)
+    } catch (err) {
+      console.error('Erro ao salvar laudo:', err)
+      addNotification({
+        type: 'error',
+        title: 'Erro',
+        message: 'Erro inesperado ao salvar o laudo.',
+      })
+    }
   }
 
   const handleCreateNewCar = async () => {
@@ -2905,7 +2965,7 @@ ${loginUrl}
                 placeholder="5 anos"
               />
             </div>
-            <div className="md:col-span-2">
+            <div>
               <label className="block text-sm text-gray-400 mb-2">Responsável Técnico</label>
               <input 
                 type="text" 
@@ -2916,8 +2976,59 @@ ${loginUrl}
                 placeholder="Nome do técnico responsável"
               />
             </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Cargo do Responsável</label>
+              <input 
+                type="text" 
+                value={laudoData.technicalResponsibleRole}
+                onChange={(e) => setLaudoData({...laudoData, technicalResponsibleRole: e.target.value})}
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                title="Cargo do responsável"
+                placeholder="Engenheiro de Blindagem"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Data de Início</label>
+              <input 
+                type="date" 
+                value={laudoData.startDate}
+                onChange={(e) => setLaudoData({...laudoData, startDate: e.target.value})}
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                title="Data de início do serviço"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Data de Conclusão</label>
+              <input 
+                type="date" 
+                value={laudoData.completionDate}
+                onChange={(e) => setLaudoData({...laudoData, completionDate: e.target.value})}
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                title="Data de conclusão do serviço"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Data de Entrega</label>
+              <input 
+                type="date" 
+                value={laudoData.deliveryDate}
+                onChange={(e) => setLaudoData({...laudoData, deliveryDate: e.target.value})}
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                title="Data de entrega ao cliente"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Validade da Garantia</label>
+              <input 
+                type="date" 
+                value={laudoData.warrantyExpiration}
+                onChange={(e) => setLaudoData({...laudoData, warrantyExpiration: e.target.value})}
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                title="Data de expiração da garantia"
+              />
+            </div>
           </div>
-          <div className="flex justify-end space-x-3">
+          <div className="flex justify-end space-x-3 mt-6">
             <button onClick={() => setShowLaudoModal(false)} className="px-6 py-3 bg-white/10 rounded-xl">Cancelar</button>
             <button onClick={handleSaveLaudo} className="px-6 py-3 bg-primary text-black rounded-xl font-semibold flex items-center space-x-2">
               <Save className="w-4 h-4" />
