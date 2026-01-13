@@ -229,7 +229,7 @@ export function ExecutorDashboard() {
   const [showQRScanner, setShowQRScanner] = useState(false)
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [filterStatus, setFilterStatus] = useState<string>('all')
+  const [filterStatus, setFilterStatus] = useState<string>('pending')
   // Filtro "Minhas Atividades" vs "Todas" - por padrão mostra apenas as atribuídas ao executor
   const [viewMode, setViewMode] = useState<'mine' | 'all'>('mine')
   // Mostrar histórico (projetos concluídos) separadamente
@@ -474,11 +474,14 @@ export function ExecutorDashboard() {
     return matchesSearch && matchesFilter
   })
 
+  // Calcular stats baseado no contexto atual (ativos vs histórico)
+  const currentProjects = showHistory ? historyProjects : activeProjects
   const stats = {
-    total: allProjects.length,
-    inProgress: allProjects.filter(p => p.status === 'in_progress').length,
-    pending: allProjects.filter(p => p.status === 'pending').length,
-    completed: allProjects.filter(p => p.status === 'completed').length,
+    total: currentProjects.length,
+    inProgress: currentProjects.filter(p => p.status === 'in_progress').length,
+    pending: currentProjects.filter(p => p.status === 'pending').length,
+    completed: currentProjects.filter(p => p.status === 'completed').length,
+    delivered: currentProjects.filter(p => p.status === 'delivered').length,
   }
 
   useEffect(() => {
@@ -1349,7 +1352,7 @@ ${loginUrl}
                 <div className="flex flex-wrap items-center gap-4">
                   <div className="flex items-center bg-white/5 rounded-xl p-1">
                     <button
-                      onClick={() => { setViewMode('mine'); setShowHistory(false); }}
+                      onClick={() => { setViewMode('mine'); setShowHistory(false); setFilterStatus('pending'); }}
                       className={cn(
                         "px-4 py-2 rounded-lg text-sm font-medium transition-all",
                         viewMode === 'mine' && !showHistory
@@ -1360,7 +1363,7 @@ ${loginUrl}
                       Minhas Atividades
                     </button>
                     <button
-                      onClick={() => { setViewMode('all'); setShowHistory(false); }}
+                      onClick={() => { setViewMode('all'); setShowHistory(false); setFilterStatus('pending'); }}
                       className={cn(
                         "px-4 py-2 rounded-lg text-sm font-medium transition-all",
                         viewMode === 'all' && !showHistory
@@ -1371,7 +1374,7 @@ ${loginUrl}
                       Ver Todos
                     </button>
                     <button
-                      onClick={() => setShowHistory(true)}
+                      onClick={() => { setShowHistory(true); setFilterStatus('all'); }}
                       className={cn(
                         "px-4 py-2 rounded-lg text-sm font-medium transition-all",
                         showHistory
@@ -1393,12 +1396,15 @@ ${loginUrl}
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-gray-400 font-medium">Filtrar por status:</span>
                   <div className="flex space-x-2 overflow-x-auto pb-2 md:pb-0">
-                    {[
-                      { value: 'all', label: 'Todos', count: showHistory ? historyProjects.length : activeProjects.length, color: 'bg-white/10' },
-                      { value: 'in_progress', label: 'Em Andamento', count: stats.inProgress, color: 'bg-primary/20 text-primary border-primary/50' },
-                      { value: 'pending', label: 'Pendentes', count: stats.pending, color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50' },
+                    {(showHistory ? [
+                      { value: 'all', label: 'Todos', count: stats.total, color: 'bg-white/10' },
                       { value: 'completed', label: 'Concluídos', count: stats.completed, color: 'bg-green-500/20 text-green-400 border-green-500/50' },
-                    ].map((filter) => (
+                      { value: 'delivered', label: 'Entregues', count: stats.delivered, color: 'bg-blue-500/20 text-blue-400 border-blue-500/50' },
+                    ] : [
+                      { value: 'all', label: 'Todos', count: stats.total, color: 'bg-white/10' },
+                      { value: 'pending', label: 'Pendentes', count: stats.pending, color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50' },
+                      { value: 'in_progress', label: 'Em Andamento', count: stats.inProgress, color: 'bg-primary/20 text-primary border-primary/50' },
+                    ]).map((filter) => (
                       <button
                         key={filter.value}
                         onClick={() => setFilterStatus(filter.value)}
