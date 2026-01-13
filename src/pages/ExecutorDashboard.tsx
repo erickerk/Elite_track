@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import QRCode from 'qrcode'
 import { useNavigate } from 'react-router-dom'
+import { getAppBaseUrl } from '../constants/companyInfo'
  
 import { 
   CheckCircle, Clock, AlertCircle, Car, QrCode, Bell, Shield,
@@ -840,10 +841,10 @@ export function ExecutorDashboard() {
     const tempPassword = generateTempPassword()
     
     // URL de login direto (o cliente já tem senha temporária registrada)
-    const loginUrl = `${window.location.origin}/login?project=${savedProject.id}`
+    const loginUrl = `${getAppBaseUrl()}/login?project=${savedProject.id}`
     
     // URL de verificação do projeto (permanente - vitalício)
-    const verifyUrl = `${window.location.origin}/verify/${savedProject.id}`
+    const verifyUrl = `${getAppBaseUrl()}/verify/${savedProject.id}`
     
     // Gerar QR Code para LOGIN (cliente já tem senha temporária)
     QRCode.toDataURL(loginUrl, {
@@ -929,7 +930,7 @@ export function ExecutorDashboard() {
     if (!createdProjectData) return
     
     // URL de login direto
-    const loginUrl = `${window.location.origin}/login?project=${createdProjectData.id}`
+    const loginUrl = `${getAppBaseUrl()}/login?project=${createdProjectData.id}`
     const expirationDate = new Date(createdProjectData.expiresAt).toLocaleDateString('pt-BR')
     
     // Mensagem premium e profissional
@@ -987,7 +988,7 @@ ${loginUrl}
     if (!createdProjectData) return
     
     // URL de login direto
-    const loginUrl = `${window.location.origin}/login?project=${createdProjectData.id}`
+    const loginUrl = `${getAppBaseUrl()}/login?project=${createdProjectData.id}`
     const expirationDate = new Date(createdProjectData.expiresAt).toLocaleDateString('pt-BR')
     
     const subject = `✨ Elite Blindagens - Acesso Exclusivo ao Seu Projeto - ${createdProjectData.vehicle}`
@@ -4311,7 +4312,7 @@ ${loginUrl}
                   <button
                     onClick={() => {
                       const token = `INV-${Date.now()}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
-                      const registerUrl = `${window.location.origin}/register?token=${token}&project=${foundProject.id}`
+                      const registerUrl = `${getAppBaseUrl()}/register?token=${token}&project=${foundProject.id}`
                       QRCode.toDataURL(registerUrl, { width: 400, margin: 3 }).then((url: string) => {
                         const link = document.createElement('a')
                         link.href = url
@@ -4338,7 +4339,7 @@ ${loginUrl}
                   </div>
                   <button
                     onClick={() => {
-                      const verifyUrl = `${window.location.origin}/verify/${foundProject.id}`
+                      const verifyUrl = `${getAppBaseUrl()}/verify/${foundProject.id}`
                       QRCode.toDataURL(verifyUrl, { width: 400, margin: 3, color: { dark: '#D4AF37' } }).then((url: string) => {
                         const link = document.createElement('a')
                         link.href = url
@@ -4366,7 +4367,7 @@ ${loginUrl}
                     onClick={() => {
                       // Gerar nova senha temporária
                       const newTempPassword = Math.floor(1000 + Math.random() * 9000).toString()
-                      const loginUrl = `${window.location.origin}/login?project=${foundProject.id}`
+                      const loginUrl = `${getAppBaseUrl()}/login?project=${foundProject.id}`
                       const expirationDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')
                       
                       // Registrar nova senha temporária
@@ -4422,7 +4423,7 @@ ${loginUrl}
                     onClick={() => {
                       // Gerar nova senha temporária
                       const newTempPassword = Math.floor(1000 + Math.random() * 9000).toString()
-                      const loginUrl = `${window.location.origin}/login?project=${foundProject.id}`
+                      const loginUrl = `${getAppBaseUrl()}/login?project=${foundProject.id}`
                       const expirationDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')
                       
                       // Registrar nova senha temporária
@@ -4720,7 +4721,7 @@ ${loginUrl}
               <button
                 onClick={() => {
                   const phone = selectedProject.user.phone?.replace(/\D/g, '')
-                  const msg = `Olá ${selectedProject.user.name}! Segue o link do seu Cartão Elite Digital: ${window.location.origin}/card/${selectedProject.id}`
+                  const msg = `Olá ${selectedProject.user.name}! Segue o link do seu Cartão Elite Digital: ${getAppBaseUrl()}/card/${selectedProject.id}`
                   window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(msg)}`, '_blank')
                   addNotification({ type: 'success', title: 'WhatsApp', message: 'Abrindo WhatsApp para compartilhar o cartão...' })
                 }}
@@ -4730,7 +4731,7 @@ ${loginUrl}
                 <span>Enviar via WhatsApp</span>
               </button>
               <button
-                onClick={() => window.open(`${window.location.origin}/card/${selectedProject.id}`, '_blank')}
+                onClick={() => window.open(`${getAppBaseUrl()}/card/${selectedProject.id}`, '_blank')}
                 className="w-full flex items-center justify-center gap-2 bg-primary/20 text-primary py-3 rounded-xl font-semibold hover:bg-primary/30 transition-colors"
               >
                 <ExternalLink className="w-5 h-5" />

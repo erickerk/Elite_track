@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { useInvite } from '../../contexts/InviteContext'
 import { useProjects } from '../../contexts/ProjectContext'
+import { getAppBaseUrl } from '../../constants/companyInfo'
 import type { RegistrationInvite } from '../../types'
 
 const exportInvitesToExcel = (invites: RegistrationInvite[], filename: string) => {
@@ -108,7 +109,7 @@ export function InviteManager({ projectId, onClose }: InviteManagerProps) {
   }
 
   const getInviteLink = (token: string) => {
-    return `${window.location.origin}/register/${token}`
+    return `${getAppBaseUrl()}/register/${token}`
   }
 
   const shareInvite = async (invite: RegistrationInvite) => {

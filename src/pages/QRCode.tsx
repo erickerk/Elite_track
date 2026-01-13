@@ -7,6 +7,7 @@ import { Badge } from '../components/ui/Badge'
 import { cn } from '../lib/utils'
 import { useTheme } from '../contexts/ThemeContext'
 import { useProjects } from '../contexts/ProjectContext'
+import { getAppBaseUrl } from '../constants/companyInfo'
 
 export function QRCodePage() {
   const { theme } = useTheme()
@@ -15,7 +16,7 @@ export function QRCodePage() {
   const isDark = theme === 'dark'
   const [copied, setCopied] = useState(false)
 
-  const verifyUrl = `${window.location.origin}/verify/${project?.id || ''}`
+  const verifyUrl = `${getAppBaseUrl()}/verify/${project?.id || ''}`
   
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
     verifyUrl

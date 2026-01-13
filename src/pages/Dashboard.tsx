@@ -12,6 +12,7 @@ import { useChat } from '../contexts/ChatContext'
 import { useProjects } from '../contexts/ProjectContext'
 import { cn } from '../lib/utils'
 import { useTheme } from '../contexts/ThemeContext'
+import { getAppBaseUrl } from '../constants/companyInfo'
 import type { Project } from '../types'
 
 export function Dashboard() {
@@ -81,7 +82,7 @@ export function Dashboard() {
 
   const currentStep = selectedProject.timeline.find(step => step.status === 'in_progress')
 
-  const qrCodeUrl = `${window.location.origin}/verify/${selectedProject.id}`
+  const qrCodeUrl = `${getAppBaseUrl()}/verify/${selectedProject.id}`
 
   const handleCopyQR = async () => {
     await navigator.clipboard.writeText(qrCodeUrl)
