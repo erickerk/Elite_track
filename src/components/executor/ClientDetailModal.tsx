@@ -41,7 +41,7 @@ export function ClientDetailModal({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
-      <div className="p-6 max-h-[85vh] overflow-y-auto">
+      <div className="p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
           <div className="flex items-center gap-4">

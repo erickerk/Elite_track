@@ -4,7 +4,7 @@ import {
   CheckCircle, Clock, TrendingUp, Settings, UserCheck,
   Eye, EyeOff, UserPlus, LogOut, Activity, Database,
   DollarSign, Calendar, FileText, Download, X, ChevronRight, Mail, Send,
-  Filter, History, ArrowLeft, RefreshCw
+  Filter, History, ArrowLeft, RefreshCw, Menu
 } from 'lucide-react'
 import { Modal } from '../components/ui/Modal'
 import { InviteManager } from '../components/admin/InviteManager'
@@ -124,6 +124,9 @@ export function AdminDashboard() {
   
   const [quoteFilter, setQuoteFilter] = useState<'all' | 'pending' | 'sent' | 'approved' | 'rejected'>('all')
   const [scheduleFilter, setScheduleFilter] = useState<'all' | 'revisao' | 'entrega' | 'confirmed' | 'pending'>('all')
+  
+  // Estado do menu mobile
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   
   const [newExecutorData, setNewExecutorData] = useState({
     name: '', email: '', phone: '', password: '',
@@ -571,12 +574,100 @@ export function AdminDashboard() {
         </div>
       </aside>
 
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 z-50 lg:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          
+          {/* Menu Drawer */}
+          <aside 
+            className="absolute left-0 top-0 h-full w-72 bg-carbon-900 border-r border-white/10 flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-white/10 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <img src="/logo-elite.png" alt="Elite Blindagens" className="h-8 w-auto" />
+                <span className="text-xs text-gray-500">Painel Admin</span>
+              </div>
+              <button 
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                aria-label="Fechar menu"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+              {navItems.map((item) => {
+                const Icon = item.icon
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setActiveTab(item.id)
+                      setMobileMenuOpen(false)
+                    }}
+                    className={cn(
+                      "w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all",
+                      activeTab === item.id 
+                        ? "bg-primary text-black" 
+                        : "text-gray-400 hover:bg-white/5 hover:text-white"
+                    )}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="font-medium">{item.label}</span>
+                    {'badge' in item && (item as { badge?: number }).badge !== undefined && (item as { badge?: number }).badge! > 0 && (
+                      <span className="ml-auto px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">{(item as { badge?: number }).badge}</span>
+                    )}
+                  </button>
+                )
+              })}
+            </nav>
+
+            <div className="p-4 border-t border-white/10">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold">{user?.name?.charAt(0)}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium truncate">{user?.name}</p>
+                  <p className="text-xs text-gray-500">Administrador</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false)
+                  handleLogout()
+                }}
+                className="w-full flex items-center justify-center space-x-2 text-gray-400 hover:text-red-400 py-3 rounded-xl hover:bg-white/5 transition-colors border border-white/10"
+                aria-label="Sair da conta"
+              >
+                <LogOut className="w-5 h-5" />
+                <span className="font-medium">Sair</span>
+              </button>
+            </div>
+          </aside>
+        </div>
+      )}
+
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-screen">
         <header className="bg-carbon-900/80 backdrop-blur-xl border-b border-white/10 sticky top-0 z-40">
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="lg:hidden flex items-center space-x-3">
+                <button
+                  onClick={() => setMobileMenuOpen(true)}
+                  className="p-2 -ml-2 rounded-lg hover:bg-white/10 transition-colors"
+                  aria-label="Abrir menu"
+                >
+                  <Menu className="w-6 h-6" />
+                </button>
                 <img src="/logo-elite.png" alt="Elite Blindagens" className="h-6 w-auto" />
               </div>
               <div className="hidden lg:block">

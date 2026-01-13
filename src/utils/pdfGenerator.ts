@@ -2,7 +2,7 @@ import jsPDF from 'jspdf'
 import QRCode from 'qrcode'
 import type { Project } from '../types'
 import { gerarDadosLaudo } from '../config/eliteshield-laudo-template'
-import { COMPANY_INFO } from '../constants/companyInfo'
+import { COMPANY_INFO, getAppBaseUrl } from '../constants/companyInfo'
 import logoElite from '../assets/logo-elite.png'
 
 // Função para gerar QR Code como Data URL
@@ -49,8 +49,8 @@ export async function generateEliteShieldPDF(project: Project): Promise<Blob> {
   const black = [0, 0, 0]
   const gray = [128, 128, 128]
 
-  // Gerar QR Code real com URL de verificação
-  const verifyUrl = `${window.location.origin}/verify/${project.id}`
+  // Gerar QR Code real com URL de verificação (usa URL base configurada)
+  const verifyUrl = `${getAppBaseUrl()}/verify/${project.id}`
   const qrCodeDataUrl = await generateQRCodeDataURL(verifyUrl)
   
   // Carregar logo Elite

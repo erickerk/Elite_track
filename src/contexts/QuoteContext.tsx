@@ -19,10 +19,12 @@ export interface QuoteRequest {
   serviceType: 'new-blinding' | 'glass-replacement' | 'door-replacement' | 'maintenance' | 'revision' | 'other'
   serviceDescription?: string
   clientDescription?: string
-  status: 'pending' | 'analyzed' | 'sent' | 'approved' | 'rejected'
+  status: 'pending' | 'analyzed' | 'sent' | 'approved' | 'rejected' | 'holding' | 'expired'
   createdAt: string
-  estimatedPrice?: string
+  estimatedPrice?: number // Armazenar como número (centavos ou decimal)
+  estimatedPriceFormatted?: string // Formatação para exibição
   estimatedDays?: number
+  daysType?: 'business' | 'calendar' // 'business' = dias úteis, 'calendar' = dias corridos
   executorNotes?: string
   executorId?: string
   executorName?: string
@@ -30,6 +32,21 @@ export interface QuoteRequest {
   respondedAt?: string
   approvedAt?: string
   rejectedAt?: string
+  lastInteractionAt?: string // Marco para contagem de status automático
+}
+
+// Formatar valor como moeda BRL
+export function formatCurrency(value: number | string | undefined): string {
+  if (value === undefined || value === null || value === '') return 'Orçamento sob consulta'
+  const numValue = typeof value === 'string' ? parseFloat(value.replace(/[^\d.,]/g, '').replace(',', '.')) : value
+  if (isNaN(numValue)) return 'Orçamento sob consulta'
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(numValue)
+}
+
+// Parsear valor de moeda para número
+export function parseCurrency(value: string): number {
+  const cleaned = value.replace(/[^\d.,]/g, '').replace(',', '.')
+  return parseFloat(cleaned) || 0
 }
 
 interface QuoteContextType {
@@ -190,17 +207,21 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
     setQuotes(prev => [newQuote, ...prev])
   }, [])
 
-  const sendQuoteToClient = useCallback((id: string, price: string, days: number, notes: string, executorId: string, executorName: string) => {
+  const sendQuoteToClient = useCallback((id: string, price: string, days: number, notes: string, executorId: string, executorName: string, daysType: 'business' | 'calendar' = 'business') => {
+    const numericPrice = parseCurrency(price)
     setQuotes(prev => prev.map(q => 
       q.id === id ? { 
         ...q, 
         status: 'sent' as const,
-        estimatedPrice: price,
+        estimatedPrice: numericPrice,
+        estimatedPriceFormatted: formatCurrency(numericPrice),
         estimatedDays: days,
+        daysType,
         executorNotes: notes,
         executorId,
         executorName,
-        respondedAt: new Date().toISOString()
+        respondedAt: new Date().toISOString(),
+        lastInteractionAt: new Date().toISOString()
       } : q
     ))
   }, [])

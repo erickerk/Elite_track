@@ -229,6 +229,10 @@ export function ExecutorDashboard() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState<string>('all')
+  // Filtro "Minhas Atividades" vs "Todas" - por padrão mostra apenas as atribuídas ao executor
+  const [viewMode, setViewMode] = useState<'mine' | 'all'>('mine')
+  // Mostrar histórico (projetos concluídos) separadamente
+  const [showHistory, setShowHistory] = useState(false)
   // Usar projetos globais diretamente (já vem do contexto/Supabase)
   const projects = globalProjects
   const [showLaudoModal, setShowLaudoModal] = useState(false)
@@ -436,11 +440,26 @@ export function ExecutorDashboard() {
     return Math.floor(1000 + Math.random() * 9000).toString()
   }
   
-  // Filtro de projetos com modo foco
-  const filteredProjects = allProjects.filter(p => {
+  // Projetos ativos (não concluídos) - para a home do executor
+  const activeProjects = allProjects.filter(p => p.status !== 'completed' && p.status !== 'delivered')
+  
+  // Projetos do histórico (concluídos/entregues)
+  const historyProjects = allProjects.filter(p => p.status === 'completed' || p.status === 'delivered')
+  
+  // Filtro de projetos com modo foco e filtro "Minhas atividades"
+  const filteredProjects = (showHistory ? historyProjects : activeProjects).filter(p => {
     // Modo foco: mostra apenas o projeto selecionado
     if (focusedProjectId) {
       return p.id === focusedProjectId
+    }
+    
+    // Filtro "Minhas atividades": verifica se o executor está atribuído ao projeto
+    // Verifica pelo nome do executor ou pelo técnico da timeline
+    if (viewMode === 'mine' && user) {
+      const isAssigned = 
+        p.blindingSpecs?.technicalResponsible?.toLowerCase() === user.name?.toLowerCase() ||
+        p.timeline?.some(step => step.technician?.toLowerCase() === user.name?.toLowerCase())
+      if (!isAssigned) return false
     }
     
     const searchLower = searchTerm.toLowerCase()
@@ -1325,12 +1344,56 @@ ${loginUrl}
                   )}
                 </div>
 
+                {/* Toggle Minhas Atividades / Todas + Histórico */}
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex items-center bg-white/5 rounded-xl p-1">
+                    <button
+                      onClick={() => { setViewMode('mine'); setShowHistory(false); }}
+                      className={cn(
+                        "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                        viewMode === 'mine' && !showHistory
+                          ? "bg-primary text-black"
+                          : "text-gray-400 hover:text-white"
+                      )}
+                    >
+                      Minhas Atividades
+                    </button>
+                    <button
+                      onClick={() => { setViewMode('all'); setShowHistory(false); }}
+                      className={cn(
+                        "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                        viewMode === 'all' && !showHistory
+                          ? "bg-primary text-black"
+                          : "text-gray-400 hover:text-white"
+                      )}
+                    >
+                      Ver Todos
+                    </button>
+                    <button
+                      onClick={() => setShowHistory(true)}
+                      className={cn(
+                        "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                        showHistory
+                          ? "bg-green-500 text-white"
+                          : "text-gray-400 hover:text-white"
+                      )}
+                    >
+                      Histórico ({historyProjects.length})
+                    </button>
+                  </div>
+                  {showHistory && (
+                    <span className="text-sm text-green-400 font-medium">
+                      Mostrando projetos concluídos/entregues
+                    </span>
+                  )}
+                </div>
+
                 {/* Filtros por Status */}
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-gray-400 font-medium">Filtrar por status:</span>
                   <div className="flex space-x-2 overflow-x-auto pb-2 md:pb-0">
                     {[
-                      { value: 'all', label: 'Todos', count: stats.total, color: 'bg-white/10' },
+                      { value: 'all', label: 'Todos', count: showHistory ? historyProjects.length : activeProjects.length, color: 'bg-white/10' },
                       { value: 'in_progress', label: 'Em Andamento', count: stats.inProgress, color: 'bg-primary/20 text-primary border-primary/50' },
                       { value: 'pending', label: 'Pendentes', count: stats.pending, color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50' },
                       { value: 'completed', label: 'Concluídos', count: stats.completed, color: 'bg-green-500/20 text-green-400 border-green-500/50' },
@@ -2757,7 +2820,7 @@ ${loginUrl}
                       className="bg-white/5 border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-colors cursor-pointer"
                       onClick={() => {
                         setSelectedQuote(quote)
-                        setQuoteExactPrice(quote.estimatedPrice || '')
+                        setQuoteExactPrice(quote.estimatedPrice?.toString() || quote.estimatedPriceFormatted || '')
                         setQuoteEstimatedDays(quote.estimatedDays?.toString() || '')
                         setQuoteNotes(quote.executorNotes || '')
                         setShowQuoteModal(true)
@@ -3849,7 +3912,7 @@ ${loginUrl}
                     return
                   }
                   updateQuoteStatus(selectedQuote.id, 'sent', {
-                    estimatedPrice: quoteExactPrice,
+                    estimatedPrice: parseFloat(quoteExactPrice.replace(/[^\d.,]/g, '').replace(',', '.')) || 0,
                     estimatedDays: parseInt(quoteEstimatedDays),
                     executorNotes: quoteNotes
                   })
@@ -4127,7 +4190,7 @@ ${loginUrl}
                   serviceType: newQuoteData.serviceType,
                   serviceDescription: newQuoteData.serviceDescription,
                   status: 'sent',
-                  estimatedPrice: newQuoteData.estimatedPrice,
+                  estimatedPrice: parseFloat(newQuoteData.estimatedPrice.replace(/[^\d.,]/g, '').replace(',', '.')) || 0,
                   estimatedDays: parseInt(newQuoteData.estimatedDays),
                   executorNotes: newQuoteData.executorNotes,
                   executorId: user?.id,

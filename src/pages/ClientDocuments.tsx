@@ -316,7 +316,26 @@ export function ClientDocuments() {
                       </button>
                     )}
                     <button
-                      onClick={() => addNotification({ type: 'info', title: 'Download', message: 'Download iniciado.' })}
+                      onClick={async () => {
+                        try {
+                          if (doc.url) {
+                            // Se URL já existe (signed ou blob), usa direto
+                            const link = document.createElement('a')
+                            link.href = doc.url
+                            link.download = doc.name
+                            link.target = '_blank'
+                            document.body.appendChild(link)
+                            link.click()
+                            document.body.removeChild(link)
+                            addNotification({ type: 'success', title: 'Download', message: 'Download iniciado com sucesso.' })
+                          } else {
+                            addNotification({ type: 'warning', title: 'Download', message: 'Documento não disponível para download.' })
+                          }
+                        } catch (error) {
+                          console.error('Erro ao baixar documento:', error)
+                          addNotification({ type: 'error', title: 'Erro', message: 'Não foi possível baixar o documento.' })
+                        }
+                      }}
                       className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
                       title="Baixar"
                     >

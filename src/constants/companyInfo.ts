@@ -1,3 +1,21 @@
+// URL base da aplicação para QR Codes e links externos
+// Prioridade: VITE_APP_URL > window.location.origin
+export const getAppBaseUrl = (): string => {
+  // Em produção, usar a variável de ambiente
+  if (import.meta.env.VITE_APP_URL) {
+    return import.meta.env.VITE_APP_URL
+  }
+  // Fallback para o domínio atual (development)
+  if (typeof window !== 'undefined') {
+    return window.location.origin
+  }
+  // Fallback absoluto para SSR ou testes
+  return 'https://app.eliteblindagens.com.br'
+}
+
+// URL canônica de produção (para QR Codes permanentes)
+export const PRODUCTION_URL = 'https://app.eliteblindagens.com.br'
+
 // Dados de contato da Elite Blindagens
 export const COMPANY_INFO = {
   name: 'Elite Blindagens',
@@ -7,6 +25,7 @@ export const COMPANY_INFO = {
   phoneFormatted: '(11) 9.1312-3071',
   website: 'https://www.eliteblindagens.com.br',
   websiteDisplay: 'www.eliteblindagens.com.br',
+  appUrl: PRODUCTION_URL,
   address: {
     street: 'R. Doutor Ulisses Guimaraes, 874',
     neighborhood: 'Loteamento Industrial',

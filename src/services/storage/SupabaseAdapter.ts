@@ -667,11 +667,18 @@ export class SupabaseNotificationStorage implements INotificationStorage {
 
   async createNotification(notification: Notification): Promise<Notification> {
     if (!supabase) throw new Error('Supabase não configurado')
+    
+    // Validar que o userId existe antes de inserir
+    if (!notification.userId) {
+      console.error('[NotificationStorage] userId é obrigatório para criar notificação')
+      throw new Error('userId é obrigatório para criar notificação')
+    }
 
     const { error } = await supabase
       .from('notifications')
       .insert({
         id: notification.id,
+        user_id: notification.userId, // Campo obrigatório - corrige bug 400/null user_id
         title: notification.title,
         message: notification.message,
         type: notification.type,
@@ -679,7 +686,10 @@ export class SupabaseNotificationStorage implements INotificationStorage {
         project_id: notification.projectId,
       })
 
-    if (error) throw error
+    if (error) {
+      console.error('[NotificationStorage] Erro ao criar notificação:', error)
+      throw error
+    }
 
     return notification
   }

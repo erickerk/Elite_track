@@ -199,7 +199,7 @@ export function Login() {
               </button>
 
               <div className="text-center pt-4 border-t border-white/10">
-                <p className="text-gray-400 text-sm">Ainda não tem uma conta? <a href="#" className="text-primary hover:text-primary/80 transition-colors">Solicite acesso</a></p>
+                <p className="text-gray-400 text-sm">Ainda não tem uma conta? <button type="button" onClick={() => navigate('/register')} className="text-primary hover:text-primary/80 transition-colors font-medium">Solicite acesso</button></p>
               </div>
             </form>
           </div>
