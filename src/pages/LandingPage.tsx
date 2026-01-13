@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLeads } from '../contexts/LeadsContext'
 import { useNotifications } from '../contexts/NotificationContext'
+import { QRScanner } from '../components/executor/QRScanner'
 import '../styles/LandingPage.css'
 
 export function LandingPage() {
@@ -20,48 +21,22 @@ export function LandingPage() {
   const [showConsultaModal, setShowConsultaModal] = useState(false)
   const [consultaInput, setConsultaInput] = useState('')
   const [showQRScanner, setShowQRScanner] = useState(false)
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const streamRef = useRef<MediaStream | null>(null)
-
-  const stopCamera = useCallback(() => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop())
-      streamRef.current = null
-    }
-    setShowQRScanner(false)
-  }, [])
-
-  const startCamera = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' }
-      })
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        streamRef.current = stream
-        setShowQRScanner(true)
-      }
-    } catch (err) {
-      console.error('Erro ao acessar câmera:', err)
-      addNotification({
-        type: 'error',
-        title: 'Câmera indisponível',
-        message: 'Não foi possível acessar a câmera. Use o código manualmente.'
-      })
-    }
-  }, [addNotification])
 
   const handleConsulta = () => {
     if (consultaInput.trim()) {
-      stopCamera()
       setShowConsultaModal(false)
       navigate(`/verify/${consultaInput.trim()}`)
       setConsultaInput('')
     }
   }
 
+  const handleQRScan = (code: string) => {
+    setShowQRScanner(false)
+    setShowConsultaModal(false)
+    navigate(`/verify/${code}`)
+  }
+
   const closeModal = () => {
-    stopCamera()
     setShowConsultaModal(false)
     setConsultaInput('')
   }
@@ -738,43 +713,27 @@ export function LandingPage() {
               Consulte o histórico completo de blindagem, materiais, certificações e laudos do seu veículo.
             </p>
 
-            {/* QR Scanner */}
-            {showQRScanner ? (
-              <div className="mb-6">
-                <div className="relative rounded-xl overflow-hidden bg-black aspect-square mb-4">
-                  <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 border-2 border-primary/50 rounded-xl pointer-events-none">
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-2 border-primary rounded-lg"></div>
-                  </div>
-                </div>
-                <button onClick={stopCamera} className="w-full py-3 bg-white/10 rounded-xl text-sm hover:bg-white/20 transition-colors">
-                  <i className="ri-keyboard-line mr-2"></i>
-                  Digitar código manualmente
-                </button>
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Código do projeto ou placa</label>
+                <input
+                  type="text"
+                  value={consultaInput}
+                  onChange={(e) => setConsultaInput(e.target.value.toUpperCase())}
+                  onKeyDown={(e) => e.key === 'Enter' && handleConsulta()}
+                  placeholder="PRJ-2025-003 ou ABC-1234"
+                  className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-primary focus:outline-none transition-colors text-center font-mono uppercase"
+                  autoFocus
+                />
               </div>
-            ) : (
-              <div className="space-y-4 mb-6">
-                <div>
-                  <label className="block text-sm text-gray-400 mb-2">Código do projeto ou placa</label>
-                  <input
-                    type="text"
-                    value={consultaInput}
-                    onChange={(e) => setConsultaInput(e.target.value.toUpperCase())}
-                    onKeyDown={(e) => e.key === 'Enter' && handleConsulta()}
-                    placeholder="PRJ-2025-003 ou ABC-1234"
-                    className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-primary focus:outline-none transition-colors text-center font-mono uppercase"
-                    autoFocus
-                  />
-                </div>
-                <button
-                  onClick={startCamera}
-                  className="w-full py-3 bg-white/10 border border-white/20 rounded-xl text-sm hover:bg-white/20 transition-colors flex items-center justify-center gap-2"
-                >
-                  <i className="ri-qr-scan-2-line text-primary"></i>
-                  Escanear QR Code
-                </button>
-              </div>
-            )}
+              <button
+                onClick={() => setShowQRScanner(true)}
+                className="w-full py-3 bg-white/10 border border-white/20 rounded-xl text-sm hover:bg-white/20 transition-colors flex items-center justify-center gap-2"
+              >
+                <i className="ri-qr-scan-2-line text-primary"></i>
+                Escanear QR Code
+              </button>
+            </div>
 
             <div className="flex gap-3">
               <button onClick={closeModal} className="flex-1 py-3 bg-white/10 rounded-xl font-semibold hover:bg-white/20 transition-colors">
@@ -795,6 +754,13 @@ export function LandingPage() {
           </div>
         </div>
       )}
+
+      {/* QR Scanner Component */}
+      <QRScanner 
+        isOpen={showQRScanner} 
+        onClose={() => setShowQRScanner(false)} 
+        onScan={handleQRScan}
+      />
     </div>
   )
 }

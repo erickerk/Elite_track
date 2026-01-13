@@ -87,7 +87,7 @@ export function InviteManager({ projectId, onClose }: InviteManagerProps) {
     setIsCreating(true)
     try {
       await new Promise(resolve => setTimeout(resolve, 1000))
-      const invite = createInvite(selectedProject, ownerData)
+      const invite = await createInvite(selectedProject, ownerData)
       setNewInvite(invite)
       setOwnerData({ name: '', email: '', phone: '' })
     } catch (error) {

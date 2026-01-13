@@ -166,7 +166,7 @@ export function Register() {
 
       // Consome o convite
       const userId = `user-${Date.now()}`
-      const success = consumeInvite(token, userId)
+      const success = await consumeInvite(token, userId)
 
       if (success) {
         setStep('success')
