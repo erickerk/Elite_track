@@ -1069,7 +1069,7 @@ ${loginUrl}
   }))
 
   return (
-    <div className="min-h-screen bg-black text-white font-['Inter'] flex">
+    <div className="min-h-screen bg-black text-white font-['Inter'] flex overflow-x-hidden">
       {/* Sidebar */}
       <aside className="hidden lg:flex flex-col w-64 bg-carbon-900 border-r border-white/10">
         {/* Logo */}
@@ -1141,20 +1141,34 @@ ${loginUrl}
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-h-screen">
-        {/* Header */}
-        <header className="bg-carbon-900/80 backdrop-blur-xl border-b border-white/10 sticky top-0 z-40">
-          <div className="px-4 md:px-6 py-4">
+      <div className="flex-1 flex flex-col min-h-screen min-w-0 overflow-x-hidden pb-20 lg:pb-0">
+        {/* Header Mobile - Compacto */}
+        <header className="bg-carbon-900/95 backdrop-blur-xl border-b border-white/10 sticky top-0 z-40">
+          <div className="px-3 md:px-6 py-2 md:py-4">
             <div className="flex items-center justify-between">
-              {/* Mobile Logo */}
-              <div className="flex items-center space-x-3 lg:hidden">
-                <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/60 rounded-lg flex items-center justify-center">
-                  <span className="text-black font-bold">E</span>
+              {/* Mobile: Título da página atual */}
+              <div className="flex items-center space-x-2 lg:hidden min-w-0 flex-1">
+                <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/60 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <span className="text-black font-bold text-sm">E</span>
                 </div>
-                <span className="font-['Pacifico'] text-lg text-primary">EliteTrack™</span>
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-base font-bold text-white truncate">
+                    {activeTab === 'dashboard' && 'Projetos'}
+                    {activeTab === 'timeline' && 'Timeline'}
+                    {activeTab === 'photos' && 'Fotos'}
+                    {activeTab === 'laudo' && 'Laudo'}
+                    {activeTab === 'card' && 'Cartão'}
+                    {activeTab === 'chat' && 'Chat'}
+                  </h2>
+                  {selectedProject && activeTab !== 'dashboard' && activeTab !== 'chat' && (
+                    <p className="text-xs text-gray-400 truncate">
+                      {selectedProject.vehicle.plate} • {selectedProject.user.name?.split(' ')[0]}
+                    </p>
+                  )}
+                </div>
               </div>
 
-              {/* Page Title */}
+              {/* Desktop: Page Title */}
               <div className="hidden lg:block">
                 <h2 className="text-xl font-bold">
                   {activeTab === 'dashboard' && 'Painel de Projetos'}
@@ -1171,41 +1185,19 @@ ${loginUrl}
                 )}
               </div>
 
-              {/* Actions */}
-              <div className="flex items-center space-x-3">
-                {/* Consultar QR Codes */}
-                <button
-                  onClick={() => setShowQRLookup(true)}
-                  className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2.5 rounded-xl font-semibold hover:bg-blue-700 transition-colors"
-                  title="Consultar QR Codes por Placa"
-                  aria-label="Consultar QR Codes"
-                >
-                  <Search className="w-5 h-5" />
-                  <span className="hidden md:inline">QR por Placa</span>
-                </button>
-
-                {/* QR Scanner */}
-                <button
-                  onClick={() => setShowQRScanner(true)}
-                  className="flex items-center space-x-2 bg-primary text-black px-4 py-2.5 rounded-xl font-semibold hover:bg-primary/90 transition-colors"
-                  title="Escanear QR Code"
-                  aria-label="Escanear QR Code"
-                >
-                  <QrCode className="w-5 h-5" />
-                  <span className="hidden md:inline">Escanear</span>
-                </button>
-
+              {/* Actions - Compactas no mobile */}
+              <div className="flex items-center space-x-1.5 md:space-x-3 flex-shrink-0">
                 {/* Notifications */}
                 <div className="relative">
                   <button
                     onClick={() => setShowNotifications(!showNotifications)}
-                    className="relative w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center hover:bg-white/20 transition-colors"
+                    className="relative w-9 h-9 md:w-10 md:h-10 bg-white/10 rounded-xl flex items-center justify-center hover:bg-white/20 transition-colors active:scale-95"
                     title="Notificações"
                     aria-label="Notificações"
                   >
-                    <Bell className="w-5 h-5" />
+                    <Bell className="w-4 h-4 md:w-5 md:h-5" />
                     {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold">
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
                         {unreadCount > 9 ? '9+' : unreadCount}
                       </span>
                     )}
@@ -1218,177 +1210,229 @@ ${loginUrl}
                   )}
                 </div>
 
-                {/* Chat Badge (Mobile) */}
-                <button
-                  onClick={() => handleSetActiveTab('chat')}
-                  className="lg:hidden relative w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center hover:bg-white/20 transition-colors"
-                  title="Chat"
-                  aria-label="Chat com clientes"
-                >
-                  <MessageCircle className="w-5 h-5" />
-                  {chatUnreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold">
-                      {chatUnreadCount}
-                    </span>
-                  )}
-                </button>
-
-                {/* Settings */}
+                {/* Settings - Desktop only */}
                 <button
                   onClick={() => navigate('/profile')}
-                  className="hidden md:flex w-10 h-10 bg-white/10 rounded-xl items-center justify-center hover:bg-white/20 transition-colors"
+                  className="hidden lg:flex w-10 h-10 bg-white/10 rounded-xl items-center justify-center hover:bg-white/20 transition-colors"
                   title="Configurações"
                   aria-label="Configurações"
                 >
                   <Settings className="w-5 h-5" />
                 </button>
 
-                {/* Botão Sair - Visível no Mobile */}
+                {/* Logout - Mobile only in header */}
                 <button
                   onClick={handleLogout}
-                  className="lg:hidden w-10 h-10 bg-red-500/20 rounded-xl flex items-center justify-center hover:bg-red-500/30 transition-colors"
+                  className="lg:hidden w-9 h-9 bg-red-500/20 rounded-xl flex items-center justify-center hover:bg-red-500/30 transition-colors active:scale-95"
                   title="Sair"
                   aria-label="Sair do sistema"
                 >
-                  <LogOut className="w-5 h-5 text-red-400" />
+                  <LogOut className="w-4 h-4 text-red-400" />
+                </button>
+
+                {/* Desktop: Full action buttons */}
+                <button
+                  onClick={() => setShowQRLookup(true)}
+                  className="hidden lg:flex items-center justify-center space-x-2 bg-blue-600 text-white px-4 py-2.5 rounded-xl font-semibold hover:bg-blue-700 transition-colors"
+                  title="Consultar QR Codes por Placa"
+                  aria-label="Consultar QR Codes"
+                >
+                  <Search className="w-5 h-5" />
+                  <span className="text-sm">QR por Placa</span>
+                </button>
+
+                <button
+                  onClick={() => setShowQRScanner(true)}
+                  className="hidden lg:flex items-center justify-center space-x-2 bg-primary text-black px-4 py-2.5 rounded-xl font-semibold hover:bg-primary/90 transition-colors"
+                  title="Escanear QR Code"
+                  aria-label="Escanear QR Code"
+                >
+                  <QrCode className="w-5 h-5" />
+                  <span className="text-sm">Escanear</span>
                 </button>
               </div>
             </div>
           </div>
         </header>
 
-        {/* Mobile Navigation */}
-        <nav className="lg:hidden flex items-center space-x-1 px-4 py-2 overflow-x-auto border-b border-white/10 bg-carbon-900/50">
-          {navItems.map((item) => {
-            const Icon = item.icon
-            const isActive = activeTab === item.id
-            const showBadge = item.id === 'chat' && chatUnreadCount > 0
+        {/* BOTTOM NAVIGATION - Mobile Only - Fixed */}
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-carbon-900/98 backdrop-blur-xl border-t border-white/10 safe-area-pb">
+          <div className="grid grid-cols-6 gap-0">
+            {navItems.map((item) => {
+              const Icon = item.icon
+              const isActive = activeTab === item.id
+              const showBadge = item.id === 'chat' && chatUnreadCount > 0
 
-            return (
-              <button
-                key={item.id}
-                onClick={() => handleSetActiveTab(item.id)}
-                className={cn(
-                  "flex items-center space-x-2 px-4 py-2 rounded-xl whitespace-nowrap transition-all",
-                  isActive 
-                    ? "bg-primary text-black" 
-                    : "text-gray-400 hover:bg-white/5"
-                )}
-              >
-                <Icon className="w-4 h-4" />
-                <span className="text-sm font-medium">{item.label}</span>
-                {showBadge && (
-                  <span className="bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">
-                    {chatUnreadCount}
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleSetActiveTab(item.id)}
+                  className={cn(
+                    "flex flex-col items-center justify-center py-2 px-1 min-h-[56px] transition-all active:scale-95",
+                    isActive 
+                      ? "text-primary" 
+                      : "text-gray-500"
+                  )}
+                  aria-label={item.label}
+                >
+                  <div className="relative">
+                    <Icon className={cn("w-5 h-5 mb-0.5", isActive && "text-primary")} />
+                    {showBadge && (
+                      <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                        {chatUnreadCount > 9 ? '9+' : chatUnreadCount}
+                      </span>
+                    )}
+                  </div>
+                  <span className={cn(
+                    "text-[10px] font-medium truncate max-w-full",
+                    isActive ? "text-primary" : "text-gray-500"
+                  )}>
+                    {item.label.split(' ')[0]}
                   </span>
-                )}
-              </button>
-            )
-          })}
+                </button>
+              )
+            })}
+          </div>
         </nav>
 
+        {/* FAB - Scanner QR - Mobile Only */}
+        <div className="lg:hidden fixed bottom-20 right-4 z-50 flex flex-col space-y-2">
+          <button
+            onClick={() => setShowQRLookup(true)}
+            className="w-12 h-12 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 transition-all active:scale-95"
+            title="Buscar por Placa"
+            aria-label="Buscar QR por Placa"
+          >
+            <Search className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => setShowQRScanner(true)}
+            className="w-14 h-14 bg-primary text-black rounded-full shadow-lg shadow-primary/30 flex items-center justify-center hover:bg-primary/90 transition-all active:scale-95"
+            title="Escanear QR Code"
+            aria-label="Escanear QR Code"
+          >
+            <QrCode className="w-6 h-6" />
+          </button>
+        </div>
+
         {/* Main Content Area */}
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+        <main className="flex-1 p-3 md:p-6 overflow-y-auto overflow-x-hidden">
           {/* Dashboard Tab */}
           {activeTab === 'dashboard' && (
-            <div className="space-y-6">
-              {/* Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
-                  <div className="flex items-center justify-between mb-2">
-                    <Users className="w-6 h-6 text-primary" />
-                    <span className="text-2xl font-bold">{stats.total}</span>
+            <div className="space-y-4 md:space-y-6">
+              {/* Stats - Compactos no mobile */}
+              <div className="grid grid-cols-4 gap-2 md:gap-4">
+                <button 
+                  onClick={() => setFilterStatus('all')}
+                  className={cn(
+                    "bg-white/5 rounded-xl p-2 md:p-4 border transition-all active:scale-95",
+                    filterStatus === 'all' ? "border-primary" : "border-white/10"
+                  )}
+                >
+                  <div className="flex flex-col items-center md:flex-row md:justify-between md:mb-2">
+                    <Users className="w-5 h-5 md:w-6 md:h-6 text-primary mb-1 md:mb-0" />
+                    <span className="text-lg md:text-2xl font-bold">{stats.total}</span>
                   </div>
-                  <p className="text-sm text-gray-400">Total Projetos</p>
-                </div>
-                <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
-                  <div className="flex items-center justify-between mb-2">
-                    <Clock className="w-6 h-6 text-yellow-400" />
-                    <span className="text-2xl font-bold">{stats.inProgress}</span>
+                  <p className="text-[10px] md:text-sm text-gray-400 text-center md:text-left">Total</p>
+                </button>
+                <button 
+                  onClick={() => setFilterStatus('in_progress')}
+                  className={cn(
+                    "bg-white/5 rounded-xl p-2 md:p-4 border transition-all active:scale-95",
+                    filterStatus === 'in_progress' ? "border-yellow-400" : "border-white/10"
+                  )}
+                >
+                  <div className="flex flex-col items-center md:flex-row md:justify-between md:mb-2">
+                    <Clock className="w-5 h-5 md:w-6 md:h-6 text-yellow-400 mb-1 md:mb-0" />
+                    <span className="text-lg md:text-2xl font-bold">{stats.inProgress}</span>
                   </div>
-                  <p className="text-sm text-gray-400">Em Andamento</p>
-                </div>
-                <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
-                  <div className="flex items-center justify-between mb-2">
-                    <AlertCircle className="w-6 h-6 text-gray-400" />
-                    <span className="text-2xl font-bold">{stats.pending}</span>
+                  <p className="text-[10px] md:text-sm text-gray-400 text-center md:text-left">Andamento</p>
+                </button>
+                <button 
+                  onClick={() => setFilterStatus('pending')}
+                  className={cn(
+                    "bg-white/5 rounded-xl p-2 md:p-4 border transition-all active:scale-95",
+                    filterStatus === 'pending' ? "border-orange-400" : "border-white/10"
+                  )}
+                >
+                  <div className="flex flex-col items-center md:flex-row md:justify-between md:mb-2">
+                    <AlertCircle className="w-5 h-5 md:w-6 md:h-6 text-orange-400 mb-1 md:mb-0" />
+                    <span className="text-lg md:text-2xl font-bold">{stats.pending}</span>
                   </div>
-                  <p className="text-sm text-gray-400">Pendentes</p>
-                </div>
-                <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
-                  <div className="flex items-center justify-between mb-2">
-                    <CheckCircle className="w-6 h-6 text-green-400" />
-                    <span className="text-2xl font-bold">{stats.completed}</span>
+                  <p className="text-[10px] md:text-sm text-gray-400 text-center md:text-left">Pendente</p>
+                </button>
+                <button 
+                  onClick={() => { setShowHistory(true); setFilterStatus('all'); }}
+                  className={cn(
+                    "bg-white/5 rounded-xl p-2 md:p-4 border transition-all active:scale-95",
+                    showHistory ? "border-green-400" : "border-white/10"
+                  )}
+                >
+                  <div className="flex flex-col items-center md:flex-row md:justify-between md:mb-2">
+                    <CheckCircle className="w-5 h-5 md:w-6 md:h-6 text-green-400 mb-1 md:mb-0" />
+                    <span className="text-lg md:text-2xl font-bold">{stats.completed}</span>
                   </div>
-                  <p className="text-sm text-gray-400">Concluídos</p>
-                </div>
+                  <p className="text-[10px] md:text-sm text-gray-400 text-center md:text-left">Concluído</p>
+                </button>
               </div>
 
-              {/* Search & Filter - Melhorado */}
-              <div className="space-y-4">
-                {/* Barra de Busca Principal */}
+              {/* Search & Filter - Compacto no mobile */}
+              <div className="space-y-3">
+                {/* Barra de Busca - Mais compacta no mobile */}
                 <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-primary" />
                   <input
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Digite: nome do cliente, placa, modelo ou código do projeto..."
-                    className="w-full bg-white/5 border-2 border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder-gray-400 focus:border-primary focus:outline-none transition-colors"
+                    placeholder="Placa, nome ou código..."
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-10 py-2.5 md:py-3 text-sm md:text-base text-white placeholder-gray-500 focus:border-primary focus:outline-none transition-colors"
                     aria-label="Buscar projetos"
                   />
                   {searchTerm && (
                     <button
                       onClick={() => setSearchTerm('')}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white p-1"
                       aria-label="Limpar busca"
                     >
-                      <X className="w-5 h-5" />
+                      <X className="w-4 h-4" />
                     </button>
                   )}
                 </div>
 
-                {/* Toggle Minhas Atividades / Todas + Histórico */}
-                <div className="flex flex-wrap items-center gap-4">
-                  <div className="flex items-center bg-white/5 rounded-xl p-1">
+                {/* Toggle Minhas/Todos - Botões maiores para toque */}
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 flex items-center bg-white/5 rounded-xl p-1">
                     <button
                       onClick={() => { setViewMode('mine'); setShowHistory(false); setFilterStatus('pending'); }}
                       className={cn(
-                        "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                        "flex-1 px-3 py-2.5 rounded-lg text-xs md:text-sm font-medium transition-all active:scale-95",
                         viewMode === 'mine' && !showHistory
                           ? "bg-primary text-black"
-                          : "text-gray-400 hover:text-white"
+                          : "text-gray-400"
                       )}
                     >
-                      Minhas Atividades
+                      Meus
                     </button>
                     <button
                       onClick={() => { setViewMode('all'); setShowHistory(false); setFilterStatus('pending'); }}
                       className={cn(
-                        "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                        "flex-1 px-3 py-2.5 rounded-lg text-xs md:text-sm font-medium transition-all active:scale-95",
                         viewMode === 'all' && !showHistory
                           ? "bg-primary text-black"
-                          : "text-gray-400 hover:text-white"
+                          : "text-gray-400"
                       )}
                     >
-                      Ver Todos
-                    </button>
-                    <button
-                      onClick={() => { setShowHistory(true); setFilterStatus('all'); }}
-                      className={cn(
-                        "px-4 py-2 rounded-lg text-sm font-medium transition-all",
-                        showHistory
-                          ? "bg-green-500 text-white"
-                          : "text-gray-400 hover:text-white"
-                      )}
-                    >
-                      Histórico ({historyProjects.length})
+                      Todos
                     </button>
                   </div>
                   {showHistory && (
-                    <span className="text-sm text-green-400 font-medium">
-                      Mostrando projetos concluídos/entregues
-                    </span>
+                    <button
+                      onClick={() => { setShowHistory(false); setFilterStatus('pending'); }}
+                      className="px-3 py-2.5 bg-green-500/20 text-green-400 rounded-xl text-xs font-medium flex items-center gap-1 active:scale-95"
+                    >
+                      <X className="w-3 h-3" /> Histórico
+                    </button>
                   )}
                 </div>
 
