@@ -3,35 +3,11 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import QrScanner from 'qr-scanner'
 import { 
   Camera, QrCode, Search, Flashlight, SwitchCamera, 
-  Upload, AlertTriangle, Loader2, ArrowLeft, CheckCircle 
+  Upload, Loader2, ArrowLeft, CheckCircle 
 } from 'lucide-react'
 import { cn } from '../lib/utils'
 
 type ScanState = 'idle' | 'requesting' | 'active' | 'success' | 'error'
-type ErrorType = 'permission' | 'https' | 'no-camera' | 'in-use' | 'unknown'
-
-const ERROR_MESSAGES: Record<ErrorType, { title: string; message: string }> = {
-  permission: {
-    title: 'Permissão Negada',
-    message: 'Permita o acesso à câmera nas configurações do navegador.'
-  },
-  https: {
-    title: 'Conexão Não Segura',
-    message: 'O scanner requer HTTPS. Use a busca manual ou envie uma imagem.'
-  },
-  'no-camera': {
-    title: 'Câmera Não Encontrada',
-    message: 'Nenhuma câmera disponível neste dispositivo.'
-  },
-  'in-use': {
-    title: 'Câmera em Uso',
-    message: 'A câmera está sendo usada por outro app. Feche-o e tente novamente.'
-  },
-  unknown: {
-    title: 'Erro ao Acessar Câmera',
-    message: 'Não foi possível acessar a câmera. Use a busca manual.'
-  }
-}
 
 export function ScanPage() {
   const navigate = useNavigate()
@@ -45,13 +21,10 @@ export function ScanPage() {
   const autoStartAttempted = useRef(false)
   
   const [scanState, setScanState] = useState<ScanState>('idle')
-  const [errorType, setErrorType] = useState<ErrorType | null>(null)
   const [manualInput, setManualInput] = useState('')
-  const [hasFlash, setHasFlash] = useState(false)
   const [flashOn, setFlashOn] = useState(false)
   const [processingImage, setProcessingImage] = useState(false)
   const [scannedCode, setScannedCode] = useState<string | null>(null)
-  const [cameraStarted, setCameraStarted] = useState(false)
 
   const extractProjectCode = useCallback((data: string): string => {
     if (data.includes('/verify/')) {
@@ -78,90 +51,17 @@ export function ScanPage() {
     }, 800)
   }, [extractProjectCode, navigate])
 
-  const getErrorType = (err: unknown): ErrorType => {
-    if (err instanceof Error) {
-      const message = err.message.toLowerCase()
-      const name = err.name.toLowerCase()
-      
-      if (name === 'notallowederror' || message.includes('permission')) {
-        return 'permission'
-      }
-      if (name === 'notfounderror' || message.includes('not found')) {
-        return 'no-camera'
-      }
-      if (name === 'notreadableerror' || message.includes('in use') || message.includes('could not start')) {
-        return 'in-use'
-      }
-      if (message.includes('secure') || message.includes('https')) {
-        return 'https'
-      }
-    }
-    
-    if (typeof window !== 'undefined' && !window.isSecureContext) {
-      return 'https'
-    }
-    
-    return 'unknown'
-  }
-
-  const startScanner = useCallback(async () => {
-    if (!videoRef.current || cameraStarted) return
-    
-    setScanState('requesting')
-    setErrorType(null)
-    
-    try {
-      const hasCamera = await QrScanner.hasCamera()
-      if (!hasCamera) {
-        setScanState('error')
-        setErrorType('no-camera')
-        return
-      }
-
-      const scanner = new QrScanner(
-        videoRef.current,
-        (result) => {
-          if (result.data) {
-            handleScanResult(result.data)
-          }
-        },
-        {
-          preferredCamera: 'environment',
-          highlightScanRegion: true,
-          highlightCodeOutline: true,
-          returnDetailedScanResult: true,
-          maxScansPerSecond: 5,
-        }
-      )
-      
-      scannerRef.current = scanner
-      
-      await scanner.start()
-      setCameraStarted(true)
-      setScanState('active')
-      
-      const hasFlashCapability = await scanner.hasFlash()
-      setHasFlash(hasFlashCapability)
-      
-    } catch (err) {
-      console.error('[ScanPage] Erro ao iniciar scanner:', err)
-      setScanState('error')
-      setErrorType(getErrorType(err))
-    }
-  }, [cameraStarted, handleScanResult])
-
   const stopScanner = useCallback(() => {
     if (scannerRef.current) {
       scannerRef.current.stop()
       scannerRef.current.destroy()
       scannerRef.current = null
     }
-    setCameraStarted(false)
     setScanState('idle')
   }, [])
 
   const toggleFlash = async () => {
-    if (scannerRef.current && hasFlash) {
+    if (scannerRef.current) {
       try {
         await scannerRef.current.toggleFlash()
         setFlashOn(!flashOn)
@@ -220,11 +120,10 @@ export function ScanPage() {
     navigate(-1)
   }
 
-  // Auto-start: abre câmera diretamente via input file (funciona em HTTP)
+  // Auto-start: abre câmera diretamente via input file
   useEffect(() => {
     if (autoStart && !autoStartAttempted.current) {
       autoStartAttempted.current = true
-      // Pequeno delay para garantir que o componente montou completamente
       setTimeout(() => {
         const cameraInput = document.getElementById('camera-capture') as HTMLInputElement
         if (cameraInput) {
@@ -245,8 +144,6 @@ export function ScanPage() {
     }
   }, [])
 
-  const errorInfo = errorType ? ERROR_MESSAGES[errorType] : null
-
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col">
       {/* Input para upload de imagem */}
@@ -259,8 +156,8 @@ export function ScanPage() {
         aria-label="Enviar imagem do QR Code"
       />
       
-      {/* Input para captura direta da câmera (método principal em HTTP) */}
-      {/* @ts-ignore - capture é suportado em mobile, warning é falso positivo */}
+      {/* Input para captura direta da câmera */}
+      {/* @ts-ignore - capture é suportado em mobile */}
       <input
         id="camera-capture"
         type="file"
@@ -328,18 +225,16 @@ export function ScanPage() {
             </div>
             {/* Camera controls */}
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center space-x-4">
-              {hasFlash && (
-                <button
-                  onClick={toggleFlash}
-                  className={cn(
-                    "w-12 h-12 rounded-full flex items-center justify-center transition-colors",
-                    flashOn ? "bg-primary text-black" : "bg-white/20 text-white backdrop-blur-sm"
-                  )}
-                  aria-label="Alternar flash"
-                >
-                  <Flashlight className="w-5 h-5" />
-                </button>
-              )}
+              <button
+                onClick={toggleFlash}
+                className={cn(
+                  "w-12 h-12 rounded-full flex items-center justify-center transition-colors",
+                  flashOn ? "bg-primary text-black" : "bg-white/20 text-white backdrop-blur-sm"
+                )}
+                aria-label="Alternar flash"
+              >
+                <Flashlight className="w-5 h-5" />
+              </button>
               <button
                 onClick={switchCamera}
                 className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
@@ -355,7 +250,7 @@ export function ScanPage() {
             <p className="text-white font-medium">Acessando câmera...</p>
             <p className="text-sm text-gray-400 mt-2">Permita o acesso quando solicitado</p>
           </div>
-        ) : scanState === 'error' || scanState === 'idle' ? (
+        ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
             <video ref={videoRef} className="hidden" autoPlay playsInline muted />
             <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mb-6">
@@ -384,7 +279,7 @@ export function ScanPage() {
               </button>
             </div>
           </div>
-        ) : null}
+        )}
       </div>
 
       {/* Manual Input Panel */}

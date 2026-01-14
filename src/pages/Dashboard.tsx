@@ -39,6 +39,18 @@ export function Dashboard() {
   const [copied, setCopied] = useState(false)
   const [photoModal, setPhotoModal] = useState<{ src: string; alt: string } | null>(null)
 
+  // Validação de dados do projeto
+  if (!selectedProject) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-black">
+        <div className="text-center">
+          <p className="text-white text-lg">Nenhum projeto encontrado</p>
+          <p className="text-gray-400 text-sm mt-2">Entre em contato com a Elite Blindagens</p>
+        </div>
+      </div>
+    )
+  }
+
   // Informações de contato da empresa
   const companyInfo = {
     whatsapp: '5511913123071',
@@ -84,14 +96,6 @@ export function Dashboard() {
       </div>
     )
   }
-
-  // Validação de dados do projeto para prevenir tela preta
-  const vehicleImage = selectedProject.vehicle?.images?.[0] || '/placeholder-car.jpg'
-  const timelineWithPhotos = selectedProject.timeline?.map(step => ({
-    ...step,
-    photos: step.photos || [],
-    photoDetails: step.photoDetails || []
-  })) || []
 
   const currentStep = selectedProject.timeline.find(step => step.status === 'in_progress')
 
