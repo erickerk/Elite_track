@@ -24,7 +24,12 @@ export function Dashboard() {
   const { totalUnreadCount: chatUnreadCount } = useChat()
   const { projects } = useProjects()
 
-  const userProjects = projects.filter(p => p.user.id === user?.id || p.user.email === user?.email)
+  // Filtrar projetos do usuário por ID ou email (fallback robusto)
+  const userProjects = projects.filter(p => {
+    const matchById = p.user.id === user?.id
+    const matchByEmail = p.user.email?.toLowerCase() === user?.email?.toLowerCase()
+    return matchById || matchByEmail
+  })
   const [selectedProject, setSelectedProject] = useState<Project | null>(userProjects[0] || projects[0] || null)
   const [showVehicleSelector, setShowVehicleSelector] = useState(false)
   const [showQRModal, setShowQRModal] = useState(false)
@@ -79,6 +84,14 @@ export function Dashboard() {
       </div>
     )
   }
+
+  // Validação de dados do projeto para prevenir tela preta
+  const vehicleImage = selectedProject.vehicle?.images?.[0] || '/placeholder-car.jpg'
+  const timelineWithPhotos = selectedProject.timeline?.map(step => ({
+    ...step,
+    photos: step.photos || [],
+    photoDetails: step.photoDetails || []
+  })) || []
 
   const currentStep = selectedProject.timeline.find(step => step.status === 'in_progress')
 

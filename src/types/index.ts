@@ -154,6 +154,7 @@ export interface Project {
   permanentQrCode?: string // QR Code permanente do projeto (base64)
   inviteToken?: string // Token de convite para cadastro
   inviteExpiresAt?: string // Data de expiração do convite
+  executorId?: string // ID do executor responsável pelo projeto
   blindingSpecs?: BlindingSpecs
   deliveryChecklist?: DeliveryChecklist[]
   deliverySchedule?: DeliverySchedule

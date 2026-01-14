@@ -54,6 +54,7 @@ function dbProjectToProject(dbProject: any, vehicle: Vehicle, user: User, timeli
     permanentQrCode: dbProject.permanent_qr_code || undefined,
     inviteToken: dbProject.invite_token || undefined,
     inviteExpiresAt: dbProject.invite_expires_at || undefined,
+    executorId: dbProject.executor_id || undefined,
   }
 }
 
@@ -73,6 +74,8 @@ export class SupabaseProjectStorage implements IProjectStorage {
   async getProjects(): Promise<Project[]> {
     if (!supabase) throw new Error('Supabase não configurado')
 
+    console.log('[SupabaseAdapter] Buscando projetos do Supabase...')
+
     const { data: projects, error } = await supabase
       .from('projects')
       .select(`
@@ -81,7 +84,7 @@ export class SupabaseProjectStorage implements IProjectStorage {
           *,
           vehicle_images (*)
         ),
-        users (*),
+        users!projects_user_id_fkey (*),
         timeline_steps (
           *,
           step_photos (*)
@@ -89,7 +92,18 @@ export class SupabaseProjectStorage implements IProjectStorage {
       `)
       .order('created_at', { ascending: false })
 
-    if (error) throw error
+    if (error) {
+      console.error('[SupabaseAdapter] Erro ao buscar projetos:', error)
+      throw error
+    }
+
+    console.log(`[SupabaseAdapter] ${projects?.length || 0} projetos encontrados`)
+    
+    if (projects && projects.length > 0) {
+      projects.forEach((p: any) => {
+        console.log(`  - ${p.qr_code} | User: ${p.users?.name} | Executor: ${p.executor_id || 'SEM EXECUTOR'}`)
+      })
+    }
 
     return (projects || []).map((p: any) => {
       const vehicleImages = (p.vehicles?.vehicle_images || []) as any[]
@@ -149,7 +163,7 @@ export class SupabaseProjectStorage implements IProjectStorage {
           *,
           vehicle_images (*)
         ),
-        users (*),
+        users!projects_user_id_fkey (*),
         timeline_steps (
           *,
           step_photos (*)
@@ -219,7 +233,7 @@ export class SupabaseProjectStorage implements IProjectStorage {
           *,
           vehicle_images (*)
         ),
-        users (*),
+        users!projects_user_id_fkey (*),
         timeline_steps (
           *,
           step_photos (*)
@@ -455,6 +469,7 @@ export class SupabaseProjectStorage implements IProjectStorage {
     if (data.processStartDate !== undefined) updateData.process_start_date = data.processStartDate
     if (data.completedDate !== undefined) updateData.completed_date = data.completedDate
     if (data.qrCode !== undefined) updateData.qr_code = data.qrCode
+    if (data.executorId !== undefined) updateData.executor_id = data.executorId
 
     // Atualizar projeto principal
     if (Object.keys(updateData).length > 0) {

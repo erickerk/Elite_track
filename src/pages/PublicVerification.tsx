@@ -403,7 +403,7 @@ export function PublicVerification() {
         .select(`
           *,
           vehicles (*),
-          users (*),
+          users!projects_user_id_fkey (*),
           timeline_steps (*),
           step_photos (*)
         `)
@@ -423,7 +423,7 @@ export function PublicVerification() {
             .select(`
               *,
               vehicles (*),
-              users (*),
+              users!projects_user_id_fkey (*),
               timeline_steps (*),
               step_photos (*)
             `)

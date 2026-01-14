@@ -455,9 +455,11 @@ export function ExecutorDashboard() {
     }
     
     // Filtro "Minhas atividades": verifica se o executor está atribuído ao projeto
-    // Verifica pelo nome do executor ou pelo técnico da timeline
     if (viewMode === 'mine' && user) {
+      // Verifica pelo executor_id, email ou nome do técnico (fallbacks múltiplos)
       const isAssigned = 
+        p.executorId === user.id ||
+        p.executorId === user.email?.toLowerCase() ||
         p.blindingSpecs?.technicalResponsible?.toLowerCase() === user.name?.toLowerCase() ||
         p.timeline?.some(step => step.technician?.toLowerCase() === user.name?.toLowerCase())
       if (!isAssigned) return false
@@ -1037,6 +1039,35 @@ ${loginUrl}
     })
   }
 
+  // Função para tornar o projeto "meu" - atribuir o executor atual como responsável
+  const handleTakeProject = async (project: Project) => {
+    if (!user?.id) {
+      addNotification({
+        type: 'error',
+        title: 'Erro',
+        message: 'Usuário não identificado',
+      })
+      return
+    }
+
+    try {
+      await updateGlobalProject(project.id, { executorId: user.id })
+      await refreshProjects()
+      addNotification({
+        type: 'success',
+        title: 'Projeto Atribuído',
+        message: `Você agora é o responsável por ${project.vehicle.plate}`,
+      })
+    } catch (error) {
+      console.error('Erro ao atribuir projeto:', error)
+      addNotification({
+        type: 'error',
+        title: 'Erro',
+        message: 'Não foi possível atribuir o projeto',
+      })
+    }
+  }
+
   return (
     <div className="min-h-screen bg-black text-white font-['Inter'] flex overflow-x-hidden">
       {/* Sidebar */}
@@ -1550,6 +1581,16 @@ ${loginUrl}
                         <ExternalLink className="w-4 h-4" />
                         Preview Público
                       </button>
+                      {/* Botão "Tornar Meu" - só aparece se o projeto não for do executor atual */}
+                      {selectedProject.executorId !== user?.id && (
+                        <button
+                          onClick={() => handleTakeProject(selectedProject)}
+                          className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl font-semibold text-sm transition-colors"
+                        >
+                          <Users className="w-4 h-4" />
+                          Tornar Meu
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

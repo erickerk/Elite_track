@@ -11,6 +11,7 @@ import { LeadsProvider } from './contexts/LeadsContext'
 import { InviteProvider } from './contexts/InviteContext'
 import { EliteShieldProvider } from './contexts/EliteShieldContext'
 import { Layout, ExecutorLayout, AdminLayout } from './components/layout'
+import { ErrorBoundary } from './components/ui'
 import { 
   Dashboard, Timeline, Gallery, Chat, Profile, Login, QRCodePage,
   ExecutorDashboard, AdminDashboard, PublicVerification, EliteShield, Revisions,
@@ -144,7 +145,9 @@ function AppRoutes() {
         path="/dashboard"
         element={
           <PrivateRoute>
-            <RoleBasedRoute />
+            <ErrorBoundary>
+              <RoleBasedRoute />
+            </ErrorBoundary>
           </PrivateRoute>
         }
       />

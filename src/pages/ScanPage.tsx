@@ -37,10 +37,12 @@ export function ScanPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const mode = searchParams.get('mode') || 'project'
+  const autoStart = searchParams.get('autoStart') === 'true'
   
   const videoRef = useRef<HTMLVideoElement>(null)
   const scannerRef = useRef<QrScanner | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const autoStartAttempted = useRef(false)
   
   const [scanState, setScanState] = useState<ScanState>('idle')
   const [errorType, setErrorType] = useState<ErrorType | null>(null)
@@ -218,6 +220,18 @@ export function ScanPage() {
     navigate(-1)
   }
 
+  // Auto-start scanner se query param autoStart=true
+  useEffect(() => {
+    if (autoStart && !autoStartAttempted.current && scanState === 'idle') {
+      autoStartAttempted.current = true
+      // Pequeno delay para garantir que o componente montou completamente
+      setTimeout(() => {
+        startScanner()
+      }, 100)
+    }
+  }, [autoStart, scanState, startScanner])
+
+  // Cleanup ao desmontar
   useEffect(() => {
     return () => {
       if (scannerRef.current) {

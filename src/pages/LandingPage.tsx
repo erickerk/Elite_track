@@ -720,7 +720,7 @@ export function LandingPage() {
                 />
               </div>
               <button
-                onClick={() => navigate('/scan?mode=verify')}
+                onClick={() => navigate('/scan?mode=verify&autoStart=true')}
                 className="w-full py-3 bg-white/10 border border-white/20 rounded-xl text-sm hover:bg-white/20 transition-colors flex items-center justify-center gap-2"
               >
                 <i className="ri-qr-scan-2-line text-primary"></i>
