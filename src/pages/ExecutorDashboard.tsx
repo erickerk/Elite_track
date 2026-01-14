@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import { Modal } from '../components/ui/Modal'
 import { NotificationPanel } from '../components/ui/NotificationPanel'
-import { ExecutorChat, ExecutorTimeline, ExecutorPhotos, ClientDetailModal } from '../components/executor'
+import { ExecutorChat, ExecutorTimeline, ExecutorPhotos, ClientDetailModal, MobileDrawer } from '../components/executor'
 import { exportToExcel, formatDateBR, formatPhone } from '../utils/exportToExcel'
 import { useAuth } from '../contexts/AuthContext'
 // Nota: registerTempPassword é usado para registrar senhas temporárias para novos clientes
@@ -226,11 +226,12 @@ export function ExecutorDashboard() {
     executorNotes: '',
   })
   const [showNotifications, setShowNotifications] = useState(false)
+  const [showMobileDrawer, setShowMobileDrawer] = useState(false)
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState<string>('pending')
-  // Filtro "Minhas Atividades" vs "Todas" - por padrão mostra apenas as atribuídas ao executor
-  const [viewMode, setViewMode] = useState<'mine' | 'all'>('mine')
+  // Filtro "Minhas Atividades" vs "Todas" - por padrão mostra todos para garantir visibilidade
+  const [viewMode, setViewMode] = useState<'mine' | 'all'>('all')
   // Mostrar histórico (projetos concluídos) separadamente
   const [showHistory, setShowHistory] = useState(false)
   // Usar projetos globais diretamente (já vem do contexto/Supabase)
@@ -1114,11 +1115,17 @@ ${loginUrl}
         <header className="bg-carbon-900/95 backdrop-blur-xl border-b border-white/10 sticky top-0 z-40">
           <div className="px-3 md:px-6 py-2 md:py-4">
             <div className="flex items-center justify-between">
-              {/* Mobile: Título da página atual */}
+              {/* Mobile: Hamburger + Título */}
               <div className="flex items-center space-x-2 lg:hidden min-w-0 flex-1">
-                <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/60 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <span className="text-black font-bold text-sm">E</span>
-                </div>
+                <button
+                  onClick={() => setShowMobileDrawer(true)}
+                  className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-xl transition-colors flex-shrink-0"
+                  aria-label="Abrir menu"
+                >
+                  <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
                 <div className="min-w-0 flex-1">
                   <h2 className="text-base font-bold text-white truncate">
                     {activeTab === 'dashboard' && 'Projetos'}
@@ -1127,8 +1134,12 @@ ${loginUrl}
                     {activeTab === 'laudo' && 'Laudo'}
                     {activeTab === 'card' && 'Cartão'}
                     {activeTab === 'chat' && 'Chat'}
+                    {activeTab === 'clients' && 'Clientes'}
+                    {activeTab === 'quotes' && 'Orçamentos'}
+                    {activeTab === 'tickets' && 'Tickets'}
+                    {activeTab === 'schedule' && 'Agenda'}
                   </h2>
-                  {selectedProject && activeTab !== 'dashboard' && activeTab !== 'chat' && (
+                  {selectedProject && activeTab !== 'dashboard' && activeTab !== 'chat' && activeTab !== 'clients' && activeTab !== 'quotes' && activeTab !== 'tickets' && activeTab !== 'schedule' && (
                     <p className="text-xs text-gray-400 truncate">
                       {selectedProject.vehicle.plate} • {selectedProject.user.name?.split(' ')[0]}
                     </p>
@@ -4757,6 +4768,19 @@ ${loginUrl}
           </div>
         )}
       </Modal>
+
+      {/* Mobile Drawer */}
+      <MobileDrawer
+        isOpen={showMobileDrawer}
+        onClose={() => setShowMobileDrawer(false)}
+        activeTab={activeTab}
+        onTabChange={handleSetActiveTab}
+        onScanClick={() => navigate('/scan?mode=project')}
+        onLogout={handleLogout}
+        userName={user?.name}
+        userAvatar={user?.avatar}
+        chatUnreadCount={chatUnreadCount}
+      />
     </div>
   )
 }

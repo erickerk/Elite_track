@@ -238,14 +238,7 @@ function AppRoutes() {
       />
       <Route path="/verify/:projectId" element={<PublicVerification />} />
       <Route path="/qr/:code" element={<QRRedirect />} />
-      <Route 
-        path="/scan" 
-        element={
-          <PrivateRoute>
-            <ScanPage />
-          </PrivateRoute>
-        } 
-      />
+      <Route path="/scan" element={<ScanPage />} />
       <Route path="/register/:token" element={<Register />} />
       <Route
         path="/invites"
