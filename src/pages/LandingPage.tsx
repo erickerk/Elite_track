@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLeads } from '../contexts/LeadsContext'
 import { useNotifications } from '../contexts/NotificationContext'
-import { QRScanner } from '../components/executor/QRScanner'
 import '../styles/LandingPage.css'
 
 export function LandingPage() {
@@ -20,8 +19,7 @@ export function LandingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showConsultaModal, setShowConsultaModal] = useState(false)
   const [consultaInput, setConsultaInput] = useState('')
-  const [showQRScanner, setShowQRScanner] = useState(false)
-
+  
   const handleConsulta = () => {
     if (consultaInput.trim()) {
       setShowConsultaModal(false)
@@ -30,12 +28,7 @@ export function LandingPage() {
     }
   }
 
-  const handleQRScan = (code: string) => {
-    setShowQRScanner(false)
-    setShowConsultaModal(false)
-    navigate(`/verify/${code}`)
-  }
-
+  
   const closeModal = () => {
     setShowConsultaModal(false)
     setConsultaInput('')
@@ -727,7 +720,7 @@ export function LandingPage() {
                 />
               </div>
               <button
-                onClick={() => setShowQRScanner(true)}
+                onClick={() => navigate('/scan?mode=verify')}
                 className="w-full py-3 bg-white/10 border border-white/20 rounded-xl text-sm hover:bg-white/20 transition-colors flex items-center justify-center gap-2"
               >
                 <i className="ri-qr-scan-2-line text-primary"></i>
@@ -755,12 +748,6 @@ export function LandingPage() {
         </div>
       )}
 
-      {/* QR Scanner Component */}
-      <QRScanner 
-        isOpen={showQRScanner} 
-        onClose={() => setShowQRScanner(false)} 
-        onScan={handleQRScan}
-      />
-    </div>
+      </div>
   )
 }

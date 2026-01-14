@@ -35,9 +35,7 @@ export function EliteCard() {
   const userProjects = allProjects.filter(p => p.user.id === user?.id || p.user.email === user?.email)
   const completedProjects = userProjects.filter(p => p.status === 'completed' && p.eliteCard)
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
-  const [showQRScanner, setShowQRScanner] = useState(false)
-  const [qrCode, setQrCode] = useState('')
-  
+    
   const project = selectedProjectId 
     ? (userProjects.find(p => p.id === selectedProjectId) || completedProjects[0] || userProjects[0] || allProjects[0])
     : (completedProjects[0] || userProjects[0] || allProjects[0])
@@ -53,22 +51,6 @@ export function EliteCard() {
   const [ticketCategory, setTicketCategory] = useState<'general' | 'technical' | 'warranty'>('general')
   const [ticketPriority, setTicketPriority] = useState<'low' | 'medium' | 'high'>('medium')
   const [isGettingLocation, setIsGettingLocation] = useState(false)
-
-  const handleScanQRCode = () => {
-    if (!qrCode.trim()) {
-      addNotification({ type: 'error', title: 'Erro', message: 'Digite ou escaneie um código QR válido.' })
-      return
-    }
-    const foundProject = allProjects.find(p => p.id === qrCode || p.qrCode === qrCode)
-    if (foundProject) {
-      setSelectedProjectId(foundProject.id)
-      setShowQRScanner(false)
-      setQrCode('')
-      addNotification({ type: 'success', title: 'Cartão Encontrado', message: `Cartão de ${foundProject.vehicle.brand} ${foundProject.vehicle.model} carregado.` })
-    } else {
-      addNotification({ type: 'error', title: 'Não Encontrado', message: 'Nenhum cartão encontrado com este código.' })
-    }
-  }
 
   const handleRescueRequest = async () => {
     if (!rescueLocation) {
@@ -370,7 +352,7 @@ export function EliteCard() {
               <div className="flex items-center justify-between mb-3">
                 <p className="text-sm text-gray-400">Selecione um cartão:</p>
                 <button 
-                  onClick={() => setShowQRScanner(true)}
+                  onClick={() => navigate('/scan?mode=card')}
                   className="flex items-center gap-2 text-primary text-sm hover:bg-primary/10 px-3 py-1.5 rounded-lg transition-colors"
                 >
                   <i className="ri-qr-scan-2-line"></i>
@@ -400,7 +382,7 @@ export function EliteCard() {
           {/* Opção de Escanear QR para acompanhar outro veículo */}
           <div className="mb-6 text-center">
             <button 
-              onClick={() => setShowQRScanner(true)}
+              onClick={() => navigate('/scan?mode=card')}
               className="inline-flex items-center gap-2 text-gray-400 hover:text-primary text-sm transition-colors"
             >
               <i className="ri-qr-code-line"></i>
@@ -786,50 +768,6 @@ export function EliteCard() {
         </div>
       )}
 
-      {/* Modal Scanner QR Code */}
-      {showQRScanner && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="bg-carbon-900 border border-white/10 rounded-3xl p-8 max-w-md w-full mx-4">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold">Escanear QR Code</h3>
-              <button 
-                onClick={() => { setShowQRScanner(false); setQrCode(''); }}
-                className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center"
-                title="Fechar"
-                aria-label="Fechar modal"
-              >
-                <i className="ri-close-line text-white"></i>
-              </button>
-            </div>
-            <p className="text-gray-400 text-sm mb-6">
-              Digite o código do projeto ou QR code para acompanhar outro veículo
-            </p>
-            <div className="space-y-4">
-              <input
-                type="text"
-                value={qrCode}
-                onChange={(e) => setQrCode(e.target.value)}
-                placeholder="Ex: PRJ-2025-001 ou QR-12345"
-                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-primary/50"
-              />
-              <div className="flex space-x-3">
-                <button 
-                  onClick={() => { setShowQRScanner(false); setQrCode(''); }}
-                  className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button 
-                  onClick={handleScanQRCode}
-                  className="flex-1 px-6 py-3 bg-primary hover:bg-primary/90 text-black font-semibold rounded-xl transition-colors"
-                >
-                  Buscar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      </div>
   )
 }

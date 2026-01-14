@@ -16,7 +16,7 @@ import {
   ExecutorDashboard, AdminDashboard, PublicVerification, EliteShield, Revisions,
   LandingPage, EliteCard, Delivery, ProjectManager, SplashScreen,
   Quotes, ClientDocuments, Achievements, Register, InviteManagement, ChangePassword,
-  QRRedirect
+  QRRedirect, ScanPage
 } from './pages'
 
 // Limpar cache ao iniciar aplicação
@@ -238,6 +238,14 @@ function AppRoutes() {
       />
       <Route path="/verify/:projectId" element={<PublicVerification />} />
       <Route path="/qr/:code" element={<QRRedirect />} />
+      <Route 
+        path="/scan" 
+        element={
+          <PrivateRoute>
+            <ScanPage />
+          </PrivateRoute>
+        } 
+      />
       <Route path="/register/:token" element={<Register />} />
       <Route
         path="/invites"

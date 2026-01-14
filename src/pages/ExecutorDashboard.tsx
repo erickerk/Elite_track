@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import { Modal } from '../components/ui/Modal'
 import { NotificationPanel } from '../components/ui/NotificationPanel'
-import { QRScanner, ExecutorChat, ExecutorTimeline, ExecutorPhotos, ClientDetailModal } from '../components/executor'
+import { ExecutorChat, ExecutorTimeline, ExecutorPhotos, ClientDetailModal } from '../components/executor'
 import { exportToExcel, formatDateBR, formatPhone } from '../utils/exportToExcel'
 import { useAuth } from '../contexts/AuthContext'
 // Nota: registerTempPassword é usado para registrar senhas temporárias para novos clientes
@@ -226,7 +226,6 @@ export function ExecutorDashboard() {
     executorNotes: '',
   })
   const [showNotifications, setShowNotifications] = useState(false)
-  const [showQRScanner, setShowQRScanner] = useState(false)
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState<string>('pending')
@@ -514,31 +513,6 @@ export function ExecutorDashboard() {
     }
     loadTickets()
   }, [projects])
-
-  const handleQRScan = (code: string) => {
-    const project = allProjects.find(p => 
-      p.id === code || 
-      p.qrCode === code ||
-      p.id.toLowerCase().includes(code.toLowerCase()) ||
-      p.vehicle.plate.toLowerCase() === code.toLowerCase()
-    )
-    if (project) {
-      setSelectedProject(project)
-      setShowQRScanner(false)
-      addNotification({
-        type: 'success',
-        title: 'Projeto Encontrado',
-        message: `${project.vehicle.brand} ${project.vehicle.model} - ${project.user.name}`,
-        projectId: project.id,
-      })
-    } else {
-      addNotification({
-        type: 'error',
-        title: 'Projeto Não Encontrado',
-        message: 'Verifique o código e tente novamente.',
-      })
-    }
-  }
 
   const handleUpdateStep = (stepId: string, updates: Record<string, unknown>) => {
     // Usar função de atualização para garantir estado mais recente
@@ -1062,12 +1036,6 @@ ${loginUrl}
     })
   }
 
-  const projectSuggestions = allProjects.slice(0, 4).map(p => ({
-    id: p.id,
-    plate: p.vehicle.plate,
-    model: `${p.vehicle.brand} ${p.vehicle.model}`
-  }))
-
   return (
     <div className="min-h-screen bg-black text-white font-['Inter'] flex overflow-x-hidden">
       {/* Sidebar */}
@@ -1242,7 +1210,7 @@ ${loginUrl}
                 </button>
 
                 <button
-                  onClick={() => setShowQRScanner(true)}
+                  onClick={() => navigate('/scan?mode=project')}
                   className="hidden lg:flex items-center justify-center space-x-2 bg-primary text-black px-4 py-2.5 rounded-xl font-semibold hover:bg-primary/90 transition-colors"
                   title="Escanear QR Code"
                   aria-label="Escanear QR Code"
@@ -1306,7 +1274,7 @@ ${loginUrl}
             <Search className="w-5 h-5" />
           </button>
           <button
-            onClick={() => setShowQRScanner(true)}
+            onClick={() => navigate('/scan?mode=project')}
             className="w-14 h-14 bg-primary text-black rounded-full shadow-lg shadow-primary/30 flex items-center justify-center hover:bg-primary/90 transition-all active:scale-95"
             title="Escanear QR Code"
             aria-label="Escanear QR Code"
@@ -2979,7 +2947,7 @@ ${loginUrl}
                   Ver Projetos
                 </button>
                 <button
-                  onClick={() => setShowQRScanner(true)}
+                  onClick={() => navigate('/scan?mode=project')}
                   className="bg-primary text-black px-6 py-3 rounded-xl font-semibold flex items-center space-x-2"
                 >
                   <QrCode className="w-5 h-5" />
@@ -2990,14 +2958,6 @@ ${loginUrl}
           )}
         </main>
       </div>
-
-      {/* QR Scanner Modal */}
-      <QRScanner 
-        isOpen={showQRScanner}
-        onClose={() => setShowQRScanner(false)}
-        onScan={handleQRScan}
-        projectSuggestions={projectSuggestions}
-      />
 
       {/* Modal Editar Laudo */}
       <Modal isOpen={showLaudoModal} onClose={() => setShowLaudoModal(false)} size="lg">
