@@ -220,16 +220,19 @@ export function ScanPage() {
     navigate(-1)
   }
 
-  // Auto-start scanner se query param autoStart=true
+  // Auto-start: abre câmera diretamente via input file (funciona em HTTP)
   useEffect(() => {
-    if (autoStart && !autoStartAttempted.current && scanState === 'idle') {
+    if (autoStart && !autoStartAttempted.current) {
       autoStartAttempted.current = true
       // Pequeno delay para garantir que o componente montou completamente
       setTimeout(() => {
-        startScanner()
-      }, 100)
+        const cameraInput = document.getElementById('camera-capture') as HTMLInputElement
+        if (cameraInput) {
+          cameraInput.click()
+        }
+      }, 300)
     }
-  }, [autoStart, scanState, startScanner])
+  }, [autoStart])
 
   // Cleanup ao desmontar
   useEffect(() => {
@@ -246,6 +249,7 @@ export function ScanPage() {
 
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col">
+      {/* Input para upload de imagem */}
       <input
         ref={fileInputRef}
         type="file"
@@ -253,6 +257,18 @@ export function ScanPage() {
         onChange={handleImageUpload}
         className="hidden"
         aria-label="Enviar imagem do QR Code"
+      />
+      
+      {/* Input para captura direta da câmera (método principal em HTTP) */}
+      {/* @ts-ignore - capture é suportado em mobile, warning é falso positivo */}
+      <input
+        id="camera-capture"
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleImageUpload}
+        className="hidden"
+        aria-label="Capturar foto com câmera"
       />
       
       {/* Header */}
@@ -339,46 +355,36 @@ export function ScanPage() {
             <p className="text-white font-medium">Acessando câmera...</p>
             <p className="text-sm text-gray-400 mt-2">Permita o acesso quando solicitado</p>
           </div>
-        ) : scanState === 'error' && errorInfo ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
-            <AlertTriangle className="w-16 h-16 text-yellow-500 mb-4" />
-            <p className="text-white font-bold text-lg mb-2">{errorInfo.title}</p>
-            <p className="text-sm text-gray-400 text-center mb-6">{errorInfo.message}</p>
-            <div className="flex flex-col gap-3 w-full max-w-xs">
-              <button
-                onClick={startScanner}
-                className="bg-primary text-black px-6 py-3 rounded-xl font-semibold"
-              >
-                Tentar Novamente
-              </button>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="bg-white/10 text-white px-6 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
-              >
-                <Upload className="w-5 h-5" />
-                Enviar Imagem
-              </button>
-            </div>
-          </div>
-        ) : (
+        ) : scanState === 'error' || scanState === 'idle' ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
             <video ref={videoRef} className="hidden" autoPlay playsInline muted />
             <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mb-6">
               <Camera className="w-12 h-12 text-primary" />
             </div>
-            <p className="text-white font-medium text-lg mb-2">Pronto para escanear</p>
+            <p className="text-white font-medium text-lg mb-2">Escanear QR Code</p>
             <p className="text-gray-400 text-center text-sm mb-6">
-              Clique no botão abaixo para ativar a câmera
+              Use a câmera para escanear ou envie uma imagem
             </p>
-            <button
-              onClick={startScanner}
-              className="bg-primary text-black px-8 py-4 rounded-xl font-bold text-lg flex items-center space-x-3 active:scale-95 transition-transform"
-            >
-              <Camera className="w-6 h-6" />
-              <span>Ativar Câmera</span>
-            </button>
+            <div className="flex flex-col gap-3 w-full max-w-xs">
+              {/* Botão principal: abre câmera diretamente */}
+              <label
+                htmlFor="camera-capture"
+                className="bg-primary text-black px-8 py-4 rounded-xl font-bold text-lg flex items-center justify-center space-x-3 active:scale-95 transition-transform cursor-pointer"
+              >
+                <Camera className="w-6 h-6" />
+                <span>Abrir Câmera</span>
+              </label>
+              {/* Botão secundário: enviar imagem da galeria */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="bg-white/10 text-white px-6 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
+              >
+                <Upload className="w-5 h-5" />
+                Enviar da Galeria
+              </button>
+            </div>
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Manual Input Panel */}
