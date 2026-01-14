@@ -157,7 +157,8 @@ export function ScanPage() {
       />
       
       {/* Input para captura direta da câmera */}
-      {/* @ts-ignore - capture é suportado em mobile */}
+      {/* @ts-ignore - capture é suportado em mobile, warning é falso positivo */}
+      {/* eslint-disable-next-line jsx-a11y/no-access-key */}
       <input
         id="camera-capture"
         type="file"
