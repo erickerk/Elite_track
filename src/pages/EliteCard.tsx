@@ -6,7 +6,9 @@ import { useNotifications } from '../contexts/NotificationContext'
 import { useProjects } from '../contexts/ProjectContext'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import jsPDF from 'jspdf'
-import logoElite from '../assets/logo-elite.png'
+
+// Logo Elite da pasta public (caminho absoluto para o navegador)
+const LOGO_ELITE_URL = '/logo-elite.png'
 
 // Função para carregar imagem como Data URL
 async function loadImageAsDataURL(src: string): Promise<string> {
@@ -142,8 +144,8 @@ export function EliteCard() {
       format: [85.6, 53.98]
     })
     
-    // Carregar logo Elite
-    const logoDataUrl = await loadImageAsDataURL(logoElite)
+    // Carregar logo Elite da pasta public
+    const logoDataUrl = await loadImageAsDataURL(LOGO_ELITE_URL)
     
     doc.setFillColor(26, 26, 26)
     doc.rect(0, 0, 85.6, 53.98, 'F')

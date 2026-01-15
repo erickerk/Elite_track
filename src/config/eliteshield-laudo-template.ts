@@ -4,12 +4,16 @@
  * Este arquivo contém a estrutura e textos padrão do laudo técnico.
  * Qualquer alteração aqui reflete em todas as telas de laudo (público, executor, PDF).
  * 
- * @version 1.0.0
+ * IMPORTANTE: Este é o arquivo ÚNICO de template. Todas as telas devem usar estes textos.
+ * Os dados dinâmicos (veículo, cliente, datas) vêm do Supabase via função gerarDadosLaudo().
+ * 
+ * @version 2.0.0
  * @author Elite Blindagens
  */
 
 // ============================================================================
-// TEXTOS JURÍDICOS E DECLARAÇÕES PADRÃO
+// TEXTOS JURÍDICOS E DECLARAÇÕES PADRÃO (FIXOS)
+// Estes textos são idênticos em todas as telas e no PDF
 // ============================================================================
 
 export const LAUDO_TEXTOS = {
@@ -121,6 +125,123 @@ export const LAUDO_TEXTOS = {
   rodape: {
     empresa: 'Elite Blindagens',
     slogan: 'Proteção elevada ao estado da arte.'
+  }
+}
+
+// ============================================================================
+// ESTRUTURA DAS 15 TELAS DO LAUDO
+// Define a ordem e conteúdo de cada tela/seção
+// ============================================================================
+
+export const TELAS_LAUDO = {
+  // TELA 1 - CAPA
+  tela1_capa: {
+    id: 'capa',
+    titulo: 'EliteShield™',
+    subtitulo: 'Laudo Técnico Digital',
+    descricao: 'Capa do documento com logo, foto do veículo, cliente e status',
+    campos: ['logo', 'fotoVeiculo', 'nomeCliente', 'veiculoModelo', 'veiculoAno', 'status', 'dataConclusao', 'dataEntrega']
+  },
+  
+  // TELA 2 - IDENTIFICAÇÃO DO VEÍCULO
+  tela2_veiculo: {
+    id: 'veiculo',
+    titulo: 'Identificação do Veículo',
+    campos: ['marca', 'modelo', 'anoModelo', 'cor', 'placa', 'chassi', 'kmCheckin', 'tipo']
+  },
+  
+  // TELA 3 - IDENTIFICAÇÃO DO CLIENTE
+  tela3_cliente: {
+    id: 'cliente',
+    titulo: 'Dados do Cliente',
+    campos: ['nomeRazaoSocial', 'cpfCnpj', 'telefone', 'email', 'cidadeEstado']
+  },
+  
+  // TELA 4 - LINHA DE BLINDAGEM
+  tela4_linha: {
+    id: 'linha',
+    titulo: 'Linha de Blindagem',
+    campos: ['linhaBlindagem', 'nivelProtecao', 'tipoUso']
+  },
+  
+  // TELA 5 - ESPECIFICAÇÃO TÉCNICA
+  tela5_specs: {
+    id: 'specs',
+    titulo: 'Especificação Técnica',
+    campos: ['vidrosFabricante', 'vidrosEspessura', 'vidrosGarantia', 'opacosAramida', 'opacosComplemento', 'opacosFabricante']
+  },
+  
+  // TELA 6 - MAPA DA BLINDAGEM
+  tela6_mapa: {
+    id: 'mapa',
+    titulo: 'Mapa da Blindagem',
+    campos: ['areasBlindadas'],
+    descricao: 'Silhueta do carro com áreas blindadas destacadas'
+  },
+  
+  // TELA 7 - REGISTRO FOTOGRÁFICO
+  tela7_fotos: {
+    id: 'fotos',
+    titulo: 'Registro Fotográfico',
+    campos: ['fotosDesmontagem', 'fotosVidros', 'fotosOpacos', 'fotosFechamento'],
+    descricao: 'Grid 2x2 com data, etapa e técnico'
+  },
+  
+  // TELA 8 - PROCESSO DE EXECUÇÃO
+  tela8_processo: {
+    id: 'processo',
+    titulo: 'Processo de Execução',
+    campos: ['timeline'],
+    descricao: 'Timeline vertical com etapas'
+  },
+  
+  // TELA 9 - TESTES E VERIFICAÇÕES
+  tela9_testes: {
+    id: 'testes',
+    titulo: 'Testes e Verificações',
+    campos: ['checklistTestes', 'statusAprovacao']
+  },
+  
+  // TELA 10 - RESPONSÁVEIS TÉCNICOS
+  tela10_responsaveis: {
+    id: 'responsaveis',
+    titulo: 'Responsáveis Técnicos',
+    campos: ['tecnicoNome', 'tecnicoCargo', 'supervisorNome', 'supervisorCargo']
+  },
+  
+  // TELA 11 - GARANTIAS
+  tela11_garantias: {
+    id: 'garantias',
+    titulo: 'Garantias Ativas',
+    campos: ['garantiaVidros', 'garantiaOpacos', 'garantiaAcabamento']
+  },
+  
+  // TELA 12 - ELITETRACE QR CODE
+  tela12_qrcode: {
+    id: 'qrcode',
+    titulo: 'EliteTrace™',
+    campos: ['qrCode', 'urlVerificacao']
+  },
+  
+  // TELA 13 - OBSERVAÇÕES TÉCNICAS
+  tela13_observacoes: {
+    id: 'observacoes',
+    titulo: 'Observações Técnicas',
+    campos: ['observacoes', 'recomendacoes']
+  },
+  
+  // TELA 14 - DECLARAÇÃO FINAL
+  tela14_declaracao: {
+    id: 'declaracao',
+    titulo: 'Declaração Final',
+    campos: ['textoDeclaracao']
+  },
+  
+  // TELA 15 - STATUS DO DOCUMENTO
+  tela15_status: {
+    id: 'status',
+    titulo: 'Status do Documento',
+    campos: ['statusFinal', 'dataEmissao', 'versaoDocumento']
   }
 }
 
@@ -292,11 +413,13 @@ export interface DadosLaudo {
     uso: 'Civil' | 'Executivo' | 'Especial'
   }
   
-  // Datas
+  // Datas (IMPORTANTE: sincronizadas com Supabase)
   datas: {
-    recebimento: string
-    conclusao: string
-    emissao: string
+    recebimento: string      // Data de recebimento do veículo (vehicle_received_date)
+    conclusao: string        // Data de conclusão do processo (completed_date)
+    entrega: string          // Data de entrega ao cliente (actual_delivery)
+    emissao: string          // Data de emissão do laudo (gerada automaticamente)
+    previsaoEntrega: string  // Previsão de entrega (estimated_delivery)
   }
   
   // Fotos (URLs)
@@ -356,8 +479,10 @@ export function gerarDadosLaudo(project: any): DadosLaudo {
     },
     datas: {
       recebimento: project.vehicleReceivedDate || project.startDate || '',
-      conclusao: project.completedDate || project.estimatedDelivery || '',
-      emissao: new Date().toISOString()
+      conclusao: project.completedDate || '',
+      entrega: project.actualDelivery || '',
+      emissao: new Date().toISOString(),
+      previsaoEntrega: project.estimatedDelivery || ''
     },
     fotos: {
       veiculo: project.vehicle?.images?.[0],

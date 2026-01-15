@@ -156,7 +156,9 @@ test.describe('QR Scanner - Multi-device', () => {
   });
 
   test.describe('Mobile - iPhone 13', () => {
-    test.use({ ...devices['iPhone 13'] });
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 390, height: 844 }); // iPhone 13
+    });
 
     test('Scanner deve abrir no mobile', async ({ page }) => {
       await page.goto('/');
@@ -191,9 +193,8 @@ test.describe('QR Scanner - Multi-device', () => {
   });
 
   test.describe('Mobile - Samsung Galaxy S23', () => {
-    test.use({ 
-      viewport: { width: 360, height: 780 },
-      userAgent: 'Mozilla/5.0 (Linux; Android 13; SM-S911B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36'
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 360, height: 780 }); // Samsung S23
     });
 
     test('Scanner deve funcionar no Samsung S23', async ({ page }) => {
@@ -216,7 +217,9 @@ test.describe('QR Scanner - Multi-device', () => {
 test.describe('Layout Mobile - Executor Dashboard', () => {
   
   test.describe('iPhone 13', () => {
-    test.use({ ...devices['iPhone 13'] });
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 390, height: 844 }); // iPhone 13
+    });
 
     test('Não deve ter overflow horizontal', async ({ page }) => {
       await page.goto('/');

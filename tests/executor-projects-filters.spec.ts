@@ -147,7 +147,9 @@ test.describe('Executor Dashboard - Filtros de Projetos', () => {
   });
 
   test.describe('Mobile - Filtros e Navegação', () => {
-    test.use({ ...devices['iPhone 13'] });
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 390, height: 844 }); // iPhone 13
+    });
 
     test('Mobile: deve mostrar apenas pendentes por padrão', async ({ page }) => {
       await loginAsExecutor(page);

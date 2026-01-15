@@ -5,21 +5,16 @@
  * Usa o componente EliteShieldLaudo para renderização padronizada.
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import jsPDF from 'jspdf'
 import { Shield, AlertCircle, Settings, Download } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useProjects } from '../contexts/ProjectContext'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import type { Project, Vehicle, TimelineStep } from '../types'
 import { EliteShieldLaudo } from '../components/laudo/EliteShieldLaudo'
-import { 
-  LAUDO_TEXTOS, 
-  GARANTIAS_PADRAO,
-  gerarDadosLaudo 
-} from '../config/eliteshield-laudo-template'
+import { generateEliteShieldPDF } from '../utils/pdfGenerator'
 
 export function PublicVerification() {
   const { projectId } = useParams<{ projectId: string }>()
@@ -29,360 +24,29 @@ export function PublicVerification() {
   const [project, setProject] = useState<Project | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const requestIdRef = useRef(0)
   const [isExporting, setIsExporting] = useState(false)
   
   const canManageProject = isAuthenticated && (user?.role === 'executor' || user?.role === 'admin')
 
-  // Função para exportar PDF com o novo modelo EliteShield
+  // Função para exportar PDF usando o gerador padrão com logo e QR code permanente
   const exportToPDF = async () => {
     if (!project) return
     
     setIsExporting(true)
     try {
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      })
-
-      const pageWidth = 210
-      const pageHeight = 297
-      const margin = 15
-      const contentWidth = pageWidth - (2 * margin)
-      let yPos = margin
-
-      // Cores EliteShield
-      const goldColor: [number, number, number] = [212, 175, 55]
-      const blackColor: [number, number, number] = [0, 0, 0]
-      const grayColor: [number, number, number] = [128, 128, 128]
-      const whiteColor: [number, number, number] = [255, 255, 255]
-
-      const dados = gerarDadosLaudo(project)
-
-      // ========== PÁGINA 1 - CAPA ==========
-      pdf.setFillColor(...blackColor)
-      pdf.rect(0, 0, pageWidth, pageHeight, 'F')
-
-      // Logo área
-      pdf.setFillColor(...goldColor)
-      pdf.roundedRect(pageWidth/2 - 20, 30, 40, 40, 5, 5, 'F')
-      pdf.setTextColor(...blackColor)
-      pdf.setFontSize(24)
-      pdf.setFont('helvetica', 'bold')
-      pdf.text('E', pageWidth/2, 55, { align: 'center' })
-
-      // Título
-      pdf.setTextColor(...goldColor)
-      pdf.setFontSize(28)
-      pdf.text(LAUDO_TEXTOS.titulo, pageWidth/2, 90, { align: 'center' })
-      pdf.setFontSize(12)
-      pdf.setFont('helvetica', 'normal')
-      pdf.text('Laudo Técnico Digital', pageWidth/2, 100, { align: 'center' })
-
-      // Linha decorativa
-      pdf.setDrawColor(...goldColor)
-      pdf.setLineWidth(0.5)
-      pdf.line(margin + 30, 110, pageWidth - margin - 30, 110)
-
-      // Dados do veículo
-      pdf.setTextColor(...whiteColor)
-      pdf.setFontSize(14)
-      yPos = 130
-      pdf.text(`Cliente: ${dados.cliente.nome}`, pageWidth/2, yPos, { align: 'center' })
-      yPos += 10
-      pdf.text(`Veículo: ${dados.veiculo.marca} ${dados.veiculo.modelo} / ${dados.veiculo.anoModelo}`, pageWidth/2, yPos, { align: 'center' })
-      yPos += 10
-      pdf.text(`Placa: ${dados.veiculo.placa}`, pageWidth/2, yPos, { align: 'center' })
-
-      // Status
-      yPos += 20
-      const isFinished = project.status === 'completed' || project.status === 'delivered'
-      pdf.setFillColor(isFinished ? 34 : 234, isFinished ? 197 : 179, isFinished ? 94 : 8)
-      pdf.roundedRect(pageWidth/2 - 40, yPos - 5, 80, 15, 3, 3, 'F')
-      pdf.setTextColor(...(isFinished ? blackColor : whiteColor))
-      pdf.setFontSize(11)
-      pdf.setFont('helvetica', 'bold')
-      pdf.text(isFinished ? '✓ FINALIZADO' : '⏳ EM ANDAMENTO', pageWidth/2, yPos + 5, { align: 'center' })
-
-      // Data
-      pdf.setTextColor(...grayColor)
-      pdf.setFontSize(10)
-      pdf.setFont('helvetica', 'normal')
-      pdf.text(`Data de emissão: ${new Date().toLocaleDateString('pt-BR')}`, pageWidth/2, pageHeight - 30, { align: 'center' })
-
-      // Rodapé
-      pdf.setTextColor(...goldColor)
-      pdf.setFontSize(11)
-      pdf.text(LAUDO_TEXTOS.rodape.empresa, pageWidth/2, pageHeight - 20, { align: 'center' })
-      pdf.setTextColor(...grayColor)
-      pdf.setFontSize(9)
-      pdf.text(LAUDO_TEXTOS.rodape.slogan, pageWidth/2, pageHeight - 15, { align: 'center' })
-
-      // ========== PÁGINA 2 - DECLARAÇÃO ==========
-      pdf.addPage()
-      pdf.setFillColor(...blackColor)
-      pdf.rect(0, 0, pageWidth, pageHeight, 'F')
-      yPos = margin
-
-      // Cabeçalho
-      pdf.setFillColor(...goldColor)
-      pdf.rect(0, 0, pageWidth, 25, 'F')
-      pdf.setTextColor(...blackColor)
-      pdf.setFontSize(14)
-      pdf.setFont('helvetica', 'bold')
-      pdf.text(LAUDO_TEXTOS.titulo, margin, 16)
-
-      yPos = 40
-
-      // Seção 1 - Declaração
-      pdf.setTextColor(...goldColor)
-      pdf.setFontSize(12)
-      pdf.setFont('helvetica', 'bold')
-      pdf.text(LAUDO_TEXTOS.secao1.titulo, margin, yPos)
-      yPos += 8
-      pdf.setTextColor(...whiteColor)
-      pdf.setFontSize(9)
-      pdf.setFont('helvetica', 'normal')
-      const lines1 = pdf.splitTextToSize(LAUDO_TEXTOS.secao1.texto, contentWidth)
-      pdf.text(lines1, margin, yPos)
-      yPos += lines1.length * 4 + 10
-
-      // Seção 2 - Proteção Balística
-      pdf.setTextColor(...goldColor)
-      pdf.setFontSize(12)
-      pdf.setFont('helvetica', 'bold')
-      pdf.text(LAUDO_TEXTOS.secao2.titulo, margin, yPos)
-      yPos += 8
-      pdf.setTextColor(...whiteColor)
-      pdf.setFontSize(9)
-      pdf.setFont('helvetica', 'normal')
-      const lines2 = pdf.splitTextToSize(LAUDO_TEXTOS.secao2.texto, contentWidth)
-      pdf.text(lines2, margin, yPos)
-      yPos += lines2.length * 4 + 10
-
-      // Seção 3 - Materiais
-      pdf.setTextColor(...goldColor)
-      pdf.setFontSize(12)
-      pdf.setFont('helvetica', 'bold')
-      pdf.text(LAUDO_TEXTOS.secao3.titulo, margin, yPos)
-      yPos += 8
-      pdf.setTextColor(...whiteColor)
-      pdf.setFontSize(9)
-      const lines3 = pdf.splitTextToSize(LAUDO_TEXTOS.secao3.texto, contentWidth)
-      pdf.text(lines3, margin, yPos)
-      yPos += lines3.length * 4 + 5
-      LAUDO_TEXTOS.secao3.itens.forEach(item => {
-        pdf.text(`• ${item}`, margin + 5, yPos)
-        yPos += 5
-      })
-      yPos += 3
-      const lines3c = pdf.splitTextToSize(LAUDO_TEXTOS.secao3.complemento, contentWidth)
-      pdf.text(lines3c, margin, yPos)
-      yPos += lines3c.length * 4 + 10
-
-      // Seção 4 - Processo
-      pdf.setTextColor(...goldColor)
-      pdf.setFontSize(12)
-      pdf.setFont('helvetica', 'bold')
-      pdf.text(LAUDO_TEXTOS.secao4.titulo, margin, yPos)
-      yPos += 8
-      pdf.setTextColor(...whiteColor)
-      pdf.setFontSize(9)
-      const lines4 = pdf.splitTextToSize(LAUDO_TEXTOS.secao4.texto, contentWidth)
-      pdf.text(lines4, margin, yPos)
-      yPos += lines4.length * 4 + 5
-      LAUDO_TEXTOS.secao4.etapas.forEach(etapa => {
-        pdf.text(`• ${etapa}`, margin + 5, yPos)
-        yPos += 5
-      })
-
-      // ========== PÁGINA 3 - DADOS DO VEÍCULO E CLIENTE ==========
-      pdf.addPage()
-      pdf.setFillColor(...blackColor)
-      pdf.rect(0, 0, pageWidth, pageHeight, 'F')
+      // Usar gerador padrão que inclui logo Elite real e QR code permanente
+      const pdfBlob = await generateEliteShieldPDF(project)
       
-      // Cabeçalho
-      pdf.setFillColor(...goldColor)
-      pdf.rect(0, 0, pageWidth, 25, 'F')
-      pdf.setTextColor(...blackColor)
-      pdf.setFontSize(14)
-      pdf.setFont('helvetica', 'bold')
-      pdf.text('IDENTIFICAÇÃO DO VEÍCULO', margin, 16)
-
-      yPos = 40
-
-      // Box do Veículo
-      pdf.setDrawColor(...goldColor)
-      pdf.setLineWidth(0.5)
-      pdf.roundedRect(margin, yPos, contentWidth, 60, 3, 3, 'S')
-      
-      const vehicleData = [
-        ['Marca', dados.veiculo.marca],
-        ['Modelo', dados.veiculo.modelo],
-        ['Ano/Modelo', dados.veiculo.anoModelo],
-        ['Cor', dados.veiculo.cor],
-        ['Placa', dados.veiculo.placa],
-        ['Chassi', dados.veiculo.chassi],
-        ['KM Check-in', dados.veiculo.kmCheckin],
-        ['Tipo', dados.veiculo.tipo]
-      ]
-
-      let row = 0
-      let col = 0
-      vehicleData.forEach(([label, value]) => {
-        const x = margin + 5 + (col * 90)
-        const y = yPos + 10 + (row * 14)
-        pdf.setTextColor(...grayColor)
-        pdf.setFontSize(8)
-        pdf.text(label, x, y)
-        pdf.setTextColor(...whiteColor)
-        pdf.setFontSize(10)
-        pdf.text(value || '-', x, y + 5)
-        col++
-        if (col >= 2) {
-          col = 0
-          row++
-        }
-      })
-
-      yPos += 75
-
-      // Dados do Cliente
-      pdf.setTextColor(...goldColor)
-      pdf.setFontSize(14)
-      pdf.setFont('helvetica', 'bold')
-      pdf.text('DADOS DO CLIENTE', margin, yPos)
-      yPos += 10
-
-      pdf.setDrawColor(...goldColor)
-      pdf.roundedRect(margin, yPos, contentWidth, 40, 3, 3, 'S')
-
-      const clientData = [
-        ['Nome / Razão Social', dados.cliente.nome],
-        ['CPF/CNPJ', dados.cliente.cpfCnpj || '***.***.***-**'],
-        ['Telefone', dados.cliente.telefone],
-        ['E-mail', dados.cliente.email]
-      ]
-
-      row = 0
-      col = 0
-      clientData.forEach(([label, value]) => {
-        const x = margin + 5 + (col * 90)
-        const y = yPos + 10 + (row * 14)
-        pdf.setTextColor(...grayColor)
-        pdf.setFontSize(8)
-        pdf.text(label, x, y)
-        pdf.setTextColor(...whiteColor)
-        pdf.setFontSize(10)
-        pdf.text(value || '-', x, y + 5)
-        col++
-        if (col >= 2) {
-          col = 0
-          row++
-        }
-      })
-
-      yPos += 55
-
-      // Linha de Blindagem
-      pdf.setTextColor(...goldColor)
-      pdf.setFontSize(14)
-      pdf.setFont('helvetica', 'bold')
-      pdf.text('LINHA DE BLINDAGEM', margin, yPos)
-      yPos += 10
-
-      pdf.setFillColor(212, 175, 55, 0.1)
-      pdf.setDrawColor(...goldColor)
-      pdf.roundedRect(margin, yPos, contentWidth, 30, 3, 3, 'S')
-
-      pdf.setTextColor(...goldColor)
-      pdf.setFontSize(12)
-      pdf.setFont('helvetica', 'bold')
-      const linhaLabel = dados.blindagem.linha === 'ultralite' ? 'UltraLite Armor™' : 'SafeCore™'
-      pdf.text(linhaLabel, margin + 5, yPos + 12)
-      pdf.setTextColor(...whiteColor)
-      pdf.setFontSize(10)
-      pdf.setFont('helvetica', 'normal')
-      pdf.text(`Nível: ${dados.blindagem.nivel} • Uso: ${dados.blindagem.uso}`, margin + 5, yPos + 22)
-
-      // ========== PÁGINA 4 - GARANTIAS E QR CODE ==========
-      pdf.addPage()
-      pdf.setFillColor(...blackColor)
-      pdf.rect(0, 0, pageWidth, pageHeight, 'F')
-
-      // Cabeçalho
-      pdf.setFillColor(...goldColor)
-      pdf.rect(0, 0, pageWidth, 25, 'F')
-      pdf.setTextColor(...blackColor)
-      pdf.setFontSize(14)
-      pdf.setFont('helvetica', 'bold')
-      pdf.text('GARANTIAS E RASTREABILIDADE', margin, 16)
-
-      yPos = 40
-
-      // Garantias
-      pdf.setTextColor(...goldColor)
-      pdf.setFontSize(12)
-      pdf.setFont('helvetica', 'bold')
-      pdf.text('GARANTIAS ATIVAS', margin, yPos)
-      yPos += 10
-
-      Object.values(GARANTIAS_PADRAO).forEach((garantia) => {
-        pdf.setDrawColor(...goldColor)
-        pdf.roundedRect(margin, yPos, contentWidth, 15, 2, 2, 'S')
-        pdf.setTextColor(...whiteColor)
-        pdf.setFontSize(10)
-        pdf.text(`✓ ${garantia.nome}`, margin + 5, yPos + 10)
-        pdf.setTextColor(...goldColor)
-        pdf.text(garantia.prazo, pageWidth - margin - 30, yPos + 10)
-        yPos += 20
-      })
-
-      yPos += 20
-
-      // EliteTrace QR Code
-      pdf.setTextColor(...goldColor)
-      pdf.setFontSize(12)
-      pdf.setFont('helvetica', 'bold')
-      pdf.text('ELITETRACE™', pageWidth/2, yPos, { align: 'center' })
-      yPos += 10
-
-      // Placeholder para QR Code
-      pdf.setFillColor(...whiteColor)
-      pdf.roundedRect(pageWidth/2 - 30, yPos, 60, 60, 3, 3, 'F')
-      pdf.setTextColor(...blackColor)
-      pdf.setFontSize(8)
-      pdf.text('QR CODE', pageWidth/2, yPos + 35, { align: 'center' })
-
-      yPos += 70
-
-      pdf.setTextColor(...grayColor)
-      pdf.setFontSize(9)
-      pdf.text('Escaneie para acessar o histórico completo da blindagem.', pageWidth/2, yPos, { align: 'center' })
-
-      // Declaração Final
-      yPos += 30
-      pdf.setTextColor(...goldColor)
-      pdf.setFontSize(10)
-      pdf.setFont('helvetica', 'bold')
-      pdf.text('DECLARAÇÃO FINAL', margin, yPos)
-      yPos += 8
-      pdf.setTextColor(...grayColor)
-      pdf.setFontSize(8)
-      pdf.setFont('helvetica', 'normal')
-      const linesFinal = pdf.splitTextToSize(LAUDO_TEXTOS.secao12.texto, contentWidth)
-      pdf.text(linesFinal, margin, yPos)
-
-      // Rodapé em todas as páginas
-      const totalPages = pdf.getNumberOfPages()
-      for (let i = 1; i <= totalPages; i++) {
-        pdf.setPage(i)
-        pdf.setFontSize(8)
-        pdf.setTextColor(...grayColor)
-        pdf.text(`Página ${i} de ${totalPages}`, pageWidth / 2, pageHeight - 8, { align: 'center' })
-      }
-
-      pdf.save(`EliteShield-Laudo-${project.id}-${new Date().toISOString().split('T')[0]}.pdf`)
+      // Download do PDF
+      const url = URL.createObjectURL(pdfBlob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `Laudo_EliteShield_${project.vehicle.plate}_${new Date().getTime()}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
     } catch (error) {
       console.error('Erro ao exportar PDF:', error)
       alert('Erro ao gerar PDF. Tente novamente.')
@@ -398,46 +62,51 @@ export function PublicVerification() {
     try {
       console.log('[PublicVerification] Buscando no Supabase:', searchTerm)
       
-      const { data: projectData } = await (supabase as any)
-        .from('projects')
-        .select(`
+      const selectQuery = `
           *,
           vehicles (*),
           users!projects_user_id_fkey (*),
           timeline_steps (*),
           step_photos (*)
-        `)
-        .or(`id.eq.${searchTerm},vehicles.plate.ilike.${searchTerm}`)
+        `
+
+      // 1) Buscar por ID (UUID) diretamente
+      const { data: byId } = await (supabase as any)
+        .from('projects')
+        .select(selectQuery)
+        .eq('id', searchTerm)
+        .maybeSingle()
+
+      if (byId) return convertDbProjectToProject(byId)
+
+      // 2) Buscar por qr_code
+      const { data: byQr } = await (supabase as any)
+        .from('projects')
+        .select(selectQuery)
+        .eq('qr_code', searchTerm)
+        .maybeSingle()
+
+      if (byQr) return convertDbProjectToProject(byQr)
+
+      // 3) Buscar por placa em vehicles e depois pelo vehicle_id
+      const plateNormalized = searchTerm.toUpperCase().replace(/[^A-Z0-9]/g, '')
+      const { data: vehicleData } = await (supabase as any)
+        .from('vehicles')
+        .select('id')
+        .or(`plate.ilike.%${searchTerm}%,plate.ilike.%${plateNormalized}%`)
         .limit(1)
 
-      if (!projectData || projectData.length === 0) {
-        const { data: vehicleData } = await (supabase as any)
-          .from('vehicles')
-          .select('id')
-          .ilike('plate', searchTerm)
-          .limit(1)
+      if (vehicleData && vehicleData.length > 0) {
+        const { data: projectByVehicle } = await (supabase as any)
+          .from('projects')
+          .select(selectQuery)
+          .eq('vehicle_id', vehicleData[0].id)
+          .maybeSingle()
 
-        if (vehicleData && vehicleData.length > 0) {
-          const { data: projectByVehicle } = await (supabase as any)
-            .from('projects')
-            .select(`
-              *,
-              vehicles (*),
-              users!projects_user_id_fkey (*),
-              timeline_steps (*),
-              step_photos (*)
-            `)
-            .eq('vehicle_id', vehicleData[0].id)
-            .limit(1)
-
-          if (projectByVehicle && projectByVehicle.length > 0) {
-            return convertDbProjectToProject(projectByVehicle[0])
-          }
-        }
-        return null
+        if (projectByVehicle) return convertDbProjectToProject(projectByVehicle)
       }
 
-      return convertDbProjectToProject(projectData[0])
+      return null
     } catch (err) {
       console.error('[PublicVerification] Erro ao buscar no Supabase:', err)
       return null
@@ -507,6 +176,7 @@ export function PublicVerification() {
 
   useEffect(() => {
     const searchProject = async () => {
+      const currentRequestId = ++requestIdRef.current
       setLoading(true)
       const pid = (projectId || '').trim()
       const pidUpper = pid.toUpperCase()
@@ -525,15 +195,19 @@ export function PublicVerification() {
 
       if (found) {
         console.log('[PublicVerification] ✓ Encontrado no contexto:', found.id)
-        setProject(found)
-        setError(false)
-        setLoading(false)
+        if (currentRequestId === requestIdRef.current) {
+          setProject(found)
+          setError(false)
+          setLoading(false)
+        }
         return
       }
 
       // 2. Se não encontrou no contexto, buscar diretamente no Supabase
       console.log('[PublicVerification] Buscando no Supabase...')
       const supabaseProject = await fetchProjectFromSupabase(pid)
+
+      if (currentRequestId !== requestIdRef.current) return
 
       if (supabaseProject) {
         console.log('[PublicVerification] ✓ Encontrado no Supabase:', supabaseProject.id)

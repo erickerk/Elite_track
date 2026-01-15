@@ -15,6 +15,7 @@ import { useQuotes } from '../contexts/QuoteContext'
 import { useLeads } from '../contexts/LeadsContext'
 import { cn } from '../lib/utils'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { generateEliteShieldPDF } from '../utils/pdfGenerator'
 
 interface ExecutorUser {
   id: string
@@ -1253,12 +1254,38 @@ export function AdminDashboard() {
                           </div>
                         </div>
                         <button
-                          onClick={() => {
-                            const link = document.createElement('a')
-                            link.href = '/documents/laudo-exemplo.pdf'
-                            link.download = `Laudo_EliteShield_${selectedClient.name.replace(/\s/g, '_')}.pdf`
-                            link.click()
-                            addNotification({ type: 'success', title: 'Download', message: 'Laudo baixado com sucesso!' })
+                          onClick={async () => {
+                            // Buscar projeto real do cliente para gerar PDF dinâmico
+                            const clientProject = selectedClient.projects[0]
+                            if (!clientProject) {
+                              addNotification({ type: 'error', title: 'Erro', message: 'Nenhum projeto encontrado para este cliente.' })
+                              return
+                            }
+                            
+                            // Buscar projeto completo do contexto
+                            const fullProject = projects.find(p => p.id === clientProject.id)
+                            if (!fullProject) {
+                              addNotification({ type: 'error', title: 'Erro', message: 'Projeto não encontrado no sistema.' })
+                              return
+                            }
+                            
+                            addNotification({ type: 'info', title: 'Gerando PDF', message: 'Aguarde enquanto o laudo é gerado...' })
+                            
+                            try {
+                              const pdfBlob = await generateEliteShieldPDF(fullProject)
+                              const url = URL.createObjectURL(pdfBlob)
+                              const a = document.createElement('a')
+                              a.href = url
+                              a.download = `Laudo_EliteShield_${fullProject.vehicle.plate}_${new Date().getTime()}.pdf`
+                              document.body.appendChild(a)
+                              a.click()
+                              document.body.removeChild(a)
+                              URL.revokeObjectURL(url)
+                              addNotification({ type: 'success', title: 'Download', message: 'Laudo baixado com sucesso!' })
+                            } catch (error) {
+                              console.error('Erro ao gerar PDF:', error)
+                              addNotification({ type: 'error', title: 'Erro', message: 'Erro ao gerar o PDF do laudo.' })
+                            }
                           }}
                           className="flex items-center space-x-2 px-4 py-2 bg-primary text-black rounded-lg font-medium text-sm"
                         >

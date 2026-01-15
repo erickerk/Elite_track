@@ -60,7 +60,7 @@ export function EliteShieldLaudo({
         <div className="text-center mb-8">
           <div className="w-24 h-24 mx-auto mb-4">
             <img 
-              src="/src/assets/logo-elite.png" 
+              src="/logo-elite.png" 
               alt="Elite Blindagens Logo"
               className="w-full h-full object-contain"
               onError={(e) => {
@@ -121,13 +121,33 @@ export function EliteShieldLaudo({
         {/* Linha Dourada */}
         <div className="h-px bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mt-6" />
 
-        {/* Data de Conclusão */}
-        {dados.datas.conclusao && (
-          <p className="text-center text-sm text-gray-500 mt-4">
-            {isFinished ? 'Concluído em' : 'Previsão de entrega'}:{' '}
-            {new Date(dados.datas.conclusao).toLocaleDateString('pt-BR')}
-          </p>
-        )}
+        {/* Datas Importantes */}
+        <div className="mt-4 space-y-2 text-center text-sm">
+          {/* Data de Recebimento */}
+          {dados.datas.recebimento && (
+            <p className="text-gray-500">
+              Recebido em: {new Date(dados.datas.recebimento).toLocaleDateString('pt-BR')}
+            </p>
+          )}
+          
+          {/* Data de Conclusão */}
+          {dados.datas.conclusao && (
+            <p className="text-gray-400">
+              Concluído em: {new Date(dados.datas.conclusao).toLocaleDateString('pt-BR')}
+            </p>
+          )}
+          
+          {/* Data de Entrega (IMPORTANTE) */}
+          {dados.datas.entrega ? (
+            <p className="text-green-400 font-semibold">
+              ✓ Entregue em: {new Date(dados.datas.entrega).toLocaleDateString('pt-BR')}
+            </p>
+          ) : dados.datas.previsaoEntrega && (
+            <p className="text-yellow-400">
+              Previsão de entrega: {new Date(dados.datas.previsaoEntrega).toLocaleDateString('pt-BR')}
+            </p>
+          )}
+        </div>
 
         {/* Botão Exportar PDF */}
         {showExportButton && onExportPDF && (

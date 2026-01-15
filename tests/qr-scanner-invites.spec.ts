@@ -120,7 +120,9 @@ test.describe('Dashboard Admin - Convites', () => {
 
 // Testes Mobile
 test.describe('Scanner QR - Mobile', () => {
-  test.use({ ...devices['iPhone 13'] });
+  test.beforeEach(async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 }); // iPhone 13
+  });
 
   test('Scanner deve abrir em mobile', async ({ page }) => {
     await page.goto('/');

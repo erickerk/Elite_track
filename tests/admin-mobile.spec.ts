@@ -1,8 +1,10 @@
-import { test, expect, devices } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 // Testes para viewport mobile (iPhone 13)
 test.describe('Admin Dashboard - Mobile', () => {
-  test.use({ ...devices['iPhone 13'] });
+  test.beforeEach(async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 }); // iPhone 13
+  });
 
   async function loginAsAdmin(page: any) {
     await page.goto('/login');
@@ -94,7 +96,9 @@ test.describe('Admin Dashboard - Mobile', () => {
 
 // Testes para viewport desktop
 test.describe('Admin Dashboard - Desktop', () => {
-  test.use({ viewport: { width: 1280, height: 720 } });
+  test.beforeEach(async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+  });
 
   async function loginAsAdmin(page: any) {
     await page.goto('/login');
@@ -167,7 +171,9 @@ test.describe('QR Code - Verificação', () => {
 test.describe('Projetos Concluídos - Paridade Web/Mobile', () => {
   
   test.describe('Mobile', () => {
-    test.use({ ...devices['iPhone 13'] });
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 390, height: 844 }); // iPhone 13
+    });
 
     test('Projetos concluídos devem aparecer na listagem mobile', async ({ page }) => {
       await page.goto('/login');
@@ -190,7 +196,9 @@ test.describe('Projetos Concluídos - Paridade Web/Mobile', () => {
   });
 
   test.describe('Desktop', () => {
-    test.use({ viewport: { width: 1280, height: 720 } });
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 720 });
+    });
 
     test('Projetos concluídos devem aparecer na listagem desktop', async ({ page }) => {
       await page.goto('/login');

@@ -1,0 +1,12 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e4]:
+  - img [ref=e6]
+  - heading "Projeto Não Encontrado" [level=1] [ref=e8]
+  - paragraph [ref=e9]: O código QR escaneado não corresponde a nenhum projeto registrado em nosso sistema.
+  - generic [ref=e10]:
+    - paragraph [ref=e11]: "Código consultado:"
+    - paragraph [ref=e12]: test-project-id
+  - paragraph [ref=e13]: Se você acredita que isso é um erro, entre em contato com a Elite Blindagens.
+```

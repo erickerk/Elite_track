@@ -25,30 +25,8 @@ import { cn } from '../lib/utils'
 import type { Project, SupportTicket } from '../types'
 import { supportTicketStorage } from '../services/storage'
 import { EliteShieldLaudo } from '../components/laudo/EliteShieldLaudo'
+import { generateEliteShieldPDF } from '../utils/pdfGenerator'
 
-// Componente ProgressBar sem inline style
-function ProgressBar({ progress }: { progress: number }) {
-  const widthClasses: Record<number, string> = {
-    0: 'w-0', 5: 'w-[5%]', 9: 'w-[9%]', 10: 'w-[10%]', 18: 'w-[18%]', 20: 'w-1/5',
-    25: 'w-1/4', 30: 'w-[30%]', 33: 'w-1/3', 36: 'w-[36%]', 40: 'w-2/5',
-    50: 'w-1/2', 60: 'w-3/5', 66: 'w-2/3', 70: 'w-[70%]', 75: 'w-3/4',
-    80: 'w-4/5', 90: 'w-[90%]', 100: 'w-full'
-  }
-  
-  // Encontrar a classe mais próxima
-  const closestKey = Object.keys(widthClasses)
-    .map(Number)
-    .reduce((prev, curr) => Math.abs(curr - progress) < Math.abs(prev - progress) ? curr : prev)
-  
-  return (
-    <div 
-      className="w-full bg-white/10 rounded-full h-2 overflow-hidden"
-      title={`${progress}% concluído`}
-    >
-      <div className={cn("bg-primary h-2 rounded-full transition-all", widthClasses[closestKey])} />
-    </div>
-  )
-}
 
 type TabType = 'dashboard' | 'timeline' | 'photos' | 'laudo' | 'card' | 'chat' | 'schedule' | 'clients' | 'tickets' | 'quotes'
 
@@ -169,17 +147,26 @@ const ticketPriorityConfig = {
   high: { label: 'Alta', color: 'bg-red-500' },
 }
 
+// Bottom nav mobile - apenas 4 itens essenciais
+const mobileNavItems = [
+  { id: 'dashboard' as TabType, label: 'Projetos', icon: Home },
+  { id: 'timeline' as TabType, label: 'Timeline', icon: Clock },
+  { id: 'chat' as TabType, label: 'Chat', icon: MessageCircle },
+  { id: 'clients' as TabType, label: 'Clientes', icon: Users },
+]
+
+// Todos os itens para sidebar desktop e drawer
 const navItems = [
   { id: 'dashboard' as TabType, label: 'Projetos', icon: Home },
-  { id: 'clients' as TabType, label: 'Clientes', icon: Users },
-  { id: 'quotes' as TabType, label: 'Orçamentos', icon: DollarSign },
-  { id: 'tickets' as TabType, label: 'Tickets', icon: MessageCircle },
-  { id: 'schedule' as TabType, label: 'Agenda', icon: Calendar },
   { id: 'timeline' as TabType, label: 'Timeline', icon: Clock },
   { id: 'photos' as TabType, label: 'Fotos', icon: Image },
   { id: 'laudo' as TabType, label: 'Laudo', icon: FileText },
   { id: 'card' as TabType, label: 'Cartão', icon: CreditCard },
   { id: 'chat' as TabType, label: 'Chat', icon: MessageCircle },
+  { id: 'clients' as TabType, label: 'Clientes', icon: Users },
+  { id: 'quotes' as TabType, label: 'Orçamentos', icon: DollarSign },
+  { id: 'tickets' as TabType, label: 'Tickets', icon: MessageCircle },
+  { id: 'schedule' as TabType, label: 'Agenda', icon: Calendar },
 ]
 
 export function ExecutorDashboard() {
@@ -486,8 +473,15 @@ export function ExecutorDashboard() {
     delivered: currentProjects.filter(p => p.status === 'delivered').length,
   }
 
+  const isSelectedProjectInFiltered = !!selectedProject && filteredProjects.some(p => p.id === selectedProject.id)
+
   useEffect(() => {
-    if (!selectedProject && filteredProjects.length > 0) {
+    if (filteredProjects.length === 0) {
+      if (selectedProject) setSelectedProject(null)
+      return
+    }
+
+    if (!selectedProject || !filteredProjects.some(p => p.id === selectedProject.id)) {
       setSelectedProject(filteredProjects[0])
     }
   }, [filteredProjects, selectedProject])
@@ -677,6 +671,50 @@ export function ExecutorDashboard() {
         type: 'error',
         title: 'Erro',
         message: 'Erro inesperado ao salvar o laudo.',
+      })
+    }
+  }
+
+  // Função para exportar PDF do laudo usando o gerador unificado
+  const handleExportLaudoPDF = async () => {
+    if (!selectedProject) {
+      addNotification({
+        type: 'error',
+        title: 'Erro',
+        message: 'Nenhum projeto selecionado para gerar o PDF.',
+      })
+      return
+    }
+
+    addNotification({
+      type: 'info',
+      title: 'Gerando PDF',
+      message: 'Aguarde enquanto o laudo é gerado...',
+    })
+
+    try {
+      const pdfBlob = await generateEliteShieldPDF(selectedProject)
+      const url = URL.createObjectURL(pdfBlob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `Laudo_EliteShield_${selectedProject.vehicle.plate}_${new Date().getTime()}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+
+      addNotification({
+        type: 'success',
+        title: 'PDF Gerado',
+        message: 'Laudo EliteShield gerado com sucesso!',
+        projectId: selectedProject.id,
+      })
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error)
+      addNotification({
+        type: 'error',
+        title: 'Erro',
+        message: 'Erro ao gerar o PDF do laudo.',
       })
     }
   }
@@ -1265,10 +1303,10 @@ ${loginUrl}
           </div>
         </header>
 
-        {/* BOTTOM NAVIGATION - Mobile Only - Fixed */}
+        {/* BOTTOM NAVIGATION - Mobile Only - 4 itens essenciais */}
         <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-carbon-900/98 backdrop-blur-xl border-t border-white/10 safe-area-pb">
-          <div className="grid grid-cols-6 gap-0">
-            {navItems.map((item) => {
+          <div className="grid grid-cols-4 gap-0">
+            {mobileNavItems.map((item) => {
               const Icon = item.icon
               const isActive = activeTab === item.id
               const showBadge = item.id === 'chat' && chatUnreadCount > 0
@@ -1278,15 +1316,15 @@ ${loginUrl}
                   key={item.id}
                   onClick={() => handleSetActiveTab(item.id)}
                   className={cn(
-                    "flex flex-col items-center justify-center py-2 px-1 min-h-[56px] transition-all active:scale-95",
+                    "flex flex-col items-center justify-center py-3 transition-all active:scale-95",
                     isActive 
-                      ? "text-primary" 
+                      ? "text-primary bg-primary/10" 
                       : "text-gray-500"
                   )}
                   aria-label={item.label}
                 >
                   <div className="relative">
-                    <Icon className={cn("w-5 h-5 mb-0.5", isActive && "text-primary")} />
+                    <Icon className={cn("w-6 h-6", isActive && "text-primary")} />
                     {showBadge && (
                       <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
                         {chatUnreadCount > 9 ? '9+' : chatUnreadCount}
@@ -1294,10 +1332,10 @@ ${loginUrl}
                     )}
                   </div>
                   <span className={cn(
-                    "text-[10px] font-medium truncate max-w-full",
+                    "text-[11px] font-medium mt-1",
                     isActive ? "text-primary" : "text-gray-500"
                   )}>
-                    {item.label.split(' ')[0]}
+                    {item.label}
                   </span>
                 </button>
               )
@@ -1333,10 +1371,10 @@ ${loginUrl}
               {/* Stats - Compactos no mobile */}
               <div className="grid grid-cols-4 gap-2 md:gap-4">
                 <button 
-                  onClick={() => setFilterStatus('all')}
+                  onClick={() => { setShowHistory(false); setFilterStatus('all'); }}
                   className={cn(
                     "bg-white/5 rounded-xl p-2 md:p-4 border transition-all active:scale-95",
-                    filterStatus === 'all' ? "border-primary" : "border-white/10"
+                    filterStatus === 'all' && !showHistory ? "border-primary ring-2 ring-primary/30" : "border-white/10"
                   )}
                 >
                   <div className="flex flex-col items-center md:flex-row md:justify-between md:mb-2">
@@ -1346,10 +1384,10 @@ ${loginUrl}
                   <p className="text-[10px] md:text-sm text-gray-400 text-center md:text-left">Total</p>
                 </button>
                 <button 
-                  onClick={() => setFilterStatus('in_progress')}
+                  onClick={() => { setShowHistory(false); setFilterStatus('in_progress'); }}
                   className={cn(
                     "bg-white/5 rounded-xl p-2 md:p-4 border transition-all active:scale-95",
-                    filterStatus === 'in_progress' ? "border-yellow-400" : "border-white/10"
+                    filterStatus === 'in_progress' && !showHistory ? "border-yellow-400 ring-2 ring-yellow-400/30" : "border-white/10"
                   )}
                 >
                   <div className="flex flex-col items-center md:flex-row md:justify-between md:mb-2">
@@ -1359,10 +1397,10 @@ ${loginUrl}
                   <p className="text-[10px] md:text-sm text-gray-400 text-center md:text-left">Andamento</p>
                 </button>
                 <button 
-                  onClick={() => setFilterStatus('pending')}
+                  onClick={() => { setShowHistory(false); setFilterStatus('pending'); }}
                   className={cn(
                     "bg-white/5 rounded-xl p-2 md:p-4 border transition-all active:scale-95",
-                    filterStatus === 'pending' ? "border-orange-400" : "border-white/10"
+                    filterStatus === 'pending' && !showHistory ? "border-orange-400 ring-2 ring-orange-400/30" : "border-white/10"
                   )}
                 >
                   <div className="flex flex-col items-center md:flex-row md:justify-between md:mb-2">
@@ -1372,10 +1410,19 @@ ${loginUrl}
                   <p className="text-[10px] md:text-sm text-gray-400 text-center md:text-left">Pendente</p>
                 </button>
                 <button 
-                  onClick={() => { setShowHistory(true); setFilterStatus('all'); }}
+                  onClick={() => { 
+                    // TOGGLE: se já está no histórico, volta ao default
+                    if (showHistory) {
+                      setShowHistory(false);
+                      setFilterStatus('pending');
+                    } else {
+                      setShowHistory(true);
+                      setFilterStatus('all');
+                    }
+                  }}
                   className={cn(
                     "bg-white/5 rounded-xl p-2 md:p-4 border transition-all active:scale-95",
-                    showHistory ? "border-green-400" : "border-white/10"
+                    showHistory ? "border-green-400 ring-2 ring-green-400/30" : "border-white/10"
                   )}
                 >
                   <div className="flex flex-col items-center md:flex-row md:justify-between md:mb-2">
@@ -1436,13 +1483,25 @@ ${loginUrl}
                       Todos
                     </button>
                   </div>
-                  {showHistory && (
+                  {/* Botão Limpar Filtros - sempre visível quando há filtro ativo */}
+                  {(showHistory || filterStatus !== 'pending' || searchTerm) && (
                     <button
-                      onClick={() => { setShowHistory(false); setFilterStatus('pending'); }}
-                      className="px-3 py-2.5 bg-green-500/20 text-green-400 rounded-xl text-xs font-medium flex items-center gap-1 active:scale-95"
+                      onClick={() => { 
+                        setShowHistory(false); 
+                        setFilterStatus('pending'); 
+                        setSearchTerm('');
+                        setFocusedProjectId(null);
+                      }}
+                      className="px-3 py-2.5 bg-red-500/20 text-red-400 rounded-xl text-xs font-medium flex items-center gap-1 active:scale-95 hover:bg-red-500/30 transition-colors"
+                      title="Limpar todos os filtros"
                     >
-                      <X className="w-3 h-3" /> Histórico
+                      <X className="w-3 h-3" /> Limpar
                     </button>
+                  )}
+                  {showHistory && (
+                    <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded-lg text-xs font-medium">
+                      📋 Histórico
+                    </span>
                   )}
                 </div>
 
@@ -1526,7 +1585,7 @@ ${loginUrl}
               />
 
               {/* Destaque do Veículo Selecionado */}
-              {selectedProject && (
+              {isSelectedProjectInFiltered && selectedProject && (
                 <div className="bg-primary/10 border-2 border-primary rounded-2xl p-4 mb-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -1596,8 +1655,15 @@ ${loginUrl}
                 </div>
               )}
 
-              {/* Projects Grid */}
-              <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {filteredProjects.length === 0 && (
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
+                  <p className="text-sm text-gray-300 font-medium">Nenhum projeto encontrado</p>
+                  <p className="text-xs text-gray-500 mt-1">Ajuste os filtros ou a busca para visualizar projetos.</p>
+                </div>
+              )}
+
+              {/* Projects Grid - Cards compactos no mobile */}
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4">
                 {filteredProjects.map((project) => {
                   const config = statusConfig[project.status]
                   const isSelected = selectedProject?.id === project.id
@@ -1607,76 +1673,62 @@ ${loginUrl}
                       key={project.id}
                       onClick={() => setSelectedProject(project)}
                       className={cn(
-                        "bg-white/5 rounded-2xl p-4 border cursor-pointer transition-all hover:border-primary/50",
-                        isSelected ? "border-primary ring-2 ring-primary/50 bg-primary/5" : "border-white/10"
+                        "bg-white/5 rounded-xl p-3 md:p-4 border cursor-pointer transition-all active:scale-[0.98]",
+                        isSelected ? "border-primary bg-primary/5" : "border-white/10"
                       )}
                     >
-                      {/* Indicador de Selecionado */}
-                      {isSelected && (
-                        <div className="flex items-center gap-2 mb-3 pb-3 border-b border-primary/30">
-                          <span className="bg-primary text-black px-2 py-0.5 rounded-full text-xs font-bold animate-pulse">
-                            ✓ SELECIONADO
-                          </span>
-                        </div>
-                      )}
-                      <div className="flex items-start space-x-4">
+                      {/* Layout mobile compacto */}
+                      <div className="flex items-center gap-3">
+                        {/* Foto menor no mobile */}
                         <div className={cn(
-                          "w-20 h-16 rounded-xl overflow-hidden bg-carbon-900 flex-shrink-0",
+                          "w-14 h-14 md:w-16 md:h-14 rounded-lg overflow-hidden bg-carbon-900 flex-shrink-0",
                           isSelected && "ring-2 ring-primary"
                         )}>
                           {project.vehicle.images?.[0] ? (
                             <img src={project.vehicle.images[0]} alt={project.vehicle.model} className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center"><Car className="w-8 h-8 text-gray-500" /></div>
+                            <div className="w-full h-full flex items-center justify-center"><Car className="w-6 h-6 text-gray-500" /></div>
                           )}
                         </div>
+                        
+                        {/* Info compacta */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h3 className={cn("font-semibold truncate", isSelected ? "text-primary text-lg" : "text-white")}>
-                                {project.user.name}
-                              </h3>
-                              <p className="text-sm text-gray-400">{project.vehicle.brand} {project.vehicle.model}</p>
-                            </div>
-                            <span className={cn("w-3 h-3 rounded-full flex-shrink-0", config.color)} />
+                          <div className="flex items-center justify-between gap-2">
+                            <h3 className={cn("font-semibold truncate text-sm md:text-base", isSelected ? "text-primary" : "text-white")}>
+                              {project.user.name?.split(' ')[0]}
+                            </h3>
+                            <span className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0", config.color)} />
                           </div>
-                          <p className="text-xs text-gray-500 mt-1">
-                            <span className={cn("font-mono font-bold", isSelected ? "text-primary" : "text-gray-400")}>{project.vehicle.plate}</span>
-                            {" • "}{project.id}
-                          </p>
+                          <p className="text-xs text-gray-400 truncate">{project.vehicle.brand} {project.vehicle.model}</p>
+                          <div className="flex items-center justify-between mt-1">
+                            <span className="font-mono text-xs font-bold text-primary">{project.vehicle.plate}</span>
+                            <span className="text-[10px] text-gray-500">{project.progress}%</span>
+                          </div>
                         </div>
+                        
+                        {/* Ação rápida - apenas no mobile */}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); navigate(`/manage/${project.id}`); }}
+                          className="md:hidden w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center flex-shrink-0 active:scale-95"
+                          aria-label="Gerenciar"
+                        >
+                          <ChevronRight className="w-5 h-5 text-primary" />
+                        </button>
                       </div>
 
-                      {/* Progress */}
-                      <div className="mt-4">
-                        <div className="flex items-center justify-between text-sm mb-2">
-                          <span className={config.textColor}>{config.label}</span>
-                          <span className="text-primary font-semibold">{project.progress}%</span>
-                        </div>
-                        <ProgressBar progress={project.progress} />
+                      {/* Progress bar compacta */}
+                      <div className="mt-2 md:mt-3">
+                        <progress
+                          className="w-full h-1.5 rounded-full overflow-hidden bg-white/10 [&::-webkit-progress-bar]:bg-white/10 [&::-webkit-progress-value]:bg-primary [&::-moz-progress-bar]:bg-primary"
+                          value={project.progress}
+                          max={100}
+                          aria-label="Progresso do projeto"
+                        />
                       </div>
 
-                      {/* Quick Actions */}
-                      <div className="mt-4 flex items-center justify-between">
+                      {/* Quick Actions - apenas desktop */}
+                      <div className="hidden md:flex mt-3 items-center justify-between">
                         <div className="flex space-x-2">
-                          {/* Botão Focar - destaca apenas este veículo */}
-                          <button
-                            onClick={(e) => { 
-                              e.stopPropagation(); 
-                              setFocusedProjectId(focusedProjectId === project.id ? null : project.id);
-                              setSelectedProject(project);
-                            }}
-                            className={cn(
-                              "p-2 rounded-lg transition-colors",
-                              focusedProjectId === project.id 
-                                ? "bg-blue-500 text-white" 
-                                : "bg-white/5 hover:bg-blue-500/20"
-                            )}
-                            title={focusedProjectId === project.id ? "Mostrar todos" : "Focar neste veículo"}
-                            aria-label={focusedProjectId === project.id ? "Mostrar todos" : "Focar neste veículo"}
-                          >
-                            <Eye className={cn("w-4 h-4", focusedProjectId === project.id ? "text-white" : "text-blue-400")} />
-                          </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); navigate(`/manage/${project.id}`); }}
                             className="p-2 bg-white/5 rounded-lg hover:bg-primary/20 transition-colors"
@@ -1748,7 +1800,7 @@ ${loginUrl}
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => window.open(`/verify/${selectedProject.vehicle.plate}`, '_blank')}
+                    onClick={() => window.open(`/verify/${selectedProject.id}`, '_blank')}
                     className="flex items-center gap-2 bg-white/10 text-white px-4 py-2 rounded-xl font-semibold text-sm hover:bg-white/20 transition-colors"
                   >
                     <ExternalLink className="w-4 h-4" />
@@ -1768,6 +1820,7 @@ ${loginUrl}
               <div className="rounded-2xl overflow-hidden border border-white/10">
                 <EliteShieldLaudo 
                   project={selectedProject}
+                  onExportPDF={handleExportLaudoPDF}
                   showExportButton={true}
                   compact={true}
                 />

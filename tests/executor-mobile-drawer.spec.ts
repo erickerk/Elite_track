@@ -1,10 +1,9 @@
-import { test, expect, devices } from '@playwright/test';
-
-// Configuração para dispositivo mobile
-const mobileDevice = devices['iPhone 13'];
+import { test, expect } from '@playwright/test';
 
 test.describe('Executor Mobile Drawer', () => {
-  test.use({ ...mobileDevice });
+  test.beforeEach(async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 }); // iPhone 13
+  });
 
   test('Hamburger menu abre drawer e fecha ao selecionar item', async ({ page }) => {
     // Navegar para a página de login
@@ -60,7 +59,9 @@ test.describe('Executor Mobile Drawer', () => {
 });
 
 test.describe('Executor - Filtro de Concluídos', () => {
-  test.use({ ...mobileDevice });
+  test.beforeEach(async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+  });
 
   test('Botão Concluído filtra projetos concluídos', async ({ page }) => {
     await page.goto('/login');

@@ -720,10 +720,10 @@ export function LandingPage() {
                 />
               </div>
               <button
-                onClick={() => navigate('/scan?mode=verify&autoStart=true')}
-                className="w-full py-3 bg-white/10 border border-white/20 rounded-xl text-sm hover:bg-white/20 transition-colors flex items-center justify-center gap-2"
+                onClick={() => navigate('/scan?mode=verify')}
+                className="w-full py-3 bg-primary/20 border border-primary/40 rounded-xl text-sm hover:bg-primary/30 transition-colors flex items-center justify-center gap-2 font-semibold text-primary"
               >
-                <i className="ri-qr-scan-2-line text-primary"></i>
+                <i className="ri-qr-scan-2-line text-primary text-lg"></i>
                 Escanear QR Code
               </button>
             </div>
