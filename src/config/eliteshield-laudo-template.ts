@@ -493,8 +493,14 @@ export function gerarDadosLaudo(project: any): DadosLaudo {
       final: project.timeline?.find((s: any) => s.title === 'Entrega')?.photos
     },
     responsaveis: {
-      tecnico: { nome: 'Técnico Responsável', cargo: 'Técnico de Blindagem' },
-      supervisor: { nome: 'Supervisor Técnico', cargo: 'Supervisor de Qualidade' }
+      tecnico: { 
+        nome: project.blindingSpecs?.technicalResponsible || project.laudoData?.technicalResponsible || 'Técnico Responsável', 
+        cargo: project.laudoData?.technicalResponsibleRole || 'Técnico de Blindagem' 
+      },
+      supervisor: { 
+        nome: project.laudoData?.supervisorName || 'Supervisor Técnico', 
+        cargo: 'Supervisor de Qualidade' 
+      }
     },
     qrCode: project.qrCode || '',
     status: project.status === 'completed' || project.status === 'delivered' ? 'finalizado' : 'em_andamento',

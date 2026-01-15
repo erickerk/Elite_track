@@ -10,7 +10,7 @@ import { cn } from '../../lib/utils'
 import { 
   Shield, User, FileText, CheckCircle, Clock, 
   Camera, Eye, Layers, Settings, QrCode, ChevronDown, ChevronUp,
-  Car, Download
+  Car, Download, AlertTriangle, Wrench
 } from 'lucide-react'
 import type { Project } from '../../types'
 import { 
@@ -113,7 +113,7 @@ export function EliteShieldLaudo({
               "px-3 py-1 rounded-full text-sm font-semibold",
               isFinished ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"
             )}>
-              {isFinished ? '✓ Finalizado' : '⏳ Em Andamento'}
+              {isFinished ? 'Finalizado' : 'Em Andamento'}
             </span>
           </div>
         </div>
@@ -140,7 +140,7 @@ export function EliteShieldLaudo({
           {/* Data de Entrega (IMPORTANTE) */}
           {dados.datas.entrega ? (
             <p className="text-green-400 font-semibold">
-              ✓ Entregue em: {new Date(dados.datas.entrega).toLocaleDateString('pt-BR')}
+              Entregue em: {new Date(dados.datas.entrega).toLocaleDateString('pt-BR')}
             </p>
           ) : dados.datas.previsaoEntrega && (
             <p className="text-yellow-400">
@@ -437,7 +437,7 @@ export function EliteShieldLaudo({
               ? "bg-green-500/20 text-green-400 border-2 border-green-500/50" 
               : "bg-yellow-500/20 text-yellow-400 border-2 border-yellow-500/50"
           )}>
-            {isFinished ? '✓ APROVADO' : '⏳ EM VERIFICAÇÃO'}
+            {isFinished ? 'APROVADO' : 'EM VERIFICAÇÃO'}
           </div>
         </div>
       </section>
@@ -498,6 +498,99 @@ export function EliteShieldLaudo({
               <CheckCircle className="w-5 h-5 text-green-500" />
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ================================================================ */}
+      {/* SEÇÃO JURÍDICA - LIMITAÇÕES E CONDIÇÕES DE USO */}
+      {/* ================================================================ */}
+      <section className="p-6 border-b border-[#D4AF37]/30">
+        <SectionHeader 
+          icon={AlertTriangle} 
+          title={LAUDO_TEXTOS.secao8.titulo}
+          expanded={expandedSection === 'limitacoes'}
+          onToggle={() => toggleSection('limitacoes')}
+        />
+        
+        <div className={cn(
+          "mt-4 transition-all",
+          expandedSection === 'limitacoes' || !compact ? 'block' : 'hidden'
+        )}>
+          <div className="p-4 bg-white/5 rounded-xl border border-[#D4AF37]/20">
+            <p className="text-sm text-gray-400 mb-3">{LAUDO_TEXTOS.secao8.texto}</p>
+            <ul className="space-y-2 mb-3">
+              {LAUDO_TEXTOS.secao8.itens.map((item, idx) => (
+                <li key={idx} className="text-sm text-gray-300 flex items-start gap-2">
+                  <span className="text-yellow-500 mt-1">•</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-gray-500 italic">{LAUDO_TEXTOS.secao8.complemento}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================================ */}
+      {/* SEÇÃO JURÍDICA - MANUTENÇÃO E REVISÕES */}
+      {/* ================================================================ */}
+      <section className="p-6 border-b border-[#D4AF37]/30">
+        <SectionHeader 
+          icon={Wrench} 
+          title={LAUDO_TEXTOS.secao9.titulo}
+          expanded={expandedSection === 'manutencao'}
+          onToggle={() => toggleSection('manutencao')}
+        />
+        
+        <div className={cn(
+          "mt-4 transition-all",
+          expandedSection === 'manutencao' || !compact ? 'block' : 'hidden'
+        )}>
+          <div className="p-4 bg-white/5 rounded-xl border border-[#D4AF37]/20">
+            <p className="text-sm text-gray-400 leading-relaxed">{LAUDO_TEXTOS.secao9.texto}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================================ */}
+      {/* SEÇÃO JURÍDICA - RASTREABILIDADE E ELITETRACE */}
+      {/* ================================================================ */}
+      <section className="p-6 border-b border-[#D4AF37]/30">
+        <SectionHeader 
+          icon={QrCode} 
+          title={LAUDO_TEXTOS.secao10.titulo}
+          expanded={expandedSection === 'rastreabilidade'}
+          onToggle={() => toggleSection('rastreabilidade')}
+        />
+        
+        <div className={cn(
+          "mt-4 transition-all",
+          expandedSection === 'rastreabilidade' || !compact ? 'block' : 'hidden'
+        )}>
+          <div className="p-4 bg-white/5 rounded-xl border border-[#D4AF37]/20">
+            <p className="text-sm text-gray-400 leading-relaxed">{LAUDO_TEXTOS.secao10.texto}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================================ */}
+      {/* SEÇÃO JURÍDICA - VALIDADE DO DOCUMENTO */}
+      {/* ================================================================ */}
+      <section className="p-6 border-b border-[#D4AF37]/30">
+        <SectionHeader 
+          icon={FileText} 
+          title={LAUDO_TEXTOS.secao11.titulo}
+          expanded={expandedSection === 'validade'}
+          onToggle={() => toggleSection('validade')}
+        />
+        
+        <div className={cn(
+          "mt-4 transition-all",
+          expandedSection === 'validade' || !compact ? 'block' : 'hidden'
+        )}>
+          <div className="p-4 bg-white/5 rounded-xl border border-[#D4AF37]/20">
+            <p className="text-sm text-gray-400 leading-relaxed">{LAUDO_TEXTOS.secao11.texto}</p>
+          </div>
         </div>
       </section>
 

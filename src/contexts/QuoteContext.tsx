@@ -176,10 +176,29 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const updateQuoteStatus = useCallback((id: string, status: QuoteRequest['status'], data?: Partial<QuoteRequest>) => {
+  const updateQuoteStatus = useCallback(async (id: string, status: QuoteRequest['status'], data?: Partial<QuoteRequest>) => {
+    // Atualizar localmente primeiro
     setQuotes(prev => prev.map(q => 
       q.id === id ? { ...q, status, ...data, respondedAt: new Date().toISOString() } : q
     ))
+    
+    // Sincronizar com Supabase
+    if (isSupabaseConfigured() && db) {
+      try {
+        const updateData: any = { status, updated_at: new Date().toISOString() }
+        if (data?.estimatedPrice) updateData.estimated_price = data.estimatedPrice
+        if (data?.estimatedDays) updateData.estimated_days = data.estimatedDays
+        if (data?.executorNotes) updateData.executor_notes = data.executorNotes
+        if (data?.executorId) updateData.executor_id = data.executorId
+        if (data?.executorName) updateData.executor_name = data.executorName
+        if (data?.clientResponse) updateData.client_response = data.clientResponse
+        
+        await db.from('quotes').update(updateData).eq('id', id)
+        console.log('[QuoteContext] ✓ Status atualizado no Supabase:', id, status)
+      } catch (error) {
+        console.error('[QuoteContext] Erro ao atualizar status no Supabase:', error)
+      }
+    }
   }, [])
 
   const getQuotesByClient = useCallback((clientEmail: string) => {
@@ -198,17 +217,65 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
     return quotes.filter(q => q.status === 'sent')
   }, [quotes])
 
-  const createQuoteFromExecutor = useCallback((quote: Omit<QuoteRequest, 'id' | 'createdAt'>) => {
+  const createQuoteFromExecutor = useCallback(async (quote: Omit<QuoteRequest, 'id' | 'createdAt'>) => {
     const newQuote: QuoteRequest = {
       ...quote,
       id: `quote-${Date.now()}`,
       createdAt: new Date().toISOString(),
     }
+    
+    // Adicionar localmente primeiro
     setQuotes(prev => [newQuote, ...prev])
+    
+    // Sincronizar com Supabase
+    if (isSupabaseConfigured() && db) {
+      try {
+        const { data, error } = await db
+          .from('quotes')
+          .insert({
+            client_id: quote.clientId || null,
+            client_name: quote.clientName,
+            client_email: quote.clientEmail,
+            client_phone: quote.clientPhone,
+            vehicle_type: quote.vehicleType,
+            vehicle_brand: quote.vehicleBrand,
+            vehicle_model: quote.vehicleModel,
+            vehicle_year: quote.vehicleYear,
+            vehicle_plate: quote.vehiclePlate,
+            blinding_level: quote.blindingLevel,
+            service_type: quote.serviceType,
+            service_description: quote.serviceDescription,
+            client_description: quote.clientDescription,
+            status: quote.status || 'pending',
+            estimated_price: quote.estimatedPrice,
+            estimated_days: quote.estimatedDays,
+            executor_notes: quote.executorNotes,
+            executor_id: quote.executorId,
+            executor_name: quote.executorName,
+          })
+          .select()
+          .single()
+
+        if (error) {
+          console.error('[QuoteContext] Erro ao criar orçamento no Supabase:', error)
+        } else if (data) {
+          // Atualizar com o ID real do Supabase
+          setQuotes(prev => prev.map(q => 
+            q.id === newQuote.id ? dbQuoteToQuote(data) : q
+          ))
+          console.log('[QuoteContext] ✓ Orçamento criado pelo executor no Supabase:', data.id)
+        }
+      } catch (error) {
+        console.error('[QuoteContext] Erro ao criar orçamento:', error)
+      }
+    }
   }, [])
 
-  const sendQuoteToClient = useCallback((id: string, price: string, days: number, notes: string, executorId: string, executorName: string, daysType: 'business' | 'calendar' = 'business') => {
+  const sendQuoteToClient = useCallback(async (id: string, price: string, days: number, notes: string, executorId: string, executorName: string, daysType: 'business' | 'calendar' = 'business') => {
     const numericPrice = parseCurrency(price)
+    const now = new Date().toISOString()
+    
+    // Atualizar localmente primeiro
     setQuotes(prev => prev.map(q => 
       q.id === id ? { 
         ...q, 
@@ -220,32 +287,87 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
         executorNotes: notes,
         executorId,
         executorName,
-        respondedAt: new Date().toISOString(),
-        lastInteractionAt: new Date().toISOString()
+        respondedAt: now,
+        lastInteractionAt: now
       } : q
     ))
+    
+    // Sincronizar com Supabase
+    if (isSupabaseConfigured() && db) {
+      try {
+        await db.from('quotes').update({
+          status: 'sent',
+          estimated_price: numericPrice,
+          estimated_days: days,
+          executor_notes: notes,
+          executor_id: executorId,
+          executor_name: executorName,
+          responded_at: now,
+          updated_at: now
+        }).eq('id', id)
+        console.log('[QuoteContext] ✓ Orçamento enviado ao cliente no Supabase:', id)
+      } catch (error) {
+        console.error('[QuoteContext] Erro ao enviar orçamento no Supabase:', error)
+      }
+    }
   }, [])
 
-  const clientApproveQuote = useCallback((id: string, response?: string) => {
+  const clientApproveQuote = useCallback(async (id: string, response?: string) => {
+    const now = new Date().toISOString()
+    
+    // Atualizar localmente primeiro
     setQuotes(prev => prev.map(q => 
       q.id === id ? { 
         ...q, 
         status: 'approved' as const,
         clientResponse: response,
-        approvedAt: new Date().toISOString()
+        approvedAt: now
       } : q
     ))
+    
+    // Sincronizar com Supabase
+    if (isSupabaseConfigured() && db) {
+      try {
+        await db.from('quotes').update({
+          status: 'approved',
+          client_response: response,
+          approved_at: now,
+          updated_at: now
+        }).eq('id', id)
+        console.log('[QuoteContext] ✓ Orçamento aprovado no Supabase:', id)
+      } catch (error) {
+        console.error('[QuoteContext] Erro ao aprovar orçamento no Supabase:', error)
+      }
+    }
   }, [])
 
-  const clientRejectQuote = useCallback((id: string, response?: string) => {
+  const clientRejectQuote = useCallback(async (id: string, response?: string) => {
+    const now = new Date().toISOString()
+    
+    // Atualizar localmente primeiro
     setQuotes(prev => prev.map(q => 
       q.id === id ? { 
         ...q, 
         status: 'rejected' as const,
         clientResponse: response,
-        rejectedAt: new Date().toISOString()
+        rejectedAt: now
       } : q
     ))
+    
+    // Sincronizar com Supabase
+    if (isSupabaseConfigured() && db) {
+      try {
+        await db.from('quotes').update({
+          status: 'rejected',
+          client_response: response,
+          rejected_at: now,
+          updated_at: now
+        }).eq('id', id)
+        console.log('[QuoteContext] ✓ Orçamento rejeitado no Supabase:', id)
+      } catch (error) {
+        console.error('[QuoteContext] Erro ao rejeitar orçamento no Supabase:', error)
+      }
+    }
   }, [])
 
   return (

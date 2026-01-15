@@ -13,6 +13,9 @@ import { Modal } from '../components/ui/Modal'
 import { cn } from '../lib/utils'
 import { useTheme } from '../contexts/ThemeContext'
 import { useProjects } from '../contexts/ProjectContext'
+import { useAuth } from '../contexts/AuthContext'
+import { useNotifications } from '../contexts/NotificationContext'
+import { supabase, isSupabaseConfigured } from '../lib/supabase/client'
 
 interface Revision {
   id: string
@@ -82,6 +85,8 @@ export function Revisions() {
   const navigate = useNavigate()
   const { theme } = useTheme()
   const { projects } = useProjects()
+  const { user } = useAuth()
+  const { addNotification } = useNotifications()
   const project = projects[0]
   const isDark = theme === 'dark'
   const [selectedRevision, setSelectedRevision] = useState<Revision | null>(null)
@@ -93,12 +98,44 @@ export function Revisions() {
   const completedRevisions = mockRevisions.filter(r => r.status === 'completed')
   const nextRevision = pendingRevisions[0]
 
-  const handleConfirmSchedule = () => {
+  const handleConfirmSchedule = async () => {
     if (!scheduleDate || !scheduleTime) {
-      alert('Por favor, selecione data e horário')
+      addNotification({ type: 'error', title: 'Erro', message: 'Por favor, selecione data e horário' })
       return
     }
-    alert(`Revis\u00e3o agendada para ${scheduleDate} \u00e0s ${scheduleTime}. Entraremos em contato para confirmar.`)
+    
+    // Salvar no Supabase
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { error } = await (supabase as any)
+          .from('schedules')
+          .insert({
+            project_id: project?.id,
+            client_id: user?.id,
+            client_name: user?.name || 'Cliente',
+            client_email: user?.email,
+            client_phone: user?.phone,
+            vehicle: project ? `${project.vehicle?.brand} ${project.vehicle?.model}` : 'Veículo não especificado',
+            scheduled_date: scheduleDate,
+            scheduled_time: scheduleTime,
+            type: 'revisao',
+            status: 'pending',
+            notes: selectedRevision ? `Revisão: ${selectedRevision.title}` : 'Agendamento de revisão'
+          })
+        
+        if (error) {
+          console.error('[Revisions] Erro ao salvar agendamento:', error)
+          addNotification({ type: 'error', title: 'Erro', message: 'Não foi possível salvar o agendamento. Tente novamente.' })
+          return
+        }
+        
+        console.log('[Revisions] ✓ Agendamento de revisão salvo no Supabase')
+      } catch (err) {
+        console.error('[Revisions] Erro inesperado:', err)
+      }
+    }
+    
+    addNotification({ type: 'success', title: 'Revisão Agendada!', message: `Revisão agendada para ${new Date(scheduleDate).toLocaleDateString('pt-BR')} às ${scheduleTime}. Entraremos em contato para confirmar.` })
     setShowScheduleModal(false)
     setScheduleDate('')
     setScheduleTime('')

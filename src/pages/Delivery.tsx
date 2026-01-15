@@ -4,6 +4,7 @@ import { cn } from '../lib/utils'
 import { useAuth } from '../contexts/AuthContext'
 import { useNotifications } from '../contexts/NotificationContext'
 import { useProjects } from '../contexts/ProjectContext'
+import { supabase, isSupabaseConfigured } from '../lib/supabase/client'
 
 export function Delivery() {
   const navigate = useNavigate()
@@ -32,11 +33,43 @@ export function Delivery() {
     { id: 'final', label: 'Finalização', icon: 'ri-checkbox-circle-line' },
   ]
 
-  const handleScheduleDelivery = () => {
+  const handleScheduleDelivery = async () => {
     if (!scheduleDate || !scheduleTime) {
       addNotification({ type: 'error', title: 'Erro', message: 'Selecione data e horário para agendar.' })
       return
     }
+    
+    // Salvar no Supabase
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { error } = await (supabase as any)
+          .from('schedules')
+          .insert({
+            project_id: project?.id,
+            client_id: user?.id,
+            client_name: user?.name || 'Cliente',
+            client_email: user?.email,
+            client_phone: user?.phone,
+            vehicle: `${project?.vehicle?.brand} ${project?.vehicle?.model}`,
+            scheduled_date: scheduleDate,
+            scheduled_time: scheduleTime,
+            type: 'entrega',
+            status: 'pending',
+            notes: 'Agendamento solicitado pelo cliente'
+          })
+        
+        if (error) {
+          console.error('[Delivery] Erro ao salvar agendamento:', error)
+          addNotification({ type: 'error', title: 'Erro', message: 'Não foi possível salvar o agendamento. Tente novamente.' })
+          return
+        }
+        
+        console.log('[Delivery] ✓ Agendamento salvo no Supabase')
+      } catch (err) {
+        console.error('[Delivery] Erro inesperado:', err)
+      }
+    }
+    
     addNotification({ type: 'success', title: 'Entrega Agendada!', message: `Sua entrega foi agendada para ${new Date(scheduleDate).toLocaleDateString('pt-BR')} às ${scheduleTime}.` })
     setShowScheduleModal(false)
   }
