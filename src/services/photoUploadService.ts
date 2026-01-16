@@ -1,9 +1,15 @@
 // =====================================================
 // ELITE TRACK - SERVIÇO DE UPLOAD DE FOTOS
 // Upload de imagens para Supabase Storage e salvamento nas tabelas
+// Com compressão automática para otimizar armazenamento
 // =====================================================
 
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { 
+  compressStepPhoto, 
+  compressChatImage, 
+  needsCompression 
+} from '../utils/imageCompressor'
 
 // Tipos para o serviço de fotos
 export interface StepPhoto {
@@ -369,8 +375,15 @@ export async function uploadStepPhoto(
   description?: string,
   uploadedBy?: string
 ): Promise<StepPhoto | null> {
-  // Upload do arquivo
-  const photoUrl = await uploadToStorage(file, 'step-photos', `step_${stepId}`)
+  // Comprimir imagem antes do upload para economizar espaço
+  let fileToUpload = file
+  if (file.type.startsWith('image/') && needsCompression(file, 300)) {
+    console.log('[PhotoUpload] Comprimindo imagem de etapa...')
+    fileToUpload = await compressStepPhoto(file)
+  }
+
+  // Upload do arquivo comprimido
+  const photoUrl = await uploadToStorage(fileToUpload, 'step-photos', `step_${stepId}`)
   
   if (!photoUrl) {
     console.error('[PhotoUpload] Falha no upload do arquivo')
@@ -392,21 +405,28 @@ export async function uploadChatFile(
     file.type.startsWith('image/') ? 'image' :
     file.type.startsWith('video/') ? 'video' : 'document'
 
-  // Upload do arquivo
-  const fileUrl = await uploadToStorage(file, 'chat-files', `conv_${conversationId}`)
+  // Comprimir imagem antes do upload para economizar espaço
+  let fileToUpload = file
+  if (fileType === 'image' && needsCompression(file, 200)) {
+    console.log('[PhotoUpload] Comprimindo imagem de chat...')
+    fileToUpload = await compressChatImage(file)
+  }
+
+  // Upload do arquivo comprimido
+  const fileUrl = await uploadToStorage(fileToUpload, 'chat-files', `conv_${conversationId}`)
   
   if (!fileUrl) {
     console.error('[PhotoUpload] Falha no upload do arquivo')
     return null
   }
 
-  // Salvar na tabela
+  // Salvar na tabela (usar tamanho comprimido)
   return await saveChatAttachment(
     conversationId,
     fileUrl,
     fileType,
     file.name,
-    file.size,
+    fileToUpload.size,
     messageId,
     uploadedBy
   )
@@ -422,8 +442,15 @@ export async function uploadQuoteFile(
   const fileType: 'image' | 'document' = 
     file.type.startsWith('image/') ? 'image' : 'document'
 
-  // Upload do arquivo
-  const fileUrl = await uploadToStorage(file, 'quote-files', `quote_${quoteId}`)
+  // Comprimir imagem antes do upload para economizar espaço
+  let fileToUpload = file
+  if (fileType === 'image' && needsCompression(file, 300)) {
+    console.log('[PhotoUpload] Comprimindo imagem de orçamento...')
+    fileToUpload = await compressStepPhoto(file) // Usar mesma compressão de etapas
+  }
+
+  // Upload do arquivo comprimido
+  const fileUrl = await uploadToStorage(fileToUpload, 'quote-files', `quote_${quoteId}`)
   
   if (!fileUrl) {
     console.error('[PhotoUpload] Falha no upload do arquivo')

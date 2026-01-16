@@ -157,7 +157,7 @@ export async function generateEliteShieldPDF(project: Project): Promise<Blob> {
   const ph = doc.internal.pageSize.getHeight()
   const m = 15
   let y = m
-  const totalPages = 6
+  const totalPages = 9
 
   // URL de verificação permanente
   const verifyUrl = `${PRODUCTION_URL}/verify/${project.id}`
@@ -613,7 +613,7 @@ export async function generateEliteShieldPDF(project: Project): Promise<Blob> {
   addPageFooter(doc)
 
   // ========================================
-  // PÁGINA 5: DECLARAÇÃO FINAL
+  // PÁGINA 5: TERMOS JURÍDICOS (Seções 1-4)
   // ========================================
   doc.addPage()
   doc.setFillColor(...COLORS.black)
@@ -622,64 +622,275 @@ export async function generateEliteShieldPDF(project: Project): Promise<Blob> {
   addPageHeader(doc, logoDataUrl, 5, totalPages)
   y = 25
   
-  y = addSectionTitle(doc, 'Declaração Final', y)
-  
-  addCard(doc, m, y, pw - 2*m, 55)
-  
-  // Texto da declaração
+  // Seção 1 - Declaração de Execução Técnica
+  y = addSectionTitle(doc, 'Declaração de Execução Técnica', y)
+  addCard(doc, m, y, pw - 2*m, 35)
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(9)
+  doc.setFontSize(8)
   doc.setTextColor(...COLORS.lightGray)
-  const declaracao = LAUDO_TEXTOS.secao12.texto
-  const lines = doc.splitTextToSize(declaracao, pw - 2*m - 20)
-  doc.text(lines, m + 10, y + 12)
+  const sec1Lines = doc.splitTextToSize(LAUDO_TEXTOS.secao1.texto, pw - 2*m - 10)
+  doc.text(sec1Lines, m + 5, y + 8)
+  y += 42
   
-  y += 65
+  // Seção 2 - Padrão de Proteção Balística
+  y = addSectionTitle(doc, 'Padrão de Proteção Balística', y)
+  addCard(doc, m, y, pw - 2*m, 30)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  doc.setTextColor(...COLORS.lightGray)
+  const sec2Lines = doc.splitTextToSize(LAUDO_TEXTOS.secao2.texto, pw - 2*m - 10)
+  doc.text(sec2Lines, m + 5, y + 8)
+  y += 37
+  
+  // Seção 3 - Materiais e Componentes
+  y = addSectionTitle(doc, 'Materiais e Componentes Utilizados', y)
+  addCard(doc, m, y, pw - 2*m, 50)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  doc.setTextColor(...COLORS.lightGray)
+  const sec3Lines = doc.splitTextToSize(LAUDO_TEXTOS.secao3.texto, pw - 2*m - 10)
+  doc.text(sec3Lines, m + 5, y + 8)
+  
+  let bulletY = y + 18
+  LAUDO_TEXTOS.secao3.itens.forEach((item) => {
+    doc.setTextColor(...COLORS.gold)
+    doc.text('•', m + 5, bulletY)
+    doc.setTextColor(...COLORS.white)
+    doc.text(item, m + 10, bulletY)
+    bulletY += 5
+  })
+  
+  doc.setTextColor(...COLORS.gray)
+  doc.setFontSize(7)
+  const sec3Comp = doc.splitTextToSize(LAUDO_TEXTOS.secao3.complemento, pw - 2*m - 10)
+  doc.text(sec3Comp, m + 5, bulletY + 3)
+  y += 57
+  
+  // Seção 4 - Processo de Execução
+  y = addSectionTitle(doc, 'Processo de Execução', y)
+  addCard(doc, m, y, pw - 2*m, 55)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  doc.setTextColor(...COLORS.lightGray)
+  const sec4Lines = doc.splitTextToSize(LAUDO_TEXTOS.secao4.texto, pw - 2*m - 10)
+  doc.text(sec4Lines, m + 5, y + 8)
+  
+  bulletY = y + 15
+  LAUDO_TEXTOS.secao4.etapas.forEach((etapa) => {
+    doc.setTextColor(...COLORS.gold)
+    doc.text('•', m + 5, bulletY)
+    doc.setTextColor(...COLORS.white)
+    doc.text(etapa, m + 10, bulletY)
+    bulletY += 5
+  })
+  
+  doc.setTextColor(...COLORS.gray)
+  doc.setFontSize(7)
+  const sec4Comp = doc.splitTextToSize(LAUDO_TEXTOS.secao4.complemento, pw - 2*m - 10)
+  doc.text(sec4Comp, m + 5, bulletY + 3)
+  
+  addPageFooter(doc)
+
+  // ========================================
+  // PÁGINA 6: TERMOS JURÍDICOS (Seções 5-8)
+  // ========================================
+  doc.addPage()
+  doc.setFillColor(...COLORS.black)
+  doc.rect(0, 0, pw, ph, 'F')
+  
+  addPageHeader(doc, logoDataUrl, 6, totalPages)
+  y = 25
+  
+  // Seção 5 - Registro Fotográfico e Transparência
+  y = addSectionTitle(doc, 'Registro Fotográfico e Transparência', y)
+  addCard(doc, m, y, pw - 2*m, 28)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  doc.setTextColor(...COLORS.lightGray)
+  const sec5Lines = doc.splitTextToSize(LAUDO_TEXTOS.secao5.texto, pw - 2*m - 10)
+  doc.text(sec5Lines, m + 5, y + 8)
+  y += 35
+  
+  // Seção 6 - Responsabilidade Técnica
+  y = addSectionTitle(doc, 'Responsabilidade Técnica', y)
+  addCard(doc, m, y, pw - 2*m, 25)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  doc.setTextColor(...COLORS.lightGray)
+  const sec6Lines = doc.splitTextToSize(LAUDO_TEXTOS.secao6.texto, pw - 2*m - 10)
+  doc.text(sec6Lines, m + 5, y + 8)
+  y += 32
+  
+  // Seção 7 - Garantia
+  y = addSectionTitle(doc, 'Garantia', y)
+  addCard(doc, m, y, pw - 2*m, 45)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  doc.setTextColor(...COLORS.lightGray)
+  const sec7Lines = doc.splitTextToSize(LAUDO_TEXTOS.secao7.texto, pw - 2*m - 10)
+  doc.text(sec7Lines, m + 5, y + 8)
+  
+  bulletY = y + 15
+  LAUDO_TEXTOS.secao7.itens.forEach((item) => {
+    doc.setTextColor(...COLORS.gold)
+    doc.text('•', m + 5, bulletY)
+    doc.setTextColor(...COLORS.white)
+    doc.text(item, m + 10, bulletY)
+    bulletY += 5
+  })
+  
+  doc.setTextColor(...COLORS.gray)
+  doc.setFontSize(7)
+  const sec7Comp = doc.splitTextToSize(LAUDO_TEXTOS.secao7.complemento, pw - 2*m - 10)
+  doc.text(sec7Comp, m + 5, bulletY + 3)
+  y += 52
+  
+  // Seção 8 - Limitações e Condições de Uso
+  y = addSectionTitle(doc, 'Limitações e Condições de Uso', y)
+  addCard(doc, m, y, pw - 2*m, 50)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  doc.setTextColor(...COLORS.lightGray)
+  const sec8Lines = doc.splitTextToSize(LAUDO_TEXTOS.secao8.texto, pw - 2*m - 10)
+  doc.text(sec8Lines, m + 5, y + 8)
+  
+  bulletY = y + 15
+  LAUDO_TEXTOS.secao8.itens.forEach((item) => {
+    doc.setTextColor(...COLORS.gold)
+    doc.text('•', m + 5, bulletY)
+    doc.setTextColor(...COLORS.white)
+    const itemLines = doc.splitTextToSize(item, pw - 2*m - 20)
+    doc.text(itemLines, m + 10, bulletY)
+    bulletY += itemLines.length * 4 + 2
+  })
+  
+  doc.setTextColor(...COLORS.gray)
+  doc.setFontSize(7)
+  const sec8Comp = doc.splitTextToSize(LAUDO_TEXTOS.secao8.complemento, pw - 2*m - 10)
+  doc.text(sec8Comp, m + 5, bulletY + 3)
+  
+  addPageFooter(doc)
+
+  // ========================================
+  // PÁGINA 7: TERMOS JURÍDICOS (Seções 9-12)
+  // ========================================
+  doc.addPage()
+  doc.setFillColor(...COLORS.black)
+  doc.rect(0, 0, pw, ph, 'F')
+  
+  addPageHeader(doc, logoDataUrl, 7, totalPages)
+  y = 25
+  
+  // Seção 9 - Manutenção e Revisões
+  y = addSectionTitle(doc, 'Manutenção e Revisões', y)
+  addCard(doc, m, y, pw - 2*m, 25)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  doc.setTextColor(...COLORS.lightGray)
+  const sec9Lines = doc.splitTextToSize(LAUDO_TEXTOS.secao9.texto, pw - 2*m - 10)
+  doc.text(sec9Lines, m + 5, y + 8)
+  y += 32
+  
+  // Seção 10 - Rastreabilidade e EliteTrace
+  y = addSectionTitle(doc, 'Rastreabilidade e EliteTrace™', y)
+  addCard(doc, m, y, pw - 2*m, 28)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  doc.setTextColor(...COLORS.lightGray)
+  const sec10Lines = doc.splitTextToSize(LAUDO_TEXTOS.secao10.texto, pw - 2*m - 10)
+  doc.text(sec10Lines, m + 5, y + 8)
+  y += 35
+  
+  // Seção 11 - Validade do Documento
+  y = addSectionTitle(doc, 'Validade do Documento', y)
+  addCard(doc, m, y, pw - 2*m, 22)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  doc.setTextColor(...COLORS.lightGray)
+  const sec11Lines = doc.splitTextToSize(LAUDO_TEXTOS.secao11.texto, pw - 2*m - 10)
+  doc.text(sec11Lines, m + 5, y + 8)
+  y += 29
+  
+  // Seção 12 - Declaração Final
+  y = addSectionTitle(doc, 'Declaração Final', y)
+  addCard(doc, m, y, pw - 2*m, 28)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  doc.setTextColor(...COLORS.lightGray)
+  const sec12Lines = doc.splitTextToSize(LAUDO_TEXTOS.secao12.texto, pw - 2*m - 10)
+  doc.text(sec12Lines, m + 5, y + 8)
+  y += 35
+  
+  // Rodapé institucional
+  y = addSectionTitle(doc, 'Elite Blindagens', y)
+  addCard(doc, m, y, pw - 2*m, 30)
+  
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(12)
+  doc.setTextColor(...COLORS.gold)
+  doc.text(LAUDO_TEXTOS.rodape.empresa, pw/2, y + 12, { align: 'center' })
+  
+  doc.setFont('helvetica', 'italic')
+  doc.setFontSize(10)
+  doc.setTextColor(...COLORS.gray)
+  doc.text(LAUDO_TEXTOS.rodape.slogan, pw/2, y + 20, { align: 'center' })
+  
+  addPageFooter(doc)
+
+  // ========================================
+  // PÁGINA 8: STATUS DO DOCUMENTO
+  // ========================================
+  doc.addPage()
+  doc.setFillColor(...COLORS.black)
+  doc.rect(0, 0, pw, ph, 'F')
+  
+  addPageHeader(doc, logoDataUrl, 8, totalPages)
+  y = 25
   
   // Status do documento
   y = addSectionTitle(doc, 'Status do Documento', y)
   
-  addCard(doc, m, y, pw - 2*m, 40)
+  addCard(doc, m, y, pw - 2*m, 50)
   
   // Status badge
-  const statusY = y + 15
+  const statusY = y + 20
   doc.setFillColor(...(isFinished ? COLORS.green : COLORS.yellow))
-  doc.roundedRect(m + 10, statusY - 5, 50, 12, 2, 2, 'F')
+  doc.roundedRect(pw/2 - 30, statusY - 8, 60, 16, 3, 3, 'F')
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(10)
+  doc.setFontSize(12)
   doc.setTextColor(...COLORS.black)
-  doc.text(isFinished ? 'FINALIZADO' : 'EM ANDAMENTO', m + 35, statusY + 2, { align: 'center' })
+  doc.text(isFinished ? 'FINALIZADO' : 'EM ANDAMENTO', pw/2, statusY + 2, { align: 'center' })
   
   // Data de emissão
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(9)
   doc.setTextColor(...COLORS.gray)
-  doc.text(`Data de emissão: ${new Date().toLocaleDateString('pt-BR')}`, m + 70, statusY - 2)
-  doc.text(`Versão do documento: 1.0`, m + 70, statusY + 6)
-  doc.text(`ID: ${project.id}`, m + 70, statusY + 14)
+  doc.text(`Data de emissão: ${new Date().toLocaleDateString('pt-BR')}`, pw/2, statusY + 18, { align: 'center' })
+  doc.text(`Versão do documento: 1.0`, pw/2, statusY + 26, { align: 'center' })
+  doc.text(`ID: ${project.id}`, pw/2, statusY + 34, { align: 'center' })
   
-  y += 55
+  y += 60
   
   // Assinatura final
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(14)
+  doc.setFontSize(16)
   doc.setTextColor(...COLORS.gold)
-  doc.text('Elite Blindagens', pw/2, y + 10, { align: 'center' })
+  doc.text('Elite Blindagens', pw/2, y + 15, { align: 'center' })
   
   doc.setFont('helvetica', 'italic')
-  doc.setFontSize(10)
+  doc.setFontSize(11)
   doc.setTextColor(...COLORS.gray)
-  doc.text('Proteção elevada ao estado da arte.', pw/2, y + 18, { align: 'center' })
+  doc.text('Proteção elevada ao estado da arte.', pw/2, y + 25, { align: 'center' })
   
   // Linha decorativa final
   doc.setDrawColor(...COLORS.gold)
   doc.setLineWidth(0.5)
-  doc.line(pw/3, y + 25, 2*pw/3, y + 25)
+  doc.line(pw/3, y + 35, 2*pw/3, y + 35)
   
   addPageFooter(doc)
 
   // ========================================
-  // PÁGINA 6: REGISTRO FOTOGRÁFICO (se houver fotos)
+  // PÁGINA 9: REGISTRO FOTOGRÁFICO (se houver fotos)
   // ========================================
   const hasPhotos = project.timeline?.some(step => step.photos && step.photos.length > 0)
   
@@ -688,7 +899,7 @@ export async function generateEliteShieldPDF(project: Project): Promise<Blob> {
     doc.setFillColor(...COLORS.black)
     doc.rect(0, 0, pw, ph, 'F')
     
-    addPageHeader(doc, logoDataUrl, 6, totalPages)
+    addPageHeader(doc, logoDataUrl, 9, totalPages)
     y = 25
     
     y = addSectionTitle(doc, 'Registro Fotográfico', y)
@@ -701,7 +912,7 @@ export async function generateEliteShieldPDF(project: Project): Promise<Blob> {
           doc.addPage()
           doc.setFillColor(...COLORS.black)
           doc.rect(0, 0, pw, ph, 'F')
-          addPageHeader(doc, logoDataUrl, 6, totalPages)
+          addPageHeader(doc, logoDataUrl, 9, totalPages)
           y = 25
         }
         

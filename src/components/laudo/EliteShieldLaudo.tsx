@@ -502,7 +502,181 @@ export function EliteShieldLaudo({
       </section>
 
       {/* ================================================================ */}
-      {/* SEÇÃO JURÍDICA - LIMITAÇÕES E CONDIÇÕES DE USO */}
+      {/* SEÇÃO JURÍDICA 1 - DECLARAÇÃO DE EXECUÇÃO TÉCNICA */}
+      {/* ================================================================ */}
+      <section className="p-6 border-b border-[#D4AF37]/30">
+        <SectionHeader 
+          icon={FileText} 
+          title="Declaração de Execução Técnica"
+          expanded={expandedSection === 'declaracao_exec'}
+          onToggle={() => toggleSection('declaracao_exec')}
+        />
+        
+        <div className={cn(
+          "mt-4 transition-all",
+          expandedSection === 'declaracao_exec' || !compact ? 'block' : 'hidden'
+        )}>
+          <div className="p-4 bg-white/5 rounded-xl border border-[#D4AF37]/20">
+            <p className="text-sm text-gray-400 leading-relaxed">{LAUDO_TEXTOS.secao1.texto}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================================ */}
+      {/* SEÇÃO JURÍDICA 2 - PADRÃO DE PROTEÇÃO BALÍSTICA */}
+      {/* ================================================================ */}
+      <section className="p-6 border-b border-[#D4AF37]/30">
+        <SectionHeader 
+          icon={Shield} 
+          title="Padrão de Proteção Balística"
+          expanded={expandedSection === 'protecao_bal'}
+          onToggle={() => toggleSection('protecao_bal')}
+        />
+        
+        <div className={cn(
+          "mt-4 transition-all",
+          expandedSection === 'protecao_bal' || !compact ? 'block' : 'hidden'
+        )}>
+          <div className="p-4 bg-white/5 rounded-xl border border-[#D4AF37]/20">
+            <p className="text-sm text-gray-400 leading-relaxed">{LAUDO_TEXTOS.secao2.texto}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================================ */}
+      {/* SEÇÃO JURÍDICA 3 - MATERIAIS E COMPONENTES UTILIZADOS */}
+      {/* ================================================================ */}
+      <section className="p-6 border-b border-[#D4AF37]/30">
+        <SectionHeader 
+          icon={Layers} 
+          title="Materiais e Componentes Utilizados"
+          expanded={expandedSection === 'materiais'}
+          onToggle={() => toggleSection('materiais')}
+        />
+        
+        <div className={cn(
+          "mt-4 transition-all",
+          expandedSection === 'materiais' || !compact ? 'block' : 'hidden'
+        )}>
+          <div className="p-4 bg-white/5 rounded-xl border border-[#D4AF37]/20">
+            <p className="text-sm text-gray-400 mb-3">{LAUDO_TEXTOS.secao3.texto}</p>
+            <ul className="space-y-2 mb-3">
+              {LAUDO_TEXTOS.secao3.itens.map((item, idx) => (
+                <li key={idx} className="text-sm text-gray-300 flex items-start gap-2">
+                  <span className="text-[#D4AF37] mt-1">•</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-gray-500 italic">{LAUDO_TEXTOS.secao3.complemento}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================================ */}
+      {/* SEÇÃO JURÍDICA 4 - PROCESSO DE EXECUÇÃO */}
+      {/* ================================================================ */}
+      <section className="p-6 border-b border-[#D4AF37]/30">
+        <SectionHeader 
+          icon={Settings} 
+          title="Processo de Execução (Descrição Técnica)"
+          expanded={expandedSection === 'processo_desc'}
+          onToggle={() => toggleSection('processo_desc')}
+        />
+        
+        <div className={cn(
+          "mt-4 transition-all",
+          expandedSection === 'processo_desc' || !compact ? 'block' : 'hidden'
+        )}>
+          <div className="p-4 bg-white/5 rounded-xl border border-[#D4AF37]/20">
+            <p className="text-sm text-gray-400 mb-3">{LAUDO_TEXTOS.secao4.texto}</p>
+            <ul className="space-y-2 mb-3">
+              {LAUDO_TEXTOS.secao4.etapas.map((etapa, idx) => (
+                <li key={idx} className="text-sm text-gray-300 flex items-start gap-2">
+                  <span className="text-[#D4AF37] mt-1">•</span>
+                  {etapa}
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-gray-500 italic">{LAUDO_TEXTOS.secao4.complemento}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================================ */}
+      {/* SEÇÃO JURÍDICA 5 - REGISTRO FOTOGRÁFICO E TRANSPARÊNCIA */}
+      {/* ================================================================ */}
+      <section className="p-6 border-b border-[#D4AF37]/30">
+        <SectionHeader 
+          icon={Camera} 
+          title="Registro Fotográfico e Transparência"
+          expanded={expandedSection === 'foto_transp'}
+          onToggle={() => toggleSection('foto_transp')}
+        />
+        
+        <div className={cn(
+          "mt-4 transition-all",
+          expandedSection === 'foto_transp' || !compact ? 'block' : 'hidden'
+        )}>
+          <div className="p-4 bg-white/5 rounded-xl border border-[#D4AF37]/20">
+            <p className="text-sm text-gray-400 leading-relaxed">{LAUDO_TEXTOS.secao5.texto}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================================ */}
+      {/* SEÇÃO JURÍDICA 6 - RESPONSABILIDADE TÉCNICA */}
+      {/* ================================================================ */}
+      <section className="p-6 border-b border-[#D4AF37]/30">
+        <SectionHeader 
+          icon={User} 
+          title="Responsabilidade Técnica"
+          expanded={expandedSection === 'resp_tecnica'}
+          onToggle={() => toggleSection('resp_tecnica')}
+        />
+        
+        <div className={cn(
+          "mt-4 transition-all",
+          expandedSection === 'resp_tecnica' || !compact ? 'block' : 'hidden'
+        )}>
+          <div className="p-4 bg-white/5 rounded-xl border border-[#D4AF37]/20">
+            <p className="text-sm text-gray-400 leading-relaxed">{LAUDO_TEXTOS.secao6.texto}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================================ */}
+      {/* SEÇÃO JURÍDICA 7 - GARANTIA */}
+      {/* ================================================================ */}
+      <section className="p-6 border-b border-[#D4AF37]/30">
+        <SectionHeader 
+          icon={Shield} 
+          title="Garantia (Termos)"
+          expanded={expandedSection === 'garantia_termos'}
+          onToggle={() => toggleSection('garantia_termos')}
+        />
+        
+        <div className={cn(
+          "mt-4 transition-all",
+          expandedSection === 'garantia_termos' || !compact ? 'block' : 'hidden'
+        )}>
+          <div className="p-4 bg-white/5 rounded-xl border border-[#D4AF37]/20">
+            <p className="text-sm text-gray-400 mb-3">{LAUDO_TEXTOS.secao7.texto}</p>
+            <ul className="space-y-2 mb-3">
+              {LAUDO_TEXTOS.secao7.itens.map((item, idx) => (
+                <li key={idx} className="text-sm text-gray-300 flex items-start gap-2">
+                  <span className="text-[#D4AF37] mt-1">•</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-gray-500 italic">{LAUDO_TEXTOS.secao7.complemento}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================================ */}
+      {/* SEÇÃO JURÍDICA 8 - LIMITAÇÕES E CONDIÇÕES DE USO */}
       {/* ================================================================ */}
       <section className="p-6 border-b border-[#D4AF37]/30">
         <SectionHeader 

@@ -1,9 +1,7 @@
 import { ReactNode } from 'react'
-import { Header } from './Header'
-import { BottomNav } from './BottomNav'
+import { MobileLayout } from './MobileLayout'
 import { cn } from '../../lib/utils'
 import { useTheme } from '../../contexts/ThemeContext'
-import { useNotifications } from '../../contexts/NotificationContext'
 
 interface LayoutProps {
   children: ReactNode
@@ -11,18 +9,16 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const { theme } = useTheme()
-  const { unreadCount } = useNotifications()
   const isDark = theme === 'dark'
 
+  // Usar MobileLayout para melhor experiência mobile
   return (
-    <div className={cn('min-h-screen', isDark ? 'bg-carbon-900' : 'bg-[#F8F8F8]')}>
-      <Header notificationCount={unreadCount} />
-      <main className="pt-20 pb-24 px-5">
+    <MobileLayout>
+      <div className={cn('min-h-full px-4 py-4', isDark ? 'bg-black' : 'bg-gray-50')}>
         <div className="max-w-7xl mx-auto">
           {children}
         </div>
-      </main>
-      <BottomNav />
-    </div>
+      </div>
+    </MobileLayout>
   )
 }

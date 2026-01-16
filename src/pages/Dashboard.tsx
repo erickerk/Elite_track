@@ -91,7 +91,16 @@ export function Dashboard() {
           </div>
           <h2 className="text-xl font-bold mb-2">Nenhum projeto encontrado</h2>
           <p className="text-gray-400 mb-4">Você ainda não tem veículos cadastrados.</p>
-          <p className="text-sm text-gray-500">Entre em contato com a Elite Blindagens para iniciar seu acompanhamento.</p>
+          <p className="text-sm text-gray-500 mb-6">Entre em contato com a Elite Blindagens para iniciar seu acompanhamento.</p>
+          <a
+            href="https://wa.me/5511913123071?text=Ol%C3%A1%20Elite%20Blindagens!%20Gostaria%20de%20informa%C3%A7%C3%B5es%20sobre%20blindagem."
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors"
+          >
+            <MessageCircle className="w-5 h-5" />
+            Falar no WhatsApp
+          </a>
         </div>
       </div>
     )

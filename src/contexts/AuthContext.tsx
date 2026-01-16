@@ -1,10 +1,107 @@
-import { createContext, useContext, useState, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import type { User } from '../types'
 import { 
   registerTempPassword as registerTempPasswordService, 
   validateTempPassword,
 } from '../services/tempPasswordService'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
+
+// Constantes de sessão
+const SESSION_EXPIRY_HOURS = 24 // Sessão expira em 24 horas
+const SESSION_KEY = 'elite-session'
+const USER_KEY = 'elite-user'
+const PASSWORD_CHANGE_KEY = 'elite-requires-password-change'
+
+interface SessionData {
+  user: User
+  expiresAt: number
+  deviceId: string
+}
+
+// Gerar ID único do dispositivo
+const getDeviceId = (): string => {
+  let deviceId = localStorage.getItem('elite-device-id')
+  if (!deviceId) {
+    deviceId = `device-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    localStorage.setItem('elite-device-id', deviceId)
+  }
+  return deviceId
+}
+
+// Limpar todos os caches do app
+const clearAllCaches = async () => {
+  try {
+    // Limpar caches do navegador
+    if ('caches' in window) {
+      const cacheNames = await caches.keys()
+      await Promise.all(cacheNames.map(name => caches.delete(name)))
+    }
+    // Desregistrar Service Workers
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations()
+      for (const registration of registrations) {
+        await registration.unregister()
+      }
+    }
+    console.log('[Auth] Caches limpos com sucesso')
+  } catch (err) {
+    console.error('[Auth] Erro ao limpar caches:', err)
+  }
+}
+
+// Validar sessão existente
+const validateSession = (): User | null => {
+  try {
+    const sessionStr = localStorage.getItem(SESSION_KEY)
+    if (!sessionStr) {
+      // Migrar dados antigos se existirem
+      const oldUser = localStorage.getItem(USER_KEY)
+      if (oldUser) {
+        localStorage.removeItem(USER_KEY)
+        localStorage.removeItem(PASSWORD_CHANGE_KEY)
+      }
+      return null
+    }
+    
+    const session: SessionData = JSON.parse(sessionStr)
+    const now = Date.now()
+    
+    // Verificar expiração
+    if (now > session.expiresAt) {
+      console.log('[Auth] Sessão expirada - requer novo login')
+      localStorage.removeItem(SESSION_KEY)
+      localStorage.removeItem(USER_KEY)
+      return null
+    }
+    
+    // Verificar device ID (evita uso em múltiplos dispositivos)
+    const currentDeviceId = getDeviceId()
+    if (session.deviceId !== currentDeviceId) {
+      console.log('[Auth] Sessão de outro dispositivo - requer novo login')
+      localStorage.removeItem(SESSION_KEY)
+      localStorage.removeItem(USER_KEY)
+      return null
+    }
+    
+    return session.user
+  } catch (err) {
+    console.error('[Auth] Erro ao validar sessão:', err)
+    localStorage.removeItem(SESSION_KEY)
+    localStorage.removeItem(USER_KEY)
+    return null
+  }
+}
+
+// Criar nova sessão
+const createSession = (user: User): void => {
+  const session: SessionData = {
+    user,
+    expiresAt: Date.now() + (SESSION_EXPIRY_HOURS * 60 * 60 * 1000),
+    deviceId: getDeviceId()
+  }
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session))
+  localStorage.setItem(USER_KEY, JSON.stringify(user)) // Backup para compatibilidade
+}
 
 interface AuthContextType {
   user: User | null
@@ -26,13 +123,39 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 const devUsers: Record<string, User & { password: string }> = {}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('elite-user')
-    return saved ? JSON.parse(saved) : null
-  })
+  const [user, setUser] = useState<User | null>(() => validateSession())
   const [requiresPasswordChange, setRequiresPasswordChange] = useState<boolean>(() => {
-    return localStorage.getItem('elite-requires-password-change') === 'true'
+    return localStorage.getItem(PASSWORD_CHANGE_KEY) === 'true'
   })
+  // Validar sessão ao montar e periodicamente
+  useEffect(() => {
+    const checkSession = () => {
+      const validUser = validateSession()
+      if (!validUser && user) {
+        console.log('[Auth] Sessão inválida detectada - forçando logout')
+        setUser(null)
+        setRequiresPasswordChange(false)
+      }
+    }
+    
+    checkSession()
+    
+    // Verificar sessão a cada 5 minutos
+    const interval = setInterval(checkSession, 5 * 60 * 1000)
+    
+    // Verificar ao voltar foco na janela (importante para mobile)
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        checkSession()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
+  }, [user])
 
   const login = async (email: string, password: string) => {
     const normalizedEmail = email.toLowerCase().trim()
@@ -64,8 +187,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             
             setUser(authenticatedUser)
             setRequiresPasswordChange(false)
-            localStorage.setItem('elite-user', JSON.stringify(authenticatedUser))
-            localStorage.removeItem('elite-requires-password-change')
+            createSession(authenticatedUser)
+            localStorage.removeItem(PASSWORD_CHANGE_KEY)
             console.log('[Auth] ✓ Login Supabase bem-sucedido:', authenticatedUser.name, '- Role:', dbUser.role)
             return
           }
@@ -81,8 +204,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { password: _, ...userWithoutPassword } = devUser
       setUser(userWithoutPassword)
       setRequiresPasswordChange(false)
-      localStorage.setItem('elite-user', JSON.stringify(userWithoutPassword))
-      localStorage.removeItem('elite-requires-password-change')
+      createSession(userWithoutPassword)
+      localStorage.removeItem(PASSWORD_CHANGE_KEY)
       console.log('[Auth] Login dev bem-sucedido:', devUser.name)
       return
     }
@@ -101,8 +224,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       setUser(tempUser)
       setRequiresPasswordChange(true)
-      localStorage.setItem('elite-user', JSON.stringify(tempUser))
-      localStorage.setItem('elite-requires-password-change', 'true')
+      createSession(tempUser)
+      localStorage.setItem(PASSWORD_CHANGE_KEY, 'true')
       console.log('[Auth] Login com senha temporária bem-sucedido para:', normalizedEmail)
       return
     }
@@ -114,18 +237,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     throw new Error('Credenciais inválidas')
   }
 
-  const logout = () => {
+  const logout = async () => {
     setUser(null)
     setRequiresPasswordChange(false)
-    localStorage.removeItem('elite-user')
-    localStorage.removeItem('elite-requires-password-change')
+    // Limpar todos os dados de sessão
+    localStorage.removeItem(SESSION_KEY)
+    localStorage.removeItem(USER_KEY)
+    localStorage.removeItem(PASSWORD_CHANGE_KEY)
+    // Limpar caches para garantir estado limpo no próximo acesso
+    await clearAllCaches()
+    console.log('[Auth] Logout realizado - sessão e caches limpos')
   }
 
   const updateUser = async (userData: Partial<User>) => {
     if (user) {
       const updatedUser = { ...user, ...userData } as User
       setUser(updatedUser)
-      localStorage.setItem('elite-user', JSON.stringify(updatedUser))
+      createSession(updatedUser) // Atualizar sessão com novos dados
       
       // Salvar no Supabase se configurado
       if (isSupabaseConfigured() && supabase) {
@@ -238,7 +366,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         setUser(persistedUser)
-        localStorage.setItem('elite-user', JSON.stringify(persistedUser))
+        createSession(persistedUser)
       } else {
         // Usuário já existente (executor, admin ou client já persistido)
         const { error } = await (supabase as any)
@@ -253,7 +381,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       setRequiresPasswordChange(false)
-      localStorage.removeItem('elite-requires-password-change')
+      localStorage.removeItem(PASSWORD_CHANGE_KEY)
       console.log('[Auth] Senha alterada com sucesso')
     } catch (err) {
       console.error('[Auth] Erro em changePassword:', err)

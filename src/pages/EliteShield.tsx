@@ -7,7 +7,7 @@
 
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Download, ArrowLeft, Shield } from 'lucide-react'
+import { Download, ArrowLeft, Shield, Loader2 } from 'lucide-react'
 import { useProjects } from '../contexts/ProjectContext'
 import { EliteShieldLaudo } from '../components/laudo/EliteShieldLaudo'
 import { useNotifications } from '../contexts/NotificationContext'
@@ -107,8 +107,17 @@ export function EliteShield() {
             disabled={isExporting}
             className="flex items-center gap-2 px-4 py-2 bg-[#D4AF37] hover:bg-[#F4D03F] text-black font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Download className="w-4 h-4" />
-            {isExporting ? 'Gerando PDF...' : 'Baixar PDF'}
+            {isExporting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Gerando PDF...
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4" />
+                Baixar PDF
+              </>
+            )}
           </button>
         </div>
       </div>

@@ -8,7 +8,7 @@ import {
   FileText, CreditCard, MessageCircle, Settings, Search, 
   Users, Home, Image, LogOut, ChevronRight, Plus, X, Save, Edit3, Calendar,
   DollarSign, Paperclip, Send, Eye, Download, Filter, ExternalLink, Camera,
-  Grid3X3, List, FileSpreadsheet
+  Grid3X3, List, FileSpreadsheet, ArrowLeft
 } from 'lucide-react'
 import { Modal } from '../components/ui/Modal'
 import { NotificationPanel } from '../components/ui/NotificationPanel'
@@ -1792,6 +1792,13 @@ ${loginUrl}
               {/* Barra de Ações */}
               <div className="flex items-center justify-between bg-white/5 rounded-2xl p-4 border border-white/10">
                 <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setActiveTab('dashboard')}
+                    className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+                    title="Voltar para projetos"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </button>
                   <Shield className="w-6 h-6 text-primary" />
                   <div>
                     <h3 className="font-bold">Laudo EliteShield™</h3>

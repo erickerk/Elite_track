@@ -10,8 +10,12 @@ export function ExecutorLayout({ children }: ExecutorLayoutProps) {
   const { theme } = useTheme()
   const isDark = theme === 'dark'
 
+  // Layout minimalista para executor - o ExecutorShell é gerenciado pelo ExecutorDashboard
   return (
-    <div className={cn('min-h-screen', isDark ? 'bg-carbon-900' : 'bg-[#F8F8F8]')}>
+    <div className={cn(
+      'min-h-screen overflow-x-hidden',
+      isDark ? 'bg-black' : 'bg-gray-50'
+    )}>
       {children}
     </div>
   )

@@ -8,7 +8,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Shield, AlertCircle, Settings, Download } from 'lucide-react'
+import { Shield, AlertCircle, Settings, Download, ArrowLeft } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useProjects } from '../contexts/ProjectContext'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
@@ -289,6 +289,13 @@ export function PublicVerification() {
       <header className="sticky top-0 z-50 bg-black/90 backdrop-blur border-b border-[#D4AF37]/30 p-4">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/')}
+              className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+              title="Voltar"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#F4D03F] flex items-center justify-center">
               <Shield className="w-5 h-5 text-black" />
             </div>

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'elitetrack-v2';
+const CACHE_NAME = 'elitetrack-v3';
 const urlsToCache = [
   '/',
   '/index.html',
