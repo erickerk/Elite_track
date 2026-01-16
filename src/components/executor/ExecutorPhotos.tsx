@@ -18,51 +18,61 @@ interface ExecutorPhotosProps {
 function VehicleHeader({ project, isLocked }: { project: Project; isLocked: boolean }) {
   return (
     <div className={cn(
-      "rounded-2xl p-4 mb-4 border-2",
+      "rounded-2xl p-4 sm:p-6 mb-6 border transition-all duration-500",
       isLocked 
-        ? "bg-red-500/10 border-red-500/50" 
-        : "bg-primary/10 border-primary/50"
+        ? "bg-green-500/5 border-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.1)]" 
+        : "bg-primary/5 border-primary/30 shadow-[0_0_20px_rgba(212,175,55,0.1)]"
     )}>
-      <div className="flex items-center gap-4">
-        <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-white/10">
+      <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+        {/* Foto do Veículo - Premium Scale */}
+        <div className={cn(
+          "w-full sm:w-24 h-40 sm:h-24 rounded-2xl overflow-hidden flex-shrink-0 bg-carbon-900 border border-white/10 shadow-xl",
+          isLocked ? "border-green-500/30" : "border-primary/30"
+        )}>
           {project.vehicle.images?.[0] ? (
             <img 
               src={project.vehicle.images[0]} 
               alt={project.vehicle.model} 
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <Car className="w-6 h-6 text-gray-500" />
+              <Car className="w-10 h-10 text-gray-600" />
             </div>
           )}
         </div>
         
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            {isLocked && <Lock className="w-4 h-4 text-red-400" />}
-            <span className={cn(
-              "text-xs font-bold px-2 py-0.5 rounded-full",
-              isLocked ? "bg-red-500/20 text-red-400" : "bg-primary/20 text-primary"
+        {/* Info do Veículo */}
+        <div className="flex-1 text-center sm:text-left w-full">
+          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-2">
+            <div className={cn(
+              "flex items-center gap-1.5 px-3 py-1 rounded-full border backdrop-blur-md",
+              isLocked ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-primary/10 border-primary/20 text-primary"
             )}>
-              {isLocked ? 'BLOQUEADO' : 'SELECIONADO'}
-            </span>
+              {isLocked ? <Lock className="w-3 h-3" /> : <div className="w-1.5 h-1.5 rounded-full bg-primary luxury-glow animate-pulse" />}
+              <span className="text-[10px] font-bold uppercase tracking-widest">
+                {isLocked ? 'CONCLUÍDO' : 'EM EXECUÇÃO'}
+              </span>
+            </div>
           </div>
-          <h3 className="text-lg font-bold text-white">
-            {project.vehicle.brand} {project.vehicle.model}
+
+          <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight leading-none mb-2">
+            {project.vehicle.brand} <span className="text-primary">{project.vehicle.model}</span>
           </h3>
-          <div className="flex items-center gap-3 text-sm text-gray-400">
-            <span className="font-mono font-bold text-white bg-primary/20 px-2 py-0.5 rounded">
+
+          <div className="flex items-center justify-center sm:justify-start gap-4 text-xs font-medium text-gray-400">
+            <span className="font-mono font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-lg border border-primary/20 tracking-tighter">
               {project.vehicle.plate}
             </span>
+            <div className="w-1 h-1 rounded-full bg-white/10" />
             <span>{project.user.name}</span>
           </div>
         </div>
 
         {isLocked && (
-          <div className="flex items-center gap-2 text-xs text-red-400 bg-red-500/10 px-3 py-2 rounded-lg">
-            <Shield className="w-4 h-4" />
-            <span>Projeto Concluído</span>
+          <div className="w-full sm:w-auto p-3 bg-green-500/10 border border-green-500/20 rounded-xl flex items-center justify-center gap-2 text-[10px] font-bold text-green-400 uppercase tracking-widest">
+            <Shield className="w-3 h-3" />
+            <span>Finalizado</span>
           </div>
         )}
       </div>
@@ -213,27 +223,35 @@ export function ExecutorPhotos({ project, onUploadPhoto }: ExecutorPhotosProps) 
       {/* Cabeçalho do Veículo Selecionado */}
       <VehicleHeader project={project} isLocked={isProjectLocked} />
 
-      {/* Summary Header */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white/5 rounded-2xl p-4 text-center">
-          <ImageIcon className="w-8 h-8 text-primary mx-auto mb-2" />
-          <div className="text-2xl font-bold">{allPhotos.length}</div>
-          <div className="text-xs text-gray-400">Total de Fotos</div>
+      {/* Summary Header - Premium Mobile Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-white/5 rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center text-center group hover:border-primary/30 transition-all">
+          <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
+            <ImageIcon className="w-5 h-5 text-primary" />
+          </div>
+          <div className="text-2xl font-bold text-white tracking-tight">{allPhotos.length}</div>
+          <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Total de Fotos</div>
         </div>
-        <div className="bg-white/5 rounded-2xl p-4 text-center">
-          <Folder className="w-8 h-8 text-blue-400 mx-auto mb-2" />
-          <div className="text-2xl font-bold">{project.timeline.filter(s => s.photos.length > 0).length}</div>
-          <div className="text-xs text-gray-400">Etapas com Fotos</div>
+        <div className="bg-white/5 rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center text-center group hover:border-blue-400/30 transition-all">
+          <div className="w-10 h-10 bg-blue-400/10 rounded-xl flex items-center justify-center mb-3 group-hover:bg-blue-400/20 transition-colors">
+            <Folder className="w-5 h-5 text-blue-400" />
+          </div>
+          <div className="text-2xl font-bold text-white tracking-tight">{project.timeline.filter(s => s.photos.length > 0).length}</div>
+          <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Etapas Ativas</div>
         </div>
-        <div className="bg-white/5 rounded-2xl p-4 text-center">
-          <Clock className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
-          <div className="text-2xl font-bold">{project.timeline.filter(s => s.status === 'in_progress').length}</div>
-          <div className="text-xs text-gray-400">Em Andamento</div>
+        <div className="bg-white/5 rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center text-center group hover:border-yellow-400/30 transition-all">
+          <div className="w-10 h-10 bg-yellow-400/10 rounded-xl flex items-center justify-center mb-3 group-hover:bg-yellow-400/20 transition-colors">
+            <Clock className="w-5 h-5 text-yellow-400" />
+          </div>
+          <div className="text-2xl font-bold text-white tracking-tight">{project.timeline.filter(s => s.status === 'in_progress').length}</div>
+          <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Em Andamento</div>
         </div>
-        <div className="bg-white/5 rounded-2xl p-4 text-center">
-          <Check className="w-8 h-8 text-green-400 mx-auto mb-2" />
-          <div className="text-2xl font-bold">{project.timeline.filter(s => s.status === 'completed').length}</div>
-          <div className="text-xs text-gray-400">Concluídas</div>
+        <div className="bg-white/5 rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center text-center group hover:border-green-400/30 transition-all">
+          <div className="w-10 h-10 bg-green-400/10 rounded-xl flex items-center justify-center mb-3 group-hover:bg-green-400/20 transition-colors">
+            <Check className="w-5 h-5 text-green-400" />
+          </div>
+          <div className="text-2xl font-bold text-white tracking-tight">{project.timeline.filter(s => s.status === 'completed').length}</div>
+          <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Concluídas</div>
         </div>
       </div>
 
@@ -278,21 +296,17 @@ export function ExecutorPhotos({ project, onUploadPhoto }: ExecutorPhotosProps) 
               {/* Photos Grid */}
               <div className="p-4">
                 {step.photos.length > 0 ? (
-                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                     {step.photos.map((photo, idx) => (
-                      <div key={idx} className="relative group">
-                        <div className="aspect-square rounded-xl overflow-hidden bg-carbon-900">
-                          <img 
-                            src={photo} 
-                            alt={`${step.title} - Foto ${idx + 1}`}
-                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                          />
-                        </div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-end p-2">
-                          <div className="text-xs">
-                            <p className="font-semibold truncate">Foto {idx + 1}</p>
-                            <p className="text-gray-400 truncate">{step.title}</p>
-                          </div>
+                      <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden group border border-white/5 bg-carbon-900 shadow-lg">
+                        <img 
+                          src={photo} 
+                          alt={`${step.title} - Foto ${idx + 1}`}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-3">
+                          <span className="text-[10px] text-primary font-bold uppercase tracking-widest mb-0.5 truncate">Foto {idx + 1}</span>
+                          <span className="text-xs text-white font-bold truncate leading-tight">{step.title}</span>
                         </div>
                       </div>
                     ))}
@@ -300,26 +314,33 @@ export function ExecutorPhotos({ project, onUploadPhoto }: ExecutorPhotosProps) 
                     {!isProjectLocked && (
                       <button
                         onClick={() => openUploadModal(step)}
-                        className="aspect-square rounded-xl border-2 border-dashed border-white/20 flex flex-col items-center justify-center hover:border-primary/50 hover:bg-white/5 transition-all"
+                        className="aspect-square rounded-2xl border-2 border-dashed border-white/10 hover:border-primary/30 bg-white/5 hover:bg-primary/5 transition-all flex flex-col items-center justify-center gap-2 group"
                         title="Adicionar foto"
                         aria-label="Adicionar foto"
                       >
-                        <Camera className="w-6 h-6 text-gray-500 mb-1" />
-                        <span className="text-xs text-gray-500">Adicionar</span>
+                        <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                          <Camera className="w-5 h-5 text-gray-500 group-hover:text-primary" />
+                        </div>
+                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest group-hover:text-primary">Adicionar</span>
                       </button>
                     )}
                   </div>
                 ) : !isProjectLocked ? (
                   <button
                     onClick={() => openUploadModal(step)}
-                    className="w-full p-8 rounded-xl border-2 border-dashed border-white/20 text-center hover:border-primary/50 hover:bg-white/5 transition-all"
+                    className="w-full py-10 rounded-2xl border-2 border-dashed border-white/10 flex flex-col items-center justify-center hover:border-primary/50 hover:bg-primary/5 transition-all group"
                   >
-                    <Camera className="w-10 h-10 text-gray-600 mx-auto mb-3" />
-                    <p className="text-gray-400 font-medium">Adicionar fotos para esta etapa</p>
-                    <p className="text-xs text-gray-500 mt-1">Clique para selecionar ou arraste arquivos</p>
+                    <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
+                      <Camera className="w-6 h-6 text-gray-600 group-hover:text-primary" />
+                    </div>
+                    <p className="text-sm text-gray-400 font-bold uppercase tracking-widest group-hover:text-primary transition-colors">Adicionar Evidências</p>
+                    <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-tighter">Clique para selecionar arquivos</p>
                   </button>
                 ) : (
-                  <p className="text-sm text-gray-500 italic text-center py-4">Nenhuma foto registrada</p>
+                  <div className="flex flex-col items-center justify-center py-8 bg-white/5 rounded-2xl border border-white/5 opacity-50">
+                    <Shield className="w-8 h-8 text-gray-600 mb-2" />
+                    <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">Nenhuma foto registrada</p>
+                  </div>
                 )}
               </div>
             </div>

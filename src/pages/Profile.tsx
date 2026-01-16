@@ -1,5 +1,11 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { 
+  User, Lock, Bell, MessageCircle, 
+  ArrowLeft, LogOut, Camera, CheckCircle, 
+  Mail, MapPin, ChevronRight, Download, 
+  Trash2, Globe, ShieldCheck
+} from 'lucide-react'
 import { cn } from '../lib/utils'
 import { useAuth } from '../contexts/AuthContext'
 import { useNotifications } from '../contexts/NotificationContext'
@@ -19,7 +25,7 @@ const getTabsForRole = (role: string | undefined): TabType[] => {
 export function Profile() {
   const navigate = useNavigate()
   const { user, logout, updateUser } = useAuth()
-  const { unreadCount, addNotification } = useNotifications()
+  const { addNotification } = useNotifications()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { projects: allProjects } = useProjects()
@@ -160,372 +166,548 @@ export function Profile() {
   }
 
   return (
-    <div className="bg-black text-white font-['Inter'] overflow-x-hidden min-h-screen overflow-y-auto pb-20">
-      <style>{`
-        .profile-section { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); }
-        .profile-section:hover { background: rgba(255,255,255,0.08); border-color: rgba(212,175,55,0.3); }
-        .switch { position: relative; display: inline-block; width: 48px; height: 24px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; inset: 0; background: rgba(255,255,255,0.2); transition: .4s; border-radius: 24px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background: #D4AF37; }
-        input:checked + .slider:before { transform: translateX(24px); }
-        .avatar-upload { position: relative; cursor: pointer; }
-        .avatar-upload:hover .avatar-overlay { opacity: 1; }
-        .avatar-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.7); border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s; }
-      `}</style>
-
-      {isExecutor ? (
-        <header className="bg-carbon-900/80 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <button 
-                  onClick={() => navigate('/dashboard')} 
-                  className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
-                  title="Voltar ao painel"
-                >
-                  <i className="ri-arrow-left-line text-xl"></i>
-                  <span className="text-sm font-medium">Voltar</span>
-                </button>
-                <div className="w-px h-6 bg-white/20"></div>
-                <h1 className="text-xl font-bold">Configurações do Perfil</h1>
-              </div>
-              <div className="flex items-center space-x-3">
-                <button
-                  onClick={handleLogout}
-                  className="md:hidden w-10 h-10 bg-red-500/20 hover:bg-red-500/30 rounded-full flex items-center justify-center transition-colors"
-                  title="Sair"
-                >
-                  <i className="ri-logout-box-line text-red-400"></i>
-                </button>
-                <div className="text-right hidden sm:block">
-                  <div className="text-sm font-medium">{user?.name}</div>
-                  <div className="text-xs text-gray-500">Executor</div>
-                </div>
-                <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary/60 rounded-full flex items-center justify-center">
-                  {user?.avatar ? <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" /> : <i className="ri-user-line text-black text-sm"></i>}
-                </div>
+    <div className="bg-black text-white font-['Inter'] overflow-x-hidden min-h-screen overflow-y-auto pb-24">
+      {/* Header Premium Mobile */}
+      <header className="bg-black/80 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <button 
+                onClick={() => navigate('/dashboard')} 
+                className="p-2 -ml-2 text-gray-400 hover:text-white transition-colors active:scale-90"
+                aria-label="Voltar"
+              >
+                <ArrowLeft className="w-6 h-6" />
+              </button>
+              <h1 className="text-lg font-bold tracking-tight">Perfil</h1>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={handleLogout}
+                className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center transition-colors border border-red-500/20 active:scale-90"
+                title="Sair"
+              >
+                <LogOut className="w-5 h-5 text-red-400" />
+              </button>
+              <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary/60 rounded-xl flex items-center justify-center shadow-lg border border-primary/20">
+                {user?.avatar ? (
+                  <img src={user.avatar} alt={user.name} className="w-full h-full rounded-xl object-cover" />
+                ) : (
+                  <User className="w-5 h-5 text-black" />
+                )}
               </div>
             </div>
           </div>
-        </header>
-      ) : (
-        <header className="glass-effect border-b border-white/10 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-6">
-                <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/dashboard')}>
-                  <img src="/logo-elite.png" alt="Elite Blindagens" className="h-10 w-auto object-contain" />
-                </div>
-                <nav className="hidden md:flex items-center space-x-6">
-                  <span onClick={() => navigate('/timeline')} className="text-white/60 hover:text-white transition-colors text-sm font-medium cursor-pointer">Timeline</span>
-                  <span onClick={() => navigate('/chat')} className="text-white/60 hover:text-white transition-colors text-sm font-medium cursor-pointer">Suporte</span>
-                  <span onClick={() => navigate('/laudo')} className="text-white/60 hover:text-white transition-colors text-sm font-medium cursor-pointer">Documentos</span>
-                  <span className="text-primary font-semibold text-sm">Perfil</span>
-                </nav>
-              </div>
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={handleLogout}
-                  className="md:hidden w-10 h-10 bg-red-500/20 hover:bg-red-500/30 rounded-full flex items-center justify-center transition-colors"
-                  title="Sair"
-                >
-                  <i className="ri-logout-box-line text-red-400"></i>
-                </button>
-                <button className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
-                    <i className="ri-notification-3-line text-primary text-sm"></i>
-                  </div>
-                  {unreadCount > 0 && <span className="bg-primary text-black text-xs px-2 py-1 rounded-full font-semibold">{unreadCount}</span>}
-                </button>
-                <div className="flex items-center space-x-3">
-                  <div className="text-right hidden sm:block">
-                    <div className="text-sm font-medium">{user?.name}</div>
-                    <div className="text-xs text-gray-400">{project.vehicle.brand} {project.vehicle.model}</div>
-                  </div>
-                  <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary/60 rounded-full flex items-center justify-center">
-                    {user?.avatar ? <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" /> : <i className="ri-user-line text-black text-sm"></i>}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
-      )}
+        </div>
+      </header>
 
-      <main className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black">
-        <section className="py-8">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="glass-effect cinematic-blur rounded-3xl p-8">
-              <div className="flex flex-col lg:flex-row items-center space-y-6 lg:space-y-0 lg:space-x-8">
-                <div className="relative">
-                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" title="Selecionar foto de perfil" aria-label="Selecionar foto de perfil" />
-                  <div className="avatar-upload w-32 h-32 rounded-full overflow-hidden" onClick={() => fileInputRef.current?.click()}>
-                    {user?.avatar ? <img src={user.avatar} alt={user?.name} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center"><i className="ri-user-line text-black text-4xl"></i></div>}
-                    <div className="avatar-overlay"><div className="text-center"><i className="ri-camera-line text-white text-2xl mb-1"></i><p className="text-white text-xs">Alterar foto</p></div></div>
+      <main className="max-w-7xl mx-auto space-y-6 pt-6 px-4 sm:px-6">
+        {/* Profile Card Section */}
+        <section>
+          <div className="glass-effect rounded-[2.5rem] p-6 sm:p-8 border border-white/5 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[100px] -mr-32 -mt-32"></div>
+            
+            <div className="flex flex-col md:flex-row items-center gap-6 sm:gap-8 relative z-10">
+              {/* Avatar */}
+              <div className="relative group">
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" title="Upload foto de perfil" aria-label="Upload foto de perfil" />
+                <div 
+                  className="w-28 h-28 sm:w-32 sm:h-32 rounded-[2rem] overflow-hidden border-2 border-white/10 group-hover:border-primary/50 transition-all duration-500 shadow-2xl cursor-pointer"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt={user?.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
+                      <User className="text-black w-12 h-12" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
+                    <div className="text-center">
+                      <Camera className="text-white w-8 h-8 mb-1 mx-auto" />
+                      <p className="text-white text-[10px] font-bold uppercase tracking-widest">Alterar</p>
+                    </div>
                   </div>
-                  <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-primary rounded-full flex items-center justify-center border-4 border-black"><i className="ri-vip-crown-line text-black text-lg"></i></div>
                 </div>
-                <div className="flex-1 text-center lg:text-left">
-                  <h1 className="text-3xl font-bold mb-2">{user?.name}</h1>
-                  <p className="text-gray-400 mb-4">Cliente Elite desde Novembro 2025</p>
-                  <div className="flex flex-wrap justify-center lg:justify-start gap-3 mb-4">
-                    <div className="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm font-semibold"><i className="ri-vip-crown-line mr-1"></i>Elite Member</div>
-                    <div className="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm font-semibold"><i className="ri-shield-check-line mr-1"></i>Verificado</div>
-                    <div className="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full text-sm font-semibold"><i className="ri-car-line mr-1"></i>{project.vehicle.brand} {project.vehicle.model}</div>
+                <div className="absolute -bottom-2 -right-2 w-9 h-9 bg-primary rounded-xl flex items-center justify-center border-4 border-black shadow-lg">
+                  <ShieldCheck className="text-black w-5 h-5" />
+                </div>
+              </div>
+
+              {/* Info */}
+              <div className="flex-1 text-center md:text-left">
+                <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-2 sm:gap-4 mb-2">
+                  <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">{user?.name}</h2>
+                  <span className={cn(
+                    "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border backdrop-blur-md",
+                    isExecutor ? "bg-blue-500/10 border-blue-500/20 text-blue-400" : "bg-primary/10 border-primary/20 text-primary"
+                  )}>
+                    {isExecutor ? 'Equipe Elite' : 'Elite Member'}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-500 font-medium mb-6">
+                  Membro ativo • Tesla Edition
+                </p>
+                
+                <div className="grid grid-cols-3 gap-3 sm:gap-6 max-w-sm mx-auto md:mx-0">
+                  <div className="bg-white/[0.03] border border-white/5 p-3 rounded-2xl text-center">
+                    <div className="text-lg font-bold text-primary tracking-tight">{userProjects.length}</div>
+                    <div className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">Frota</div>
                   </div>
-                  <div className="grid grid-cols-3 gap-6 text-center">
-                    <div><div className="text-2xl font-bold text-primary">{userProjects.length}</div><div className="text-xs text-gray-400">Veículos</div></div>
-                    <div><div className="text-2xl font-bold text-primary">15</div><div className="text-xs text-gray-400">Dias</div></div>
-                    <div><div className="text-2xl font-bold text-primary">24/7</div><div className="text-xs text-gray-400">Suporte</div></div>
+                  <div className="bg-white/[0.03] border border-white/5 p-3 rounded-2xl text-center">
+                    <div className="text-lg font-bold text-primary tracking-tight">Tesla</div>
+                    <div className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">Style</div>
+                  </div>
+                  <div className="bg-white/[0.03] border border-white/5 p-3 rounded-2xl text-center">
+                    <div className="text-lg font-bold text-primary tracking-tight">24/7</div>
+                    <div className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">Suporte</div>
                   </div>
                 </div>
-                <div className="relative w-24 h-24">
-                  <svg className="progress-ring w-24 h-24" viewBox="0 0 84 84">
-                    <circle stroke="rgba(255,255,255,0.1)" strokeWidth="4" fill="transparent" r="40" cx="42" cy="42"/>
-                    <circle stroke="#D4AF37" strokeWidth="4" fill="transparent" r="40" cx="42" cy="42" strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * project.progress / 100)}/>
+              </div>
+
+              {/* Status Ring (Client) */}
+              {!isExecutor && project && (
+                <div className="relative w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center">
+                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="45" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-white/[0.05]" />
+                    <circle cx="50" cy="50" r="45" stroke="currentColor" strokeWidth="4" fill="transparent" 
+                      strokeDasharray={282.7}
+                      strokeDashoffset={282.7 - (282.7 * project.progress / 100)}
+                      className="text-primary transition-all duration-1000 ease-out"
+                      strokeLinecap="round"
+                    />
                   </svg>
-                  <div className="absolute inset-0 flex items-center justify-center"><div className="text-center"><div className="text-lg font-bold text-primary">{project.progress}%</div><div className="text-xs text-gray-400">Completo</div></div></div>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <div className="text-xl font-bold text-white">{project.progress}%</div>
+                    <div className="text-[8px] text-gray-500 font-bold uppercase tracking-widest">Status</div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </section>
 
-        <section className="pb-6">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="glass-effect cinematic-blur rounded-2xl p-2 inline-flex flex-wrap gap-2">
+        {/* Tab Switcher - Tesla Scroll Style */}
+        <section className="px-4 sm:px-6">
+          <div className="flex overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="inline-flex glass-effect p-1.5 rounded-2xl border border-white/10 gap-1.5 min-w-max">
               {availableTabs.map((tab) => (
-                <button key={tab} onClick={() => switchTab(tab)} className={cn("px-6 py-3 rounded-xl whitespace-nowrap transition-colors", activeTab === tab ? "bg-primary text-black font-semibold" : "text-white/60 hover:text-white")}>
-                  {tab === 'personal' ? 'Dados Pessoais' : tab === 'security' ? 'Segurança' : tab === 'notifications' ? 'Notificações' : tab === 'vehicle' ? 'Veículo' : tab === 'support' ? 'Suporte' : 'Privacidade'}
+                <button 
+                  key={tab} 
+                  onClick={() => switchTab(tab)} 
+                  className={cn(
+                    "px-6 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300", 
+                    activeTab === tab 
+                      ? "bg-primary text-black shadow-lg shadow-primary/20 scale-[1.02]" 
+                      : "text-gray-500 hover:text-white hover:bg-white/5"
+                  )}
+                >
+                  {tab === 'personal' ? 'Dados' : 
+                   tab === 'security' ? 'Segurança' : 
+                   tab === 'notifications' ? 'Alertas' : 
+                   tab === 'vehicle' ? 'Frota' : 
+                   tab === 'support' ? 'Suporte' : 'Privacidade'}
                 </button>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="pb-12">
-          <div className="max-w-7xl mx-auto px-6">
-            {activeTab === 'personal' && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="glass-effect cinematic-blur rounded-3xl p-6 profile-section">
-                  <div className="flex items-center justify-between mb-6"><h3 className="text-xl font-semibold">Informações Básicas</h3><div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center"><i className="ri-user-line text-primary"></i></div></div>
-                  <div className="space-y-4">
-                    <div><label className="block text-sm font-medium text-gray-400 mb-2">Nome Completo</label><input type="text" value={personalData.name} onChange={(e) => { setPersonalData({...personalData, name: e.target.value}); setHasUnsavedChanges(true); }} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-primary/50" title="Nome completo" placeholder="Seu nome completo" /></div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div><label className="block text-sm font-medium text-gray-400 mb-2">CPF</label><input type="text" value={personalData.cpf} onChange={(e) => { setPersonalData({...personalData, cpf: e.target.value}); setHasUnsavedChanges(true); }} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-primary/50" title="CPF" placeholder="000.000.000-00" /></div>
-                      <div><label className="block text-sm font-medium text-gray-400 mb-2">RG</label><input type="text" value={personalData.rg} onChange={(e) => { setPersonalData({...personalData, rg: e.target.value}); setHasUnsavedChanges(true); }} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-primary/50" title="RG" placeholder="00.000.000-0" /></div>
+        {/* Tab Content Area */}
+        <section className="px-4 sm:px-6 pb-12">
+          {activeTab === 'personal' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+              {/* Basic Info */}
+              <div className="glass-effect rounded-[2rem] p-6 sm:p-8 border border-white/5 relative overflow-hidden group">
+                <div className="flex items-center justify-between mb-8 relative z-10">
+                  <div>
+                    <h3 className="text-lg font-bold text-white tracking-tight">Dados Pessoais</h3>
+                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Identificação e registro</p>
+                  </div>
+                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20 transition-colors group-hover:bg-primary/20">
+                    <User className="w-5 h-5 text-primary" />
+                  </div>
+                </div>
+                <div className="space-y-5 relative z-10">
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-gray-500 font-bold uppercase tracking-widest ml-1">Nome Completo</label>
+                    <input 
+                      type="text" 
+                      value={personalData.name} 
+                      onChange={(e) => { setPersonalData({...personalData, name: e.target.value}); setHasUnsavedChanges(true); }} 
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-3.5 text-white text-sm focus:outline-none focus:border-primary/50 focus:bg-white/[0.05] transition-all" 
+                      title="Nome completo" 
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] text-gray-500 font-bold uppercase tracking-widest ml-1">CPF</label>
+                      <input 
+                        type="text" 
+                        value={personalData.cpf} 
+                        onChange={(e) => { setPersonalData({...personalData, cpf: e.target.value}); setHasUnsavedChanges(true); }} 
+                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-3.5 text-white text-sm focus:outline-none focus:border-primary/50 focus:bg-white/[0.05] transition-all" 
+                        title="CPF" 
+                      />
                     </div>
-                    <div><label className="block text-sm font-medium text-gray-400 mb-2">Profissão</label><input type="text" value={personalData.profession} onChange={(e) => { setPersonalData({...personalData, profession: e.target.value}); setHasUnsavedChanges(true); }} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-primary/50" title="Profissão" placeholder="Sua profissão" /></div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] text-gray-500 font-bold uppercase tracking-widest ml-1">Profissão</label>
+                      <input 
+                        type="text" 
+                        value={personalData.profession} 
+                        onChange={(e) => { setPersonalData({...personalData, profession: e.target.value}); setHasUnsavedChanges(true); }} 
+                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-3.5 text-white text-sm focus:outline-none focus:border-primary/50 focus:bg-white/[0.05] transition-all" 
+                        title="Profissão" 
+                      />
+                    </div>
                   </div>
-                </div>
-                <div className="glass-effect cinematic-blur rounded-3xl p-6 profile-section">
-                  <div className="flex items-center justify-between mb-6"><h3 className="text-xl font-semibold">Contato</h3><div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center"><i className="ri-phone-line text-primary"></i></div></div>
-                  <div className="space-y-4">
-                    <div><label className="block text-sm font-medium text-gray-400 mb-2">E-mail</label><div className="relative"><input type="email" value={personalData.email} onChange={(e) => { setPersonalData({...personalData, email: e.target.value}); setHasUnsavedChanges(true); }} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 pr-12 text-white text-sm" title="E-mail" placeholder="seu@email.com" /><div className="absolute right-3 top-1/2 -translate-y-1/2"><i className="ri-check-line text-green-400"></i></div></div></div>
-                    <div><label className="block text-sm font-medium text-gray-400 mb-2">Telefone</label><input type="tel" value={personalData.phone} onChange={(e) => { setPersonalData({...personalData, phone: e.target.value}); setHasUnsavedChanges(true); }} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm" title="Telefone" placeholder="(11) 99999-9999" /></div>
-                    <div><label className="block text-sm font-medium text-gray-400 mb-2">WhatsApp</label><div className="relative"><input type="tel" value={personalData.phone} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 pr-12 text-white text-sm" title="WhatsApp" placeholder="(11) 99999-9999" /><div className="absolute right-3 top-1/2 -translate-y-1/2"><i className="ri-whatsapp-fill text-green-400"></i></div></div></div>
-                  </div>
-                </div>
-                <div className="glass-effect cinematic-blur rounded-3xl p-6 profile-section lg:col-span-2">
-                  <div className="flex items-center justify-between mb-6"><h3 className="text-xl font-semibold">Endereço</h3><div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center"><i className="ri-map-pin-line text-primary"></i></div></div>
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    <div className="lg:col-span-2"><label className="block text-sm font-medium text-gray-400 mb-2">Rua</label><input type="text" value={personalData.address} onChange={(e) => { setPersonalData({...personalData, address: e.target.value}); setHasUnsavedChanges(true); }} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-primary/50" title="Rua" placeholder="Nome da rua" /></div>
-                    <div><label className="block text-sm font-medium text-gray-400 mb-2">Número</label><input type="text" value={personalData.number} onChange={(e) => { setPersonalData({...personalData, number: e.target.value}); setHasUnsavedChanges(true); }} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-primary/50" title="Número" placeholder="123" /></div>
-                    <div><label className="block text-sm font-medium text-gray-400 mb-2">Complemento</label><input type="text" value={personalData.complement} onChange={(e) => { setPersonalData({...personalData, complement: e.target.value}); setHasUnsavedChanges(true); }} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-primary/50" title="Complemento" placeholder="Apto, Bloco, etc" /></div>
-                    <div><label className="block text-sm font-medium text-gray-400 mb-2">Bairro</label><input type="text" value={personalData.neighborhood} onChange={(e) => { setPersonalData({...personalData, neighborhood: e.target.value}); setHasUnsavedChanges(true); }} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-primary/50" title="Bairro" placeholder="Nome do bairro" /></div>
-                    <div><label className="block text-sm font-medium text-gray-400 mb-2">Cidade</label><input type="text" value={personalData.city} onChange={(e) => { setPersonalData({...personalData, city: e.target.value}); setHasUnsavedChanges(true); }} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-primary/50" title="Cidade" placeholder="Nome da cidade" /></div>
-                    <div><label className="block text-sm font-medium text-gray-400 mb-2">CEP</label><input type="text" value={personalData.cep} onChange={(e) => { setPersonalData({...personalData, cep: e.target.value}); setHasUnsavedChanges(true); }} className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-primary/50" title="CEP" placeholder="00000-000" /></div>
-                  </div>
-                </div>
-                <div className="flex justify-end space-x-4 lg:col-span-2">
-                  <button className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-colors">Cancelar</button>
-                  <button onClick={savePersonalData} className="px-6 py-3 bg-primary hover:bg-primary/90 text-black font-semibold rounded-xl transition-colors">Salvar Alterações</button>
                 </div>
               </div>
-            )}
 
-            {activeTab === 'security' && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="glass-effect cinematic-blur rounded-3xl p-6 profile-section lg:col-span-2">
-                  <div className="flex items-center justify-between mb-6"><h3 className="text-xl font-semibold">Segurança da Senha</h3><div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center"><i className="ri-lock-line text-primary"></i></div></div>
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    <div><label className="block text-sm font-medium text-gray-400 mb-2">Senha Atual</label><input type="password" placeholder="••••••••" title="Senha atual" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm" /></div>
-                    <div><label className="block text-sm font-medium text-gray-400 mb-2">Nova Senha</label><input type="password" placeholder="••••••••" title="Nova senha" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm" /></div>
-                    <div><label className="block text-sm font-medium text-gray-400 mb-2">Confirmar</label><input type="password" placeholder="••••••••" title="Confirmar senha" className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm" /></div>
+              {/* Contact Info */}
+              <div className="glass-effect rounded-[2rem] p-6 sm:p-8 border border-white/5 relative overflow-hidden group">
+                <div className="flex items-center justify-between mb-8 relative z-10">
+                  <div>
+                    <h3 className="text-lg font-bold text-white tracking-tight">Canais de Contato</h3>
+                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Comunicação e avisos</p>
+                  </div>
+                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20 transition-colors group-hover:bg-primary/20">
+                    <Mail className="w-5 h-5 text-primary" />
                   </div>
                 </div>
-                <div className="flex justify-end space-x-4 lg:col-span-2">
-                  <button className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl">Cancelar</button>
-                  <button onClick={() => showNotification('Configurações de segurança salvas!', 'success')} className="px-6 py-3 bg-primary hover:bg-primary/90 text-black font-semibold rounded-xl">Salvar</button>
+                <div className="space-y-5 relative z-10">
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-gray-500 font-bold uppercase tracking-widest ml-1">E-mail</label>
+                    <div className="relative">
+                      <input 
+                        type="email" 
+                        value={personalData.email} 
+                        onChange={(e) => { setPersonalData({...personalData, email: e.target.value}); setHasUnsavedChanges(true); }} 
+                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-3.5 pr-12 text-white text-sm focus:border-primary/50 transition-all" 
+                        title="E-mail" 
+                      />
+                      <CheckCircle className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-gray-500 font-bold uppercase tracking-widest ml-1">WhatsApp</label>
+                    <div className="relative">
+                      <input 
+                        type="tel" 
+                        value={personalData.phone} 
+                        onChange={(e) => { setPersonalData({...personalData, phone: e.target.value}); setHasUnsavedChanges(true); }} 
+                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-3.5 pr-12 text-white text-sm focus:border-primary/50 transition-all" 
+                        title="Telefone" 
+                      />
+                      <MessageCircle className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
+                    </div>
+                  </div>
                 </div>
               </div>
-            )}
 
-            {activeTab === 'notifications' && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="glass-effect cinematic-blur rounded-3xl p-6 profile-section">
-                  <div className="flex items-center justify-between mb-6"><h3 className="text-xl font-semibold">E-mail</h3><div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center"><i className="ri-mail-line text-primary"></i></div></div>
-                  <div className="space-y-4">
-                    {[{k:'emailUpdates',t:'Atualizações do Processo',d:'Progresso da blindagem'},{k:'emailMessages',t:'Mensagens do Suporte',d:'Quando receber mensagens'},{k:'emailDocuments',t:'Documentos',d:'Novos documentos disponíveis'}].map(i => (
-                      <div key={i.k} className="flex items-center justify-between p-4 bg-white/5 rounded-xl"><div><div className="font-semibold">{i.t}</div><div className="text-sm text-gray-400">{i.d}</div></div><label className="switch"><input type="checkbox" title={i.t} checked={notificationSettings[i.k as keyof typeof notificationSettings]} onChange={(e) => setNotificationSettings({...notificationSettings, [i.k]: e.target.checked})} /><span className="slider"></span></label></div>
-                    ))}
+              {/* Address Section */}
+              <div className="lg:col-span-2 glass-effect rounded-[2.5rem] p-6 sm:p-10 border border-white/5 relative overflow-hidden group">
+                <div className="flex items-center justify-between mb-8 relative z-10">
+                  <div>
+                    <h3 className="text-lg font-bold text-white tracking-tight">Residência</h3>
+                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Endereço de entrega e faturamento</p>
+                  </div>
+                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20 transition-colors group-hover:bg-primary/20">
+                    <MapPin className="w-5 h-5 text-primary" />
                   </div>
                 </div>
-                <div className="glass-effect cinematic-blur rounded-3xl p-6 profile-section">
-                  <div className="flex items-center justify-between mb-6"><h3 className="text-xl font-semibold">Push</h3><div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center"><i className="ri-notification-line text-primary"></i></div></div>
-                  <div className="space-y-4">
-                    {[{k:'pushBrowser',t:'Navegador',d:'Notificações no browser'},{k:'pushUrgent',t:'Urgência Alta',d:'Questões importantes'},{k:'pushReminders',t:'Lembretes',d:'Agendamentos e prazos'}].map(i => (
-                      <div key={i.k} className="flex items-center justify-between p-4 bg-white/5 rounded-xl"><div><div className="font-semibold">{i.t}</div><div className="text-sm text-gray-400">{i.d}</div></div><label className="switch"><input type="checkbox" title={i.t} checked={notificationSettings[i.k as keyof typeof notificationSettings]} onChange={(e) => setNotificationSettings({...notificationSettings, [i.k]: e.target.checked})} /><span className="slider"></span></label></div>
-                    ))}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 relative z-10">
+                  <div className="sm:col-span-2 space-y-2">
+                    <label className="text-[10px] text-gray-500 font-bold uppercase tracking-widest ml-1">Rua / Avenida</label>
+                    <input 
+                      type="text" 
+                      value={personalData.address} 
+                      onChange={(e) => { setPersonalData({...personalData, address: e.target.value}); setHasUnsavedChanges(true); }} 
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-3.5 text-white text-sm focus:border-primary/50 transition-all" 
+                      title="Endereço" 
+                    />
                   </div>
-                </div>
-                <div className="flex justify-end space-x-4 lg:col-span-2">
-                  <button className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl">Cancelar</button>
-                  <button onClick={() => showNotification('Preferências salvas!', 'success')} className="px-6 py-3 bg-primary hover:bg-primary/90 text-black font-semibold rounded-xl">Salvar</button>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-gray-500 font-bold uppercase tracking-widest ml-1">Número</label>
+                    <input 
+                      type="text" 
+                      value={personalData.number} 
+                      onChange={(e) => { setPersonalData({...personalData, number: e.target.value}); setHasUnsavedChanges(true); }} 
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-3.5 text-white text-sm focus:border-primary/50 transition-all" 
+                      title="Número" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-gray-500 font-bold uppercase tracking-widest ml-1">Bairro</label>
+                    <input 
+                      type="text" 
+                      value={personalData.neighborhood} 
+                      onChange={(e) => { setPersonalData({...personalData, neighborhood: e.target.value}); setHasUnsavedChanges(true); }} 
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-3.5 text-white text-sm focus:border-primary/50 transition-all" 
+                      title="Bairro" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-gray-500 font-bold uppercase tracking-widest ml-1">Cidade</label>
+                    <input 
+                      type="text" 
+                      value={personalData.city} 
+                      onChange={(e) => { setPersonalData({...personalData, city: e.target.value}); setHasUnsavedChanges(true); }} 
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-3.5 text-white text-sm focus:border-primary/50 transition-all" 
+                      title="Cidade" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-gray-500 font-bold uppercase tracking-widest ml-1">CEP</label>
+                    <input 
+                      type="text" 
+                      value={personalData.cep} 
+                      onChange={(e) => { setPersonalData({...personalData, cep: e.target.value}); setHasUnsavedChanges(true); }} 
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-3.5 text-white text-sm focus:border-primary/50 transition-all" 
+                      title="CEP" 
+                    />
+                  </div>
                 </div>
               </div>
-            )}
 
-            {activeTab === 'vehicle' && (
-              <div className="space-y-6">
-                <div className="glass-effect cinematic-blur rounded-3xl p-6">
-                  <div className="flex items-center space-x-4 mb-6"><div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center"><i className="ri-car-line text-primary"></i></div><div><h2 className="text-2xl font-bold">Meus Veículos</h2><p className="text-gray-400">Gerencie seus veículos</p></div></div>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {userProjects.map((proj) => (
-                      <div key={proj.id} className="glass-effect rounded-2xl p-6 profile-section">
-                        <div className="flex items-center space-x-4 mb-4">
-                          <div className="w-20 h-16 rounded-xl overflow-hidden"><img src={proj.vehicle.images[0]} alt={proj.vehicle.model} className="w-full h-full object-cover" /></div>
-                          <div className="flex-1"><h3 className="text-xl font-semibold">{proj.vehicle.brand} {proj.vehicle.model}</h3><p className="text-gray-400">{proj.vehicle.plate} • {proj.vehicle.year}</p></div>
-                          <div className={cn("px-3 py-1 rounded-full text-sm font-semibold", proj.status === 'completed' ? "bg-green-500/20 text-green-400" : "bg-primary/20 text-primary")}>{proj.status === 'completed' ? 'Concluído' : `${proj.progress}%`}</div>
+              {/* Action Buttons */}
+              <div className="lg:col-span-2 flex flex-col sm:flex-row justify-end gap-4 pt-4 relative z-10">
+                <button className="w-full sm:w-auto px-10 py-4 bg-white/5 hover:bg-white/10 text-white font-bold text-[10px] uppercase tracking-widest rounded-2xl border border-white/10 active:scale-95 transition-all">Descartar</button>
+                <button onClick={savePersonalData} className="w-full sm:w-auto px-10 py-4 bg-primary text-black font-black text-[10px] uppercase tracking-widest rounded-2xl active:scale-95 transition-all shadow-lg shadow-primary/20">Salvar Alterações</button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'security' && (
+            <div className="max-w-2xl mx-auto space-y-6">
+              <div className="glass-effect rounded-[2rem] p-6 sm:p-10 border border-white/5 relative overflow-hidden group">
+                <div className="flex items-center justify-between mb-10 relative z-10">
+                  <div>
+                    <h3 className="text-xl font-bold text-white tracking-tight">Segurança</h3>
+                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Proteção de acesso à conta</p>
+                  </div>
+                  <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 transition-colors group-hover:bg-primary/20">
+                    <Lock className="w-6 h-6 text-primary" />
+                  </div>
+                </div>
+                <div className="space-y-6 relative z-10">
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-gray-500 font-bold uppercase tracking-widest ml-1">Senha Atual</label>
+                    <input type="password" placeholder="••••••••" className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-primary/50 focus:bg-white/[0.05] transition-all" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-gray-500 font-bold uppercase tracking-widest ml-1">Nova Senha</label>
+                    <input type="password" placeholder="••••••••" className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-primary/50 focus:bg-white/[0.05] transition-all" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-gray-500 font-bold uppercase tracking-widest ml-1">Confirmar Nova Senha</label>
+                    <input type="password" placeholder="••••••••" className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-primary/50 focus:bg-white/[0.05] transition-all" />
+                  </div>
+                  <button onClick={() => showNotification('Senha alterada com sucesso!', 'success')} className="w-full bg-primary text-black font-black text-xs uppercase tracking-widest py-5 rounded-2xl shadow-lg shadow-primary/20 mt-4 active:scale-95 transition-all">Atualizar Senha</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'notifications' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+              <div className="glass-effect rounded-[2rem] p-6 sm:p-8 border border-white/5 relative overflow-hidden group">
+                <div className="flex items-center gap-4 mb-8 relative z-10">
+                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20 transition-colors group-hover:bg-primary/20">
+                    <Mail className="w-5 h-5 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white tracking-tight">E-mail</h3>
+                </div>
+                <div className="space-y-4 relative z-10">
+                  {[
+                    { k: 'emailUpdates', t: 'Atualizações do Projeto', d: 'Receba notificações de progresso' },
+                    { k: 'emailMessages', t: 'Mensagens', d: 'Comunicações da equipe' },
+                    { k: 'emailDocuments', t: 'Documentos', d: 'Alertas de novos documentos' },
+                    { k: 'emailMarketing', t: 'Ofertas e Novidades', d: 'Promoções exclusivas' }
+                  ].map(item => (
+                    <div key={item.k} className="flex items-center justify-between p-4 bg-white/[0.02] rounded-2xl border border-white/5">
+                      <div>
+                        <div className="text-sm font-bold text-white tracking-tight">{item.t}</div>
+                        <div className="text-[10px] text-gray-500 font-medium">{item.d}</div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" className="sr-only peer" title={item.t} checked={notificationSettings[item.k as keyof typeof notificationSettings]} onChange={(e) => setNotificationSettings({...notificationSettings, [item.k]: e.target.checked})} />
+                        <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="glass-effect rounded-[2rem] p-6 sm:p-8 border border-white/5 relative overflow-hidden group">
+                <div className="flex items-center gap-4 mb-8 relative z-10">
+                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20 transition-colors group-hover:bg-primary/20">
+                    <Bell className="w-5 h-5 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white tracking-tight">Push Mobile</h3>
+                </div>
+                <div className="space-y-4 relative z-10">
+                  {[
+                    { k: 'pushBrowser', t: 'Notificações Push', d: 'Alertas no navegador' },
+                    { k: 'pushUrgent', t: 'Urgentes', d: 'Avisos prioritários' },
+                    { k: 'pushReminders', t: 'Lembretes', d: 'Agendamentos e prazos' }
+                  ].map(item => (
+                    <div key={item.k} className="flex items-center justify-between p-4 bg-white/[0.02] rounded-2xl border border-white/5">
+                      <div>
+                        <div className="text-sm font-bold text-white tracking-tight">{item.t}</div>
+                        <div className="text-[10px] text-gray-500 font-medium">{item.d}</div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" className="sr-only peer" title={item.t} checked={notificationSettings[item.k as keyof typeof notificationSettings]} onChange={(e) => setNotificationSettings({...notificationSettings, [item.k]: e.target.checked})} />
+                        <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'vehicle' && (
+            <div className="space-y-6">
+              <div className="flex flex-col gap-4">
+                {userProjects.map((proj) => (
+                  <div key={proj.id} className="glass-effect rounded-[2.5rem] p-6 sm:p-8 border border-white/5 hover:border-primary/20 transition-all duration-500 group overflow-hidden relative">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all"></div>
+                    <div className="flex flex-col sm:flex-row items-center gap-6 relative z-10">
+                      <div className="w-full sm:w-48 h-32 rounded-[1.5rem] overflow-hidden border border-white/10 shadow-xl">
+                        <img src={proj.vehicle.images[0]} alt={proj.vehicle.model} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                      </div>
+                      <div className="flex-1 text-center sm:text-left">
+                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mb-2">
+                          <span className="font-mono text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-lg border border-primary/20 tracking-tighter">
+                            {proj.vehicle.plate}
+                          </span>
+                          <div className={cn(
+                            "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border",
+                            proj.status === 'completed' ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-primary/10 border-primary/20 text-primary"
+                          )}>
+                            {proj.status === 'completed' ? 'Finalizado' : `${proj.progress}% Concluído`}
+                          </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-4 text-sm"><div><span className="text-gray-400">Cor:</span><span className="ml-2">{proj.vehicle.color}</span></div><div><span className="text-gray-400">Nível:</span><span className="ml-2">{proj.vehicle.blindingLevel}</span></div></div>
+                        <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight mb-4">{proj.vehicle.brand} <span className="text-primary">{proj.vehicle.model}</span></h3>
+                        <div className="grid grid-cols-2 gap-4 text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                          <div>Cor: <span className="text-white ml-1">{proj.vehicle.color}</span></div>
+                          <div>Nível: <span className="text-white ml-1">{proj.vehicle.blindingLevel}</span></div>
+                        </div>
                       </div>
-                    ))}
+                      <button 
+                        onClick={() => navigate('/dashboard')}
+                        className="w-full sm:w-auto h-12 px-6 bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 rounded-2xl flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest transition-all active:scale-90"
+                      >
+                        Gerenciar <ChevronRight className="w-4 h-4 text-primary" />
+                      </button>
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
-            )}
+            </div>
+          )}
 
-            {activeTab === 'support' && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="glass-effect cinematic-blur rounded-3xl p-6 profile-section">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-semibold">Central de Suporte</h3>
-                    <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
-                      <i className="ri-customer-service-2-line text-primary"></i>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <button onClick={() => navigate('/chat')} className="w-full p-4 bg-white/5 hover:bg-white/10 rounded-xl flex items-center space-x-4 transition-colors">
-                      <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center"><i className="ri-chat-3-line text-blue-400 text-xl"></i></div>
-                      <div className="flex-1 text-left"><div className="font-semibold">Chat com Suporte</div><div className="text-sm text-gray-400">Fale com nossa equipe</div></div>
-                      <i className="ri-arrow-right-s-line text-gray-400"></i>
-                    </button>
-                    <button onClick={() => navigate('/elite-card')} className="w-full p-4 bg-white/5 hover:bg-white/10 rounded-xl flex items-center space-x-4 transition-colors">
-                      <div className="w-12 h-12 bg-red-500/20 rounded-xl flex items-center justify-center"><i className="ri-truck-line text-red-400 text-xl"></i></div>
-                      <div className="flex-1 text-left"><div className="font-semibold">Elite Rescue</div><div className="text-sm text-gray-400">Guincho 24h</div></div>
-                      <i className="ri-arrow-right-s-line text-gray-400"></i>
-                    </button>
-                    <button onClick={() => navigate('/revisoes')} className="w-full p-4 bg-white/5 hover:bg-white/10 rounded-xl flex items-center space-x-4 transition-colors">
-                      <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center"><i className="ri-calendar-check-line text-green-400 text-xl"></i></div>
-                      <div className="flex-1 text-left"><div className="font-semibold">Agendar Revisão</div><div className="text-sm text-gray-400">Manutenção preventiva</div></div>
-                      <i className="ri-arrow-right-s-line text-gray-400"></i>
-                    </button>
+          {activeTab === 'support' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+              <div className="glass-effect rounded-[2rem] p-6 sm:p-8 border border-white/5 relative overflow-hidden group">
+                <div className="flex items-center justify-between mb-8 relative z-10">
+                  <h3 className="text-lg font-bold text-white tracking-tight">Atendimento Elite</h3>
+                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20 transition-colors group-hover:bg-primary/20">
+                    <ShieldCheck className="w-5 h-5 text-primary" />
                   </div>
                 </div>
-                <div className="glass-effect cinematic-blur rounded-3xl p-6 profile-section">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-semibold">Meus Chamados</h3>
-                    <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
-                      <i className="ri-ticket-2-line text-primary"></i>
+                <div className="space-y-3 relative z-10">
+                  <button onClick={() => navigate('/chat')} className="w-full p-5 bg-white/[0.02] hover:bg-white/[0.05] rounded-[1.5rem] border border-white/5 flex items-center gap-4 transition-all group/btn active:scale-95">
+                    <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center border border-blue-500/20 group-hover/btn:bg-blue-500/20 transition-colors">
+                      <MessageCircle className="w-6 h-6 text-blue-400" />
                     </div>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="p-4 bg-white/5 rounded-xl border-l-4 border-green-500">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-semibold">Ticket #TKT-001</span>
-                        <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full">Resolvido</span>
-                      </div>
-                      <p className="text-sm text-gray-400">Dúvida sobre cronograma de entrega</p>
-                      <p className="text-xs text-gray-500 mt-2">Aberto em 10/12/2025</p>
+                    <div className="flex-1 text-left">
+                      <div className="font-bold text-white tracking-tight">Chat em Tempo Real</div>
+                      <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Suporte técnico especializado</div>
                     </div>
-                    <div className="p-4 bg-white/5 rounded-xl border-l-4 border-yellow-500">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-semibold">Ticket #TKT-002</span>
-                        <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded-full">Em análise</span>
-                      </div>
-                      <p className="text-sm text-gray-400">Solicitação de fotos adicionais</p>
-                      <p className="text-xs text-gray-500 mt-2">Aberto em 12/12/2025</p>
+                    <ChevronRight className="w-4 h-4 text-gray-600 group-hover/btn:text-primary transition-colors" />
+                  </button>
+                  <button onClick={() => navigate('/revisoes')} className="w-full p-5 bg-white/[0.02] hover:bg-white/[0.05] rounded-[1.5rem] border border-white/5 flex items-center gap-4 transition-all group/btn active:scale-95">
+                    <div className="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center border border-green-500/20 group-hover/btn:bg-green-500/20 transition-colors">
+                      <CheckCircle className="w-6 h-6 text-green-400" />
                     </div>
-                    <button onClick={() => navigate('/elite-card')} className="w-full p-3 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl flex items-center justify-center space-x-2 transition-colors">
-                      <i className="ri-add-line"></i>
-                      <span>Abrir Novo Chamado</span>
-                    </button>
-                  </div>
-                </div>
-                <div className="glass-effect cinematic-blur rounded-3xl p-6 profile-section lg:col-span-2">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-semibold">Contato Direto</h3>
-                    <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
-                      <i className="ri-phone-line text-primary"></i>
+                    <div className="flex-1 text-left">
+                      <div className="font-bold text-white tracking-tight">Agendar Revisão</div>
+                      <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Manutenção e checkout</div>
                     </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <a href="tel:08007654321" className="p-4 bg-white/5 hover:bg-white/10 rounded-xl flex items-center space-x-4 transition-colors">
-                      <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center"><i className="ri-phone-line text-primary text-xl"></i></div>
-                      <div><div className="font-semibold">0800 765 4321</div><div className="text-sm text-gray-400">Ligação gratuita</div></div>
-                    </a>
-                    <a href="https://wa.me/5511913123071" target="_blank" rel="noopener noreferrer" className="p-4 bg-white/5 hover:bg-white/10 rounded-xl flex items-center space-x-4 transition-colors">
-                      <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center"><i className="ri-whatsapp-line text-green-400 text-xl"></i></div>
-                      <div><div className="font-semibold">WhatsApp</div><div className="text-sm text-gray-400">(11) 9.1312-3071</div></div>
-                    </a>
-                    <a href="mailto:suporte@eliteblindagens.com.br" className="p-4 bg-white/5 hover:bg-white/10 rounded-xl flex items-center space-x-4 transition-colors">
-                      <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center"><i className="ri-mail-line text-blue-400 text-xl"></i></div>
-                      <div><div className="font-semibold">E-mail</div><div className="text-sm text-gray-400">suporte@elite...</div></div>
-                    </a>
-                  </div>
+                    <ChevronRight className="w-4 h-4 text-gray-600 group-hover/btn:text-primary transition-colors" />
+                  </button>
                 </div>
               </div>
-            )}
 
-            {activeTab === 'privacy' && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="glass-effect cinematic-blur rounded-3xl p-6 profile-section">
-                  <div className="flex items-center justify-between mb-6"><h3 className="text-xl font-semibold">Privacidade</h3><div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center"><i className="ri-shield-user-line text-primary"></i></div></div>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl"><div><div className="font-semibold">Compartilhamento</div><div className="text-sm text-gray-400">Para melhorias</div></div><label className="switch"><input type="checkbox" title="Compartilhamento de dados" /><span className="slider"></span></label></div>
-                    <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl"><div><div className="font-semibold">Análise de Uso</div><div className="text-sm text-gray-400">Otimização</div></div><label className="switch"><input type="checkbox" defaultChecked title="Análise de uso" /><span className="slider"></span></label></div>
-                  </div>
-                  <div className="mt-6 space-y-3">
-                    <button onClick={handleDownloadUserData} className="w-full p-3 bg-white/10 hover:bg-white/20 rounded-xl flex items-center space-x-3"><i className="ri-download-line text-primary"></i><div><div className="font-semibold text-left">Baixar Meus Dados</div><div className="text-sm text-gray-400">Arquivo com suas informações</div></div></button>
-                    <button onClick={() => { if(window.confirm('Excluir conta permanentemente?')) showNotification('Solicitação enviada', 'info') }} className="w-full p-3 bg-red-500/10 hover:bg-red-500/20 rounded-xl flex items-center space-x-3"><i className="ri-delete-bin-line text-red-400"></i><div><div className="font-semibold text-red-400 text-left">Excluir Conta</div><div className="text-sm text-gray-400">Ação irreversível</div></div></button>
+              <div className="glass-effect rounded-[2rem] p-6 sm:p-8 border border-white/5 flex flex-col items-center justify-center text-center relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all"></div>
+                <div className="w-16 h-16 bg-primary/10 rounded-[1.5rem] flex items-center justify-center border border-primary/20 mb-6 shadow-xl shadow-primary/5 relative z-10">
+                  <ShieldCheck className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2 tracking-tight relative z-10">Suporte 24/7 Premium</h3>
+                <p className="text-sm text-gray-500 font-medium mb-8 max-w-xs relative z-10">Nosso time de especialistas está pronto para atender suas solicitações com máxima prioridade.</p>
+                <button 
+                  onClick={() => navigate('/elite-card')}
+                  className="w-full py-4 bg-primary text-black font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg shadow-primary/20 active:scale-95 transition-all relative z-10"
+                >
+                  Abrir Novo Chamado
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'privacy' && (
+            <div className="max-w-2xl mx-auto space-y-6">
+              <div className="glass-effect rounded-[2.5rem] p-6 sm:p-10 border border-white/5 relative overflow-hidden group">
+                <div className="flex items-center justify-between mb-10 relative z-10">
+                  <h3 className="text-xl font-bold text-white tracking-tight">Sua Privacidade</h3>
+                  <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 transition-colors group-hover:bg-primary/20">
+                    <Globe className="w-6 h-6 text-primary" />
                   </div>
                 </div>
-                <div className="glass-effect cinematic-blur rounded-3xl p-6 profile-section">
-                  <div className="flex items-center justify-between mb-6"><h3 className="text-xl font-semibold">Visibilidade</h3><div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center"><i className="ri-eye-line text-primary"></i></div></div>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl"><div><div className="font-semibold">Perfil Público</div><div className="text-sm text-gray-400">Outros podem ver</div></div><label className="switch"><input type="checkbox" title="Perfil Público" /><span className="slider"></span></label></div>
-                    <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl"><div><div className="font-semibold">Status Online</div><div className="text-sm text-gray-400">Mostrar quando online</div></div><label className="switch"><input type="checkbox" defaultChecked title="Status Online" /><span className="slider"></span></label></div>
+                <div className="space-y-4 relative z-10">
+                  <div className="flex items-center justify-between p-5 bg-white/[0.02] rounded-2xl border border-white/5">
+                    <div>
+                      <div className="text-sm font-bold text-white tracking-tight">Análise de Uso</div>
+                      <div className="text-[10px] text-gray-500 font-medium">Melhoria contínua da experiência</div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer" defaultChecked title="Análise de Uso" />
+                      <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
                   </div>
-                </div>
-                <div className="flex justify-end space-x-4 lg:col-span-2">
-                  <button className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl">Cancelar</button>
-                  <button onClick={() => showNotification('Configurações salvas!', 'success')} className="px-6 py-3 bg-primary hover:bg-primary/90 text-black font-semibold rounded-xl">Salvar</button>
+                  <div className="pt-6 space-y-3">
+                    <button onClick={handleDownloadUserData} className="w-full p-4 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 flex items-center gap-4 transition-all active:scale-95">
+                      <Download className="w-5 h-5 text-primary" />
+                      <div className="text-left">
+                        <div className="text-sm font-bold text-white">Exportar Dados</div>
+                        <div className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Backup completo da sua conta</div>
+                      </div>
+                    </button>
+                    <button onClick={() => window.confirm('Deseja excluir permanentemente?') && showNotification('Solicitação enviada', 'info')} className="w-full p-4 bg-red-500/5 hover:bg-red-500/10 rounded-2xl border border-red-500/10 flex items-center gap-4 transition-all active:scale-95">
+                      <Trash2 className="w-5 h-5 text-red-400" />
+                      <div className="text-left">
+                        <div className="text-sm font-bold text-red-400">Excluir Conta</div>
+                        <div className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Esta ação é irreversível</div>
+                      </div>
+                    </button>
+                  </div>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </section>
 
-        <section className="pb-8">
-          <div className="max-w-7xl mx-auto px-6">
-            <button onClick={handleLogout} className="w-full max-w-md mx-auto block px-6 py-4 bg-red-500/20 hover:bg-red-500/30 text-red-400 font-semibold rounded-xl transition-colors">
-              <i className="ri-logout-box-line mr-2"></i>Sair da Conta
-            </button>
-            <p className="text-center text-xs text-gray-500 mt-6">EliteTrack™ v1.0.0 • Elite Blindagens</p>
-          </div>
+        {/* Footer Info Mobile */}
+        <section className="px-4 sm:px-6 pb-8 text-center">
+          <button onClick={handleLogout} className="w-full max-w-md mx-auto block px-6 py-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold text-[10px] uppercase tracking-widest rounded-2xl border border-red-500/20 transition-all active:scale-95 mb-8">
+            <LogOut className="w-4 h-4 inline-block mr-2" /> Encerrar Sessão
+          </button>
+          <p className="text-[10px] text-gray-600 font-bold uppercase tracking-[0.2em]">EliteTrack™ v1.0.0 • 2026 Elite Blindagens</p>
         </section>
       </main>
     </div>

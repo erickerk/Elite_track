@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { QrCode, ChevronRight } from 'lucide-react'
+import { cn } from '../lib/utils'
 import { useLeads } from '../contexts/LeadsContext'
 import { useNotifications } from '../contexts/NotificationContext'
 import '../styles/LandingPage.css'
@@ -253,50 +255,55 @@ export function LandingPage() {
         </header>
 
         {/* Hero Content */}
-        <div className="relative z-20 px-6 flex items-center min-h-[85vh] pt-24">
+        <div className="relative z-20 px-4 sm:px-6 flex items-center min-h-[90vh] pt-20 sm:pt-24">
           <div className="max-w-7xl mx-auto w-full">
             <div className="max-w-5xl">
-              <div className="glass-effect cinematic-blur p-8 rounded-3xl premium-shadow mb-8">
-                <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6 tracking-tight">
+              <div className="glass-effect cinematic-blur p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] premium-shadow mb-8 border border-white/10">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 mb-6 animate-fade-in">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary luxury-glow animate-pulse"></div>
+                  <span className="text-[10px] sm:text-xs font-bold text-primary uppercase tracking-[0.2em]">Exclusividade Elite</span>
+                </div>
+                <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold leading-[1.1] mb-6 tracking-tight">
                   EliteTrack™<br />
-                  <span className="text-primary luxury-glow font-light">Transparência Absoluta</span>
+                  <span className="text-primary luxury-glow font-light italic">Transparência Absoluta</span>
                 </h1>
-                <p className="text-lg md:text-xl text-gray-300 mb-8 leading-relaxed max-w-2xl font-light">
-                  Acompanhe cada etapa da blindagem em tempo real, com fotos, status, documentos e histórico completo.<br />
-                  Tecnologia avançada para uma experiência premium incomparável.
+                <p className="text-base sm:text-lg md:text-2xl text-gray-400 mb-8 leading-relaxed max-w-2xl font-light">
+                  Acompanhe cada detalhe da blindagem em tempo real. 
+                  <span className="hidden sm:inline"> Tecnologia avançada para uma experiência premium incomparável.</span>
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8">
                   <button 
                     onClick={() => navigate('/login')}
-                    className="gradient-gold text-black font-semibold px-8 py-3 rounded-lg hover:shadow-xl hover:shadow-primary/20 transition-all duration-300 whitespace-nowrap transform hover:scale-105 luxury-glow text-sm uppercase tracking-wider inline-block text-center"
+                    className="gradient-gold text-black font-bold px-8 py-4 rounded-xl hover:shadow-[0_0_30px_rgba(212,175,55,0.3)] transition-all duration-500 whitespace-nowrap transform hover:scale-105 text-xs sm:text-sm uppercase tracking-[0.15em] w-full sm:w-auto shadow-lg"
                   >
-                    Inicie sua Experiência
+                    Iniciar Experiência
                   </button>
                   <a 
                     href="https://wa.me/5511913123071?text=Olá!%20Gostaria%20de%20falar%20com%20um%20especialista%20sobre%20blindagem%20de%20veículos."
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="glass-effect cinematic-blur border border-primary/50 text-primary font-semibold px-8 py-3 rounded-lg hover:bg-primary hover:text-black transition-all duration-300 whitespace-nowrap transform hover:scale-105 text-sm uppercase tracking-wider inline-block text-center"
+                    className="glass-effect cinematic-blur border border-white/10 text-white font-bold px-8 py-4 rounded-xl hover:bg-white/10 transition-all duration-500 whitespace-nowrap transform hover:scale-105 text-xs sm:text-sm uppercase tracking-[0.15em] w-full sm:w-auto text-center"
                   >
-                    Fale com Especialista
+                    Consultar Especialista
                   </a>
                 </div>
                 
-                {/* Consultar Histórico - Simplificado */}
+                {/* Consultar Histórico - Redesenhado para Mobile */}
                 <button
                   onClick={() => setShowConsultaModal(true)}
-                  className="w-full glass-effect cinematic-blur p-4 rounded-xl border border-primary/30 hover:border-primary/60 transition-all duration-300 group flex items-center justify-between"
+                  className="w-full bg-white/[0.03] hover:bg-white/[0.08] backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-white/10 hover:border-primary/40 transition-all duration-500 group flex items-center gap-4"
                 >
-                  <div className="flex items-center space-x-3">
-                    <i className="ri-qr-code-line text-2xl text-primary"></i>
-                    <div className="text-left">
-                      <span className="font-semibold block">Consultar Histórico do Seu Veículo</span>
-                      <span className="text-xs text-gray-400">Acesse o status, fotos e documentos da sua blindagem com o código do seu projeto exclusivo ou aponte a câmera no QR Code do veículo.</span>
-                    </div>
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
+                    <QrCode className="w-6 h-6 text-primary" />
                   </div>
-                  <i className="ri-arrow-right-line text-xl text-primary group-hover:translate-x-1 transition-transform"></i>
+                  <div className="text-left flex-1 min-w-0">
+                    <span className="font-bold text-sm sm:text-base block text-white tracking-tight">Consultar Histórico</span>
+                    <span className="text-[10px] sm:text-xs text-gray-500 truncate block mt-0.5">Acesse status e fotos via placa ou QR Code</span>
+                  </div>
+                  <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center group-hover:border-primary/40 transition-all">
+                    <ChevronRight className="w-4 h-4 text-gray-500 group-hover:text-primary transition-colors" />
+                  </div>
                 </button>
-                <p className="text-xs text-gray-500 uppercase tracking-widest font-light mt-4">Experiência premium<br />Máxima discrição</p>
               </div>
             </div>
           </div>
@@ -304,164 +311,166 @@ export function LandingPage() {
       </section>
 
       {/* Como Funciona */}
-      <section id="como-funciona" className="py-20 px-6 bg-gradient-to-b from-black to-gray-900">
+      <section id="como-funciona" className="py-16 sm:py-24 px-4 sm:px-6 bg-black relative">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16 fade-in">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">Como Funciona</h2>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">Um processo simples, transparente e totalmente monitorado do início à entrega</p>
+          <div className="text-center mb-16 sm:mb-20 fade-in">
+            <h2 className="text-3xl sm:text-5xl font-bold mb-6 tracking-tight">O Processo <span className="text-primary font-light italic">Elite</span></h2>
+            <p className="text-base sm:text-xl text-gray-500 max-w-2xl mx-auto font-medium">
+              Simplicidade e transparência em cada detalhe da execução.
+            </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="glass-effect cinematic-blur p-10 rounded-3xl fade-in hover:bg-white/15 transition-all duration-500 transform hover:scale-105 premium-shadow group">
-              <div className="w-20 h-20 flex items-center justify-center bg-primary/25 rounded-3xl mb-8 luxury-glow group-hover:bg-primary/35 transition-all duration-300">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+            <div className="glass-effect p-8 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] border border-white/5 hover:border-primary/20 transition-all duration-500 group relative overflow-hidden">
+              <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all"></div>
+              <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center bg-white/[0.03] rounded-2xl mb-8 group-hover:bg-primary/10 transition-all duration-500 border border-white/10 group-hover:border-primary/30">
                 <i className="ri-calendar-check-line text-3xl text-primary"></i>
               </div>
-              <h3 className="text-3xl font-bold mb-6 text-white">1. Agende</h3>
-              <p className="text-gray-300 leading-relaxed text-lg">Solicite seu orçamento e agende a blindagem com nossa equipe especializada.<br />Todo o processo já nasce integrado ao EliteTrack™, garantindo rastreabilidade total desde o primeiro dia.</p>
+              <h3 className="text-2xl sm:text-3xl font-bold mb-4 text-white tracking-tight">Agendamento</h3>
+              <p className="text-gray-400 leading-relaxed text-sm sm:text-base font-medium">
+                Todo o processo já nasce integrado ao EliteTrack™, garantindo rastreabilidade total desde o primeiro dia de blindagem.
+              </p>
             </div>
-            <div className="glass-effect cinematic-blur p-10 rounded-3xl fade-in hover:bg-white/15 transition-all duration-500 transform hover:scale-105 premium-shadow group delay-0-2s">
-              <div className="w-20 h-20 flex items-center justify-center bg-primary/25 rounded-3xl mb-8 luxury-glow group-hover:bg-primary/35 transition-all duration-300">
+            <div className="glass-effect p-8 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] border border-white/5 hover:border-primary/20 transition-all duration-500 group relative overflow-hidden">
+              <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all"></div>
+              <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center bg-white/[0.03] rounded-2xl mb-8 group-hover:bg-primary/10 transition-all duration-500 border border-white/10 group-hover:border-primary/30">
                 <i className="ri-eye-line text-3xl text-primary"></i>
               </div>
-              <h3 className="text-3xl font-bold mb-6 text-white">2. Acompanhe em Tempo Real</h3>
-              <p className="text-gray-300 leading-relaxed text-lg">Acompanhe cada etapa da blindagem com atualizações em tempo real, fotos do processo e registros técnicos diretamente aqui, em nossa plataforma EliteTrack™.</p>
+              <h3 className="text-2xl sm:text-3xl font-bold mb-4 text-white tracking-tight">Monitoramento</h3>
+              <p className="text-gray-400 leading-relaxed text-sm sm:text-base font-medium">
+                Acompanhe cada etapa com fotos em tempo real e registros técnicos diretamente na palma da sua mão.
+              </p>
             </div>
-            <div className="glass-effect cinematic-blur p-10 rounded-3xl fade-in hover:bg-white/15 transition-all duration-500 transform hover:scale-105 premium-shadow group delay-0-4s">
-              <div className="w-20 h-20 flex items-center justify-center bg-primary/25 rounded-3xl mb-8 luxury-glow group-hover:bg-primary/35 transition-all duration-300">
+            <div className="glass-effect p-8 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] border border-white/5 hover:border-primary/20 transition-all duration-500 group relative overflow-hidden">
+              <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all"></div>
+              <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center bg-white/[0.03] rounded-2xl mb-8 group-hover:bg-primary/10 transition-all duration-500 border border-white/10 group-hover:border-primary/30">
                 <i className="ri-shield-check-line text-3xl text-primary"></i>
               </div>
-              <h3 className="text-3xl font-bold mb-6 text-white">3. Receba com Confiança</h3>
-              <p className="text-gray-300 leading-relaxed text-lg">Seu veículo é entregue com certificação completa, documentação organizada e histórico permanente do processo com a máxima qualidade Elite Blindagens.</p>
+              <h3 className="text-2xl sm:text-3xl font-bold mb-4 text-white tracking-tight">Certificação</h3>
+              <p className="text-gray-400 leading-relaxed text-sm sm:text-base font-medium">
+                Receba seu veículo com documentação organizada e histórico permanente do processo com a qualidade Elite.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Benefícios Principais */}
-      <section id="beneficios" className="py-24 px-6 bg-gradient-to-br from-gray-900 via-black to-gray-900 relative">
-        <div className="absolute inset-0 opacity-10">
+      <section id="beneficios" className="py-20 sm:py-24 px-4 sm:px-6 bg-gradient-to-b from-black via-carbon-900 to-black relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full opacity-[0.03] pointer-events-none">
           <div className="benefits-bg" />
         </div>
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center mb-20 fade-in">
-            <h2 className="text-5xl md:text-6xl font-black mb-8 luxury-glow">Benefícios <span className="text-primary">Exclusivos</span></h2>
-            <p className="text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">Tecnologia de ponta para uma experiência premium incomparável no mundo da blindagem automotiva</p>
+          <div className="text-center mb-16 sm:mb-20 fade-in">
+            <h2 className="text-3xl sm:text-6xl font-bold mb-6 tracking-tight">Experiência <span className="text-primary font-light italic">Superior</span></h2>
+            <p className="text-base sm:text-xl text-gray-400 max-w-2xl mx-auto font-medium leading-relaxed">Tecnologia automotiva de luxo aplicada à sua segurança.</p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="glass-effect cinematic-blur p-10 rounded-3xl fade-in hover:bg-white/15 transition-all duration-500 group transform hover:scale-105 premium-shadow">
-              <div className="w-20 h-20 flex items-center justify-center bg-primary/25 rounded-3xl mb-8 group-hover:bg-primary/35 transition-all duration-300 luxury-glow">
-                <i className="ri-search-eye-line text-3xl text-primary"></i>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="glass-effect p-8 rounded-[2rem] border border-white/5 hover:border-primary/30 transition-all duration-500 group">
+              <div className="w-14 h-14 flex items-center justify-center bg-primary/10 rounded-2xl mb-6 group-hover:bg-primary/20 transition-all border border-primary/20">
+                <i className="ri-search-eye-line text-2xl text-primary"></i>
               </div>
-              <h3 className="text-2xl font-bold mb-6 text-white">Transparência Absoluta</h3>
-              <p className="text-gray-300 text-lg leading-relaxed">Você sabe exatamente o que está sendo feito no seu veículo, em cada etapa, sem depender de terceiros.</p>
+              <h3 className="text-xl font-bold mb-3 text-white tracking-tight">Transparência Total</h3>
+              <p className="text-gray-500 text-sm sm:text-base font-medium leading-relaxed">Visualize cada etapa da blindagem sem intermediários, direto do seu smartphone.</p>
             </div>
-            <div className="glass-effect p-8 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group delay-0-1s">
-              <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mb-6 group-hover:bg-primary/30 transition-colors">
+            <div className="glass-effect p-8 rounded-[2rem] border border-white/5 hover:border-primary/30 transition-all duration-500 group">
+              <div className="w-14 h-14 flex items-center justify-center bg-primary/10 rounded-2xl mb-6 group-hover:bg-primary/20 transition-all border border-primary/20">
                 <i className="ri-notification-3-line text-2xl text-primary"></i>
               </div>
-              <h3 className="text-xl font-bold mb-4">Atualizações em Tempo Real</h3>
-              <p className="text-gray-400">Receba notificações automáticas sempre que seu projeto avançar.</p>
+              <h3 className="text-xl font-bold mb-3 text-white tracking-tight">Push Real-time</h3>
+              <p className="text-gray-500 text-sm sm:text-base font-medium leading-relaxed">Receba notificações instantâneas sobre o progresso e novas evidências registradas.</p>
             </div>
-            <div className="glass-effect p-8 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group delay-0-2s">
-              <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mb-6 group-hover:bg-primary/30 transition-colors">
+            <div className="glass-effect p-8 rounded-[2rem] border border-white/5 hover:border-primary/30 transition-all duration-500 group">
+              <div className="w-14 h-14 flex items-center justify-center bg-primary/10 rounded-2xl mb-6 group-hover:bg-primary/20 transition-all border border-primary/20">
                 <i className="ri-file-shield-2-line text-2xl text-primary"></i>
               </div>
-              <h3 className="text-xl font-bold mb-4">Documentos Centralizados</h3>
-              <p className="text-gray-400">Todos os laudos, notas fiscais, certificados e registros técnicos em um único lugar.</p>
-            </div>
-            <div className="glass-effect p-8 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group delay-0-3s">
-              <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mb-6 group-hover:bg-primary/30 transition-colors">
-                <i className="ri-vip-crown-line text-2xl text-primary"></i>
-              </div>
-              <h3 className="text-xl font-bold mb-4">Experiência Premium</h3>
-              <p className="text-gray-400">Uma plataforma elegante, intuitiva e pensada para clientes exigentes.</p>
-            </div>
-            <div className="glass-effect p-8 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group delay-0-4s">
-              <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mb-6 group-hover:bg-primary/30 transition-colors">
-                <i className="ri-rocket-line text-2xl text-primary"></i>
-              </div>
-              <h3 className="text-xl font-bold mb-4">Liderança Tecnológica</h3>
-              <p className="text-gray-400">A primeira plataforma do Brasil dedicada exclusivamente à rastreabilidade da blindagem automotiva.</p>
-            </div>
-            <div className="glass-effect p-8 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group delay-0-5s">
-              <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mb-6 group-hover:bg-primary/30 transition-colors">
-                <i className="ri-lock-line text-2xl text-primary"></i>
-              </div>
-              <h3 className="text-xl font-bold mb-4">Segurança Total</h3>
-              <p className="text-gray-400">Seus dados protegidos com criptografia de padrão bancário e compliance LGPD.</p>
+              <h3 className="text-xl font-bold mb-3 text-white tracking-tight">Cofre Digital</h3>
+              <p className="text-gray-500 text-sm sm:text-base font-medium leading-relaxed">Documentação, certificados e laudos técnicos organizados e seguros em nuvem.</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Preview ao Vivo */}
-      <section id="preview" className="py-20 px-6 bg-black">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16 fade-in">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">Acompanhe em Tempo Real</h2>
-            <p className="text-xl text-gray-400">Veja exatamente o que está acontecendo com seu carro agora</p>
+      <section id="preview" className="py-20 sm:py-32 px-4 sm:px-6 bg-black overflow-hidden">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16 sm:mb-24 fade-in">
+            <h2 className="text-3xl sm:text-6xl font-bold mb-6 tracking-tight">Monitoramento <span className="text-primary font-light italic">Ativo</span></h2>
+            <p className="text-base sm:text-xl text-gray-500 max-w-2xl mx-auto font-medium">Visualize a interface que você terá em mãos.</p>
           </div>
-          <div className="glass-effect p-8 rounded-3xl fade-in">
-            <div className="flex items-center justify-between mb-8">
+          
+          <div className="glass-effect p-6 sm:p-12 rounded-[2.5rem] sm:rounded-[4rem] fade-in relative border border-white/10 shadow-2xl">
+            <div className="absolute -top-24 -left-24 w-64 h-64 bg-primary/10 rounded-full blur-[100px]"></div>
+            <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-primary/5 rounded-full blur-[100px]"></div>
+            
+            <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-12 border-b border-white/5 pb-8">
               <div>
-                <h3 className="text-2xl font-bold mb-2">Mercedes-Benz S 500</h3>
-                <p className="text-gray-400">Nível IIIA • Em processo</p>
+                <h3 className="text-2xl sm:text-4xl font-bold mb-2 tracking-tight text-white">Mercedes-Benz <span className="text-primary">S 500</span></h3>
+                <p className="text-xs sm:text-sm text-gray-500 font-bold uppercase tracking-widest">Nível NIJ III-A • Registro #2948</p>
               </div>
-              <div className="text-right">
-                <p className="text-sm text-gray-500">Última atualização</p>
-                <p className="text-primary font-semibold">Hoje, 14:32</p>
+              <div className="bg-white/[0.03] border border-white/10 px-4 py-2 rounded-xl flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-primary luxury-glow animate-pulse"></div>
+                <div>
+                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter leading-none">Último Log</p>
+                  <p className="text-xs text-white font-bold mt-1">Hoje, 14:32</p>
+                </div>
               </div>
             </div>
-            <div className="space-y-6">
-              <div className="flex items-center space-x-4">
-                <div className="w-8 h-8 flex items-center justify-center bg-green-500 rounded-full">
-                  <i className="ri-check-line text-white text-sm"></i>
+
+            <div className="space-y-8">
+              <div className="flex items-start gap-5 relative">
+                <div className="absolute top-10 bottom-0 left-5 w-px bg-white/10 hidden sm:block"></div>
+                <div className="w-10 h-10 flex items-center justify-center bg-green-500 rounded-full flex-shrink-0 shadow-[0_0_20px_rgba(34,197,94,0.3)]">
+                  <i className="ri-check-line text-white text-lg"></i>
                 </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold">Veículo Recebido</h4>
-                  <p className="text-sm text-gray-400">Inspeção inicial concluída</p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1">
+                    <h4 className="font-bold text-white text-lg tracking-tight">Check-in Concluído</h4>
+                    <span className="text-[10px] sm:text-xs font-bold text-gray-500 bg-white/5 px-2 py-0.5 rounded">10/12 09:00</span>
+                  </div>
+                  <p className="text-sm text-gray-400 font-medium leading-relaxed">Vistoria cautelar e catalogação de componentes originais finalizada.</p>
                 </div>
-                <span className="text-sm text-gray-500">10/12 09:00</span>
               </div>
-              <div className="flex items-center space-x-4">
-                <div className="w-8 h-8 flex items-center justify-center bg-green-500 rounded-full">
-                  <i className="ri-check-line text-white text-sm"></i>
+
+              <div className="flex items-start gap-5 relative">
+                <div className="absolute top-10 bottom-0 left-5 w-px bg-white/10 hidden sm:block"></div>
+                <div className="w-10 h-10 flex items-center justify-center bg-green-500 rounded-full flex-shrink-0 shadow-[0_0_20px_rgba(34,197,94,0.3)]">
+                  <i className="ri-check-line text-white text-lg"></i>
                 </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold">Desmontagem</h4>
-                  <p className="text-sm text-gray-400">Componentes removidos e catalogados</p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1">
+                    <h4 className="font-bold text-white text-lg tracking-tight">Estrutural</h4>
+                    <span className="text-[10px] sm:text-xs font-bold text-gray-500 bg-white/5 px-2 py-0.5 rounded">11/12 14:20</span>
+                  </div>
+                  <p className="text-sm text-gray-400 font-medium leading-relaxed">Desmontagem técnica e preparação da carroceria para aramida.</p>
                 </div>
-                <span className="text-sm text-gray-500">11/12 14:20</span>
               </div>
-              <div className="flex items-center space-x-4">
-                <div className="w-8 h-8 flex items-center justify-center bg-primary rounded-full">
-                  <i className="ri-tools-line text-black text-sm"></i>
+
+              <div className="flex items-start gap-5 relative group">
+                <div className="absolute top-10 bottom-0 left-5 w-px bg-white/10 hidden sm:block"></div>
+                <div className="w-10 h-10 flex items-center justify-center bg-primary rounded-full flex-shrink-0 shadow-[0_0_25px_rgba(212,175,55,0.4)]">
+                  <i className="ri-tools-line text-black text-lg"></i>
                 </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold text-primary">Instalação da Blindagem</h4>
-                  <p className="text-sm text-gray-400">Em andamento - Aplicação do aço balístico</p>
-                  <div className="progress-bar w-full mt-2 progress-65"></div>
+                <div className="flex-1 min-w-0 bg-primary/5 p-4 rounded-2xl border border-primary/20 transform transition-all duration-500 group-hover:bg-primary/10">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
+                    <h4 className="font-bold text-primary text-lg tracking-tight">Instalação Balística</h4>
+                    <span className="text-[10px] font-bold text-primary uppercase tracking-[0.1em]">Em Execução</span>
+                  </div>
+                  <p className="text-sm text-gray-300 font-medium leading-relaxed mb-4">Aplicação de UltraLite Armor™ e sobreposição de camadas.</p>
+                  <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
+                    <div className="h-full bg-primary transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(212,175,55,0.5)] w-[65%]" />
+                  </div>
                 </div>
-                <span className="text-sm text-primary">Em andamento</span>
               </div>
-              <div className="flex items-center space-x-4 opacity-50">
-                <div className="w-8 h-8 flex items-center justify-center border-2 border-gray-600 rounded-full">
-                  <i className="ri-search-line text-gray-600 text-sm"></i>
+
+              <div className="flex items-start gap-5 opacity-30 group">
+                <div className="w-10 h-10 flex items-center justify-center border-2 border-white/20 rounded-full flex-shrink-0 transition-all group-hover:border-white/40">
+                  <i className="ri-search-line text-white/40 text-lg"></i>
                 </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold">Controle de Qualidade</h4>
-                  <p className="text-sm text-gray-400">Testes balísticos e verificações finais</p>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-bold text-white/40 text-lg tracking-tight mb-1">Qualidade Elite</h4>
+                  <p className="text-sm text-white/30 font-medium">Testes de rodagem, infiltração e vedação acústica.</p>
                 </div>
-                <span className="text-sm text-gray-500">Aguardando</span>
-              </div>
-              <div className="flex items-center space-x-4 opacity-50">
-                <div className="w-8 h-8 flex items-center justify-center border-2 border-gray-600 rounded-full">
-                  <i className="ri-truck-line text-gray-600 text-sm"></i>
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold">Entrega</h4>
-                  <p className="text-sm text-gray-400">Veículo pronto para retirada</p>
-                </div>
-                <span className="text-sm text-gray-500">Aguardando</span>
               </div>
             </div>
           </div>
@@ -469,114 +478,145 @@ export function LandingPage() {
       </section>
 
       {/* Documentos e Rastreabilidade */}
-      <section className="py-20 px-6 bg-gray-900">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16 fade-in">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">Documentos & Rastreabilidade</h2>
-            <p className="text-xl text-gray-400">Tudo documentado. Tudo rastreável. Tudo seu. Toda documentação organizada e acessível.</p>
+      <section className="py-20 sm:py-32 px-4 sm:px-6 bg-carbon-900 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-[120px] -mr-48 -mt-48"></div>
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-16 sm:mb-24 fade-in">
+            <div className="max-w-2xl">
+              <h2 className="text-3xl sm:text-6xl font-bold mb-6 tracking-tight text-white">Patrimônio <span className="text-primary font-light italic">Documentado</span></h2>
+              <p className="text-base sm:text-xl text-gray-400 font-medium leading-relaxed">Segurança não é apenas física, é informação organizada e acessível quando você precisar.</p>
+            </div>
+            <div className="flex items-center gap-4 bg-white/[0.03] px-6 py-4 rounded-3xl border border-white/5 backdrop-blur-md">
+              <div className="text-right">
+                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter">Armazenamento Cloud</p>
+                <p className="text-sm text-white font-bold">Criptografia Militar</p>
+              </div>
+              <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 shadow-[0_0_20px_rgba(212,175,55,0.2)]">
+                <i className="ri-cloud-line text-2xl text-primary"></i>
+              </div>
+            </div>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="glass-effect p-6 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group cursor-pointer">
-              <div className="w-12 h-12 flex items-center justify-center bg-blue-500/20 rounded-xl mb-4 group-hover:bg-blue-500/30 transition-colors">
-                <i className="ri-file-text-line text-xl text-blue-400"></i>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="glass-effect p-8 rounded-[2rem] fade-in hover:bg-white/[0.08] transition-all duration-500 group border border-white/5 hover:border-blue-400/30">
+              <div className="w-14 h-14 flex items-center justify-center bg-blue-500/10 rounded-2xl mb-8 group-hover:bg-blue-500/20 transition-all border border-blue-500/20 shadow-lg shadow-blue-500/5">
+                <i className="ri-file-text-line text-2xl text-blue-400"></i>
               </div>
-              <h3 className="font-semibold mb-2">Laudos Técnicos</h3>
-              <p className="text-sm text-gray-400">Relatórios detalhados de cada etapa</p>
+              <h3 className="text-xl font-bold mb-3 text-white tracking-tight">Laudos Técnicos</h3>
+              <p className="text-gray-500 text-sm sm:text-base font-medium leading-relaxed">Certificação detalhada de cada material e processo aplicado.</p>
             </div>
-            <div className="glass-effect p-6 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group cursor-pointer delay-0-1s">
-              <div className="w-12 h-12 flex items-center justify-center bg-green-500/20 rounded-xl mb-4 group-hover:bg-green-500/30 transition-colors">
-                <i className="ri-receipt-line text-xl text-green-400"></i>
+            <div className="glass-effect p-8 rounded-[2rem] fade-in hover:bg-white/[0.08] transition-all duration-500 group border border-white/5 hover:border-green-400/30 delay-0-1s">
+              <div className="w-14 h-14 flex items-center justify-center bg-green-500/10 rounded-2xl mb-8 group-hover:bg-green-500/20 transition-all border border-green-500/20 shadow-lg shadow-green-500/5">
+                <i className="ri-receipt-line text-2xl text-green-400"></i>
               </div>
-              <h3 className="font-semibold mb-2">Notas Fiscais</h3>
-              <p className="text-sm text-gray-400">Documentação fiscal completa</p>
+              <h3 className="text-xl font-bold mb-3 text-white tracking-tight">Notas Fiscais</h3>
+              <p className="text-gray-500 text-sm sm:text-base font-medium leading-relaxed">Repositório completo da sua documentação fiscal e garantias.</p>
             </div>
-            <div className="glass-effect p-6 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group cursor-pointer delay-0-2s">
-              <div className="w-12 h-12 flex items-center justify-center bg-purple-500/20 rounded-xl mb-4 group-hover:bg-purple-500/30 transition-colors">
-                <i className="ri-camera-line text-xl text-purple-400"></i>
+            <div className="glass-effect p-8 rounded-[2rem] fade-in hover:bg-white/[0.08] transition-all duration-500 group border border-white/5 hover:border-purple-400/30 delay-0-2s">
+              <div className="w-14 h-14 flex items-center justify-center bg-purple-500/10 rounded-2xl mb-8 group-hover:bg-purple-500/20 transition-all border border-purple-500/20 shadow-lg shadow-purple-500/5">
+                <i className="ri-camera-line text-2xl text-purple-400"></i>
               </div>
-              <h3 className="font-semibold mb-2">Fotos do Processo</h3>
-              <p className="text-sm text-gray-400">Registro visual de cada etapa</p>
+              <h3 className="text-xl font-bold mb-3 text-white tracking-tight">Galeria Técnica</h3>
+              <p className="text-gray-500 text-sm sm:text-base font-medium leading-relaxed">Registro visual de alta definição de cada ponto de proteção.</p>
             </div>
-            <div className="glass-effect p-6 rounded-2xl fade-in hover:bg-white/10 transition-all duration-300 group cursor-pointer delay-0-3s">
-              <div className="w-12 h-12 flex items-center justify-center bg-primary/20 rounded-xl mb-4 group-hover:bg-primary/30 transition-colors">
-                <i className="ri-award-line text-xl text-primary"></i>
+            <div className="glass-effect p-8 rounded-[2rem] fade-in hover:bg-white/[0.08] transition-all duration-500 group border border-white/5 hover:border-primary/30 delay-0-3s">
+              <div className="w-14 h-14 flex items-center justify-center bg-primary/10 rounded-2xl mb-8 group-hover:bg-primary/20 transition-all border border-primary/20 shadow-lg shadow-primary/5">
+                <i className="ri-award-line text-2xl text-primary"></i>
               </div>
-              <h3 className="font-semibold mb-2">Certificados</h3>
-              <p className="text-sm text-gray-400">Certificações de qualidade e conformidade</p>
+              <h3 className="text-xl font-bold mb-3 text-white tracking-tight">Certificados</h3>
+              <p className="text-gray-500 text-sm sm:text-base font-medium leading-relaxed">Autenticidade EliteShield™ validada via QR Code único.</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Sinais de Confiança */}
-      <section id="confianca" className="py-20 px-6 bg-black">
+      <section id="confianca" className="py-20 sm:py-32 px-4 sm:px-6 bg-black relative">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16 fade-in">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">Confiança & Segurança</h2>
-            <p className="text-xl text-gray-400">Certificações e padrões de excelência</p>
+          <div className="text-center mb-16 sm:mb-24 fade-in">
+            <h2 className="text-3xl sm:text-5xl font-bold mb-6 tracking-tight text-white">Excelência <span className="text-primary font-light italic">Certificada</span></h2>
+            <p className="text-base sm:text-xl text-gray-500 max-w-2xl mx-auto font-medium">Compromisso inabalável com os mais altos padrões de segurança.</p>
           </div>
-          <div className="grid md:grid-cols-4 gap-8">
-            <div className="text-center fade-in">
-              <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mx-auto mb-4 border border-primary/30">
-                <i className="ri-shield-check-line text-2xl text-primary"></i>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8">
+            <div className="text-center fade-in group">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center bg-white/[0.02] rounded-[2rem] mx-auto mb-6 border border-white/5 group-hover:border-primary/30 transition-all duration-500 shadow-xl group-hover:shadow-primary/5">
+                <i className="ri-shield-check-line text-3xl text-primary/60 group-hover:text-primary transition-colors"></i>
               </div>
-              <h3 className="font-semibold mb-2">ISO 9001</h3>
-              <p className="text-sm text-gray-400">Gestão de qualidade certificada</p>
+              <h3 className="text-sm sm:text-base font-bold text-white tracking-tight mb-1">ISO 9001</h3>
+              <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-widest font-bold">Qualidade Premium</p>
             </div>
-            <div className="text-center fade-in delay-0-1s">
-              <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mx-auto mb-4 border border-primary/30">
-                <i className="ri-lock-line text-2xl text-primary"></i>
+            <div className="text-center fade-in delay-0-1s group">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center bg-white/[0.02] rounded-[2rem] mx-auto mb-6 border border-white/5 group-hover:border-primary/30 transition-all duration-500 shadow-xl group-hover:shadow-primary/5">
+                <i className="ri-lock-line text-3xl text-primary/60 group-hover:text-primary transition-colors"></i>
               </div>
-              <h3 className="font-semibold mb-2">Dados Seguros</h3>
-              <p className="text-sm text-gray-400">Criptografia de nível bancário</p>
+              <h3 className="text-sm sm:text-base font-bold text-white tracking-tight mb-1">AES-256</h3>
+              <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-widest font-bold">Dados Blindados</p>
             </div>
-            <div className="text-center fade-in delay-0-2s">
-              <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mx-auto mb-4 border border-primary/30">
-                <i className="ri-eye-off-line text-2xl text-primary"></i>
+            <div className="text-center fade-in delay-0-2s group">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center bg-white/[0.02] rounded-[2rem] mx-auto mb-6 border border-white/5 group-hover:border-primary/30 transition-all duration-500 shadow-xl group-hover:shadow-primary/5">
+                <i className="ri-eye-off-line text-3xl text-primary/60 group-hover:text-primary transition-colors"></i>
               </div>
-              <h3 className="font-semibold mb-2">Privacidade</h3>
-              <p className="text-sm text-gray-400">LGPD compliance total</p>
+              <h3 className="text-sm sm:text-base font-bold text-white tracking-tight mb-1">LGPD</h3>
+              <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-widest font-bold">Privacidade Total</p>
             </div>
-            <div className="text-center fade-in delay-0-3s">
-              <div className="w-16 h-16 flex items-center justify-center bg-primary/20 rounded-2xl mx-auto mb-4 border border-primary/30">
-                <i className="ri-medal-line text-2xl text-primary"></i>
+            <div className="text-center fade-in delay-0-3s group">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center bg-white/[0.02] rounded-[2rem] mx-auto mb-6 border border-white/5 group-hover:border-primary/30 transition-all duration-500 shadow-xl group-hover:shadow-primary/5">
+                <i className="ri-medal-line text-3xl text-primary/60 group-hover:text-primary transition-colors"></i>
               </div>
-              <h3 className="font-semibold mb-2">Excelência</h3>
-              <p className="text-sm text-gray-400">25+ anos de experiência</p>
+              <h3 className="text-sm sm:text-base font-bold text-white tracking-tight mb-1">25+ Anos</h3>
+              <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-widest font-bold">Liderança de Mercado</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Depoimentos */}
-      <section className="py-20 px-6 bg-gray-900">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16 fade-in">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">O que Nossos Clientes Dizem</h2>
+      <section className="py-20 sm:py-32 px-4 sm:px-6 bg-black relative">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 sm:mb-24 fade-in">
+            <div className="max-w-2xl">
+              <h2 className="text-3xl sm:text-6xl font-bold mb-6 tracking-tight text-white">Voz da <span className="text-primary font-light italic">Confiança</span></h2>
+              <p className="text-base sm:text-xl text-gray-500 font-medium">A satisfação de quem não abre mão do melhor acompanhamento.</p>
+            </div>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="glass-effect p-8 rounded-2xl fade-in">
-              <div className="text-4xl text-primary mb-4">"</div>
-              <p className="text-gray-300 italic mb-6 leading-relaxed">O EliteTrack™ revolucionou minha experiência. Poder acompanhar cada detalhe da blindagem em tempo real trouxe uma tranquilidade que eu nunca havia sentido antes.</p>
-              <div>
-                <p className="font-semibold">Ricardo Mendes</p>
-                <p className="text-sm text-gray-500">CEO, Mendes Holdings</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+            <div className="glass-effect p-8 sm:p-10 rounded-[2.5rem] fade-in border border-white/5 hover:border-primary/20 transition-all duration-500 relative">
+              <i className="ri-double-quotes-l text-4xl text-primary/20 absolute top-8 left-8"></i>
+              <p className="text-gray-300 italic mb-10 leading-relaxed text-sm sm:text-base font-medium relative z-10 pt-6">
+                "O EliteTrack™ revolucionou minha experiência. Poder acompanhar cada detalhe da blindagem em tempo real trouxe uma tranquilidade que eu nunca havia sentido antes."
+              </p>
+              <div className="flex items-center gap-4 border-t border-white/5 pt-6">
+                <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold">RM</div>
+                <div>
+                  <p className="font-bold text-white text-sm sm:text-base tracking-tight">Ricardo Mendes</p>
+                  <p className="text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-widest mt-0.5">CEO, Mendes Holdings</p>
+                </div>
               </div>
             </div>
-            <div className="glass-effect p-8 rounded-2xl fade-in delay-0-2s">
-              <div className="text-4xl text-primary mb-4">"</div>
-              <p className="text-gray-300 italic mb-6 leading-relaxed">A transparência é impressionante. Consegui acompanhar minha frota inteira sendo blindada, com documentação completa e atualizações constantes. Serviço premium de verdade.</p>
-              <div>
-                <p className="font-semibold">Marina Silva</p>
-                <p className="text-sm text-gray-500">Diretora, Silva Transportes</p>
+            <div className="glass-effect p-8 sm:p-10 rounded-[2.5rem] fade-in border border-white/5 hover:border-primary/20 transition-all duration-500 relative delay-0-2s">
+              <i className="ri-double-quotes-l text-4xl text-primary/20 absolute top-8 left-8"></i>
+              <p className="text-gray-300 italic mb-10 leading-relaxed text-sm sm:text-base font-medium relative z-10 pt-6">
+                "A transparência é impressionante. Consegui acompanhar minha frota inteira sendo blindada, com documentação completa e atualizações constantes. Serviço premium."
+              </p>
+              <div className="flex items-center gap-4 border-t border-white/5 pt-6">
+                <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold">MS</div>
+                <div>
+                  <p className="font-bold text-white text-sm sm:text-base tracking-tight">Marina Silva</p>
+                  <p className="text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-widest mt-0.5">Diretora, Silva Transportes</p>
+                </div>
               </div>
             </div>
-            <div className="glass-effect p-8 rounded-2xl fade-in delay-0-4s">
-              <div className="text-4xl text-primary mb-4">"</div>
-              <p className="text-gray-300 italic mb-6 leading-relaxed">Tecnologia de ponta aliada à qualidade Elite Blindagem. O EliteTrack™ me deu total confiança no processo, desde o primeiro dia até a entrega final.</p>
-              <div>
-                <p className="font-semibold">Carlos Eduardo</p>
-                <p className="text-sm text-gray-500">Empresário</p>
+            <div className="glass-effect p-8 sm:p-10 rounded-[2.5rem] fade-in border border-white/5 hover:border-primary/20 transition-all duration-500 relative delay-0-4s">
+              <i className="ri-double-quotes-l text-4xl text-primary/20 absolute top-8 left-8"></i>
+              <p className="text-gray-300 italic mb-10 leading-relaxed text-sm sm:text-base font-medium relative z-10 pt-6">
+                "Tecnologia de ponta aliada à qualidade Elite. O EliteTrack™ me deu total confiança no processo, desde o primeiro dia até a entrega final do meu veículo."
+              </p>
+              <div className="flex items-center gap-4 border-t border-white/5 pt-6">
+                <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold">CE</div>
+                <div>
+                  <p className="font-bold text-white text-sm sm:text-base tracking-tight">Carlos Eduardo</p>
+                  <p className="text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-widest mt-0.5">Empresário</p>
+                </div>
               </div>
             </div>
           </div>
@@ -584,69 +624,108 @@ export function LandingPage() {
       </section>
 
       {/* Contato e Captura de Leads */}
-      <section id="contato" className="py-20 px-6 bg-black">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16 fade-in">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">Comece sua Experiência Elite</h2>
-            <p className="text-xl text-gray-400">Entre em contato e tenha controle total sobre a blindagem do seu veículo, do início à entrega com o máximo de transparência e qualidade.</p>
+      <section id="contato" className="py-20 sm:py-32 px-4 sm:px-6 bg-black relative">
+        <div className="absolute top-0 left-0 w-full h-full opacity-[0.02] pointer-events-none">
+          <div className="hero-bg-image" />
+        </div>
+        <div className="max-w-5xl mx-auto relative z-10">
+          <div className="text-center mb-16 sm:mb-24 fade-in">
+            <h2 className="text-3xl sm:text-6xl font-bold mb-6 tracking-tight text-white">Inicie sua <span className="text-primary font-light italic">Jornada</span></h2>
+            <p className="text-base sm:text-xl text-gray-500 max-w-2xl mx-auto font-medium">Entre em contato e descubra o padrão Elite de transparência.</p>
           </div>
-          <div className="glass-effect p-8 rounded-3xl fade-in">
-            <form className="space-y-6" onSubmit={handleFormSubmit}>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Nome Completo</label>
+          
+          <div className="grid lg:grid-cols-5 gap-12 items-start">
+            <div className="lg:col-span-2 space-y-8 fade-in">
+              <div className="glass-effect p-8 rounded-[2rem] border border-white/5 relative overflow-hidden group">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center border border-green-500/20">
+                    <i className="ri-whatsapp-line text-2xl text-green-400"></i>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">WhatsApp Direto</p>
+                    <p className="text-lg text-white font-bold tracking-tight">(11) 9.1312-3071</p>
+                  </div>
+                </div>
+                <a 
+                  href="https://wa.me/5511913123071"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center text-xs font-bold text-primary uppercase tracking-widest group-hover:gap-3 transition-all"
+                >
+                  Falar agora <i className="ri-arrow-right-line ml-2"></i>
+                </a>
+              </div>
+
+              <div className="glass-effect p-8 rounded-[2rem] border border-white/5 relative overflow-hidden group">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                    <i className="ri-map-pin-line text-2xl text-primary"></i>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Localização</p>
+                    <p className="text-sm text-white font-bold tracking-tight leading-relaxed">São Paulo - SP<br />Atendimento Nacional</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="lg:col-span-3 glass-effect p-8 sm:p-12 rounded-[2.5rem] sm:rounded-[3.5rem] border border-white/10 shadow-2xl relative fade-in delay-0-2s">
+              <form className="space-y-6" onSubmit={handleFormSubmit}>
+                <div className="grid sm:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-gray-500 font-bold uppercase tracking-widest ml-1">Nome Completo</label>
+                    <input 
+                      type="text" 
+                      value={formData.name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-gray-600 focus:border-primary focus:bg-white/[0.05] focus:outline-none transition-all duration-300 font-medium" 
+                      placeholder="Ex: Ricardo Mendes" 
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-gray-500 font-bold uppercase tracking-widest ml-1">E-mail Corporativo</label>
+                    <input 
+                      type="email" 
+                      value={formData.email}
+                      onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-gray-600 focus:border-primary focus:bg-white/[0.05] focus:outline-none transition-all duration-300 font-medium" 
+                      placeholder="seu@email.com" 
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] text-gray-500 font-bold uppercase tracking-widest ml-1">WhatsApp</label>
                   <input 
-                    type="text" 
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-primary focus:outline-none transition-colors" 
-                    placeholder="Seu nome completo" 
+                    type="tel" 
+                    value={formData.phone}
+                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-gray-600 focus:border-primary focus:bg-white/[0.05] focus:outline-none transition-all duration-300 font-medium" 
+                    placeholder="(11) 9.0000-0000" 
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Email</label>
-                  <input 
-                    type="email" 
-                    value={formData.email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-primary focus:outline-none transition-colors" 
-                    placeholder="seu@email.com" 
-                    required
-                  />
+                <div className="flex items-center space-x-4 p-4 bg-white/[0.02] rounded-2xl border border-white/5 group cursor-pointer" onClick={() => setFormData(prev => ({ ...prev, wantsSpecialist: !prev.wantsSpecialist }))}>
+                  <div className={cn(
+                    "w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300",
+                    formData.wantsSpecialist ? "bg-primary border-primary" : "border-white/20"
+                  )}>
+                    {formData.wantsSpecialist && <i className="ri-check-line text-black font-bold"></i>}
+                  </div>
+                  <label className="text-sm text-gray-400 font-medium cursor-pointer group-hover:text-gray-200 transition-colors">
+                    Desejo falar com um especialista em segurança balística
+                  </label>
                 </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">WhatsApp</label>
-                <input 
-                  type="tel" 
-                  value={formData.phone}
-                  onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-primary focus:outline-none transition-colors" 
-                  placeholder="(11) 99999-9999" 
-                  required
-                />
-              </div>
-              <div className="flex items-center space-x-3">
-                <input 
-                  type="checkbox" 
-                  id="specialist" 
-                  checked={formData.wantsSpecialist}
-                  onChange={(e) => setFormData(prev => ({ ...prev, wantsSpecialist: e.target.checked }))}
-                  className="w-5 h-5 rounded border-white/30 bg-white/5 text-primary focus:ring-primary cursor-pointer" 
-                />
-                <label htmlFor="specialist" className="text-gray-300 cursor-pointer">
-                  Quero falar com um especialista
-                </label>
-              </div>
-              <button 
-                type="submit" 
-                disabled={isSubmitting}
-                className="w-full gradient-gold text-black font-semibold py-4 rounded-lg hover:shadow-2xl hover:shadow-primary/20 transition-all duration-300 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? 'Enviando...' : 'Solicitar Contato'}
-              </button>
-            </form>
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="w-full gradient-gold text-black font-bold py-5 rounded-2xl hover:shadow-[0_0_40px_rgba(212,175,55,0.4)] transition-all duration-500 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed text-sm uppercase tracking-[0.2em] transform hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  {isSubmitting ? 'Enviando...' : 'Solicitar Atendimento Premium'}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       </section>

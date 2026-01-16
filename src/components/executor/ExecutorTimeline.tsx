@@ -66,208 +66,189 @@ function VehicleHeader({
   
   return (
     <div className={cn(
-      "rounded-2xl p-4 mb-4 border-2",
+      "rounded-2xl p-4 sm:p-6 mb-6 border transition-all duration-500",
       atrasado && !isLocked
-        ? "bg-red-500/10 border-red-500/50"
+        ? "bg-red-500/5 border-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.1)]"
         : isLocked 
-          ? "bg-green-500/10 border-green-500/50" 
-          : "bg-primary/10 border-primary/50"
+          ? "bg-green-500/5 border-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.1)]" 
+          : "bg-primary/5 border-primary/30 shadow-[0_0_20px_rgba(212,175,55,0.1)]"
     )}>
-      <div className="flex items-center gap-4">
-        {/* Foto do Veículo */}
-        <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-white/10">
+      <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+        {/* Foto do Veículo - Premium Scale */}
+        <div className={cn(
+          "w-full sm:w-32 h-40 sm:h-32 rounded-2xl overflow-hidden flex-shrink-0 bg-carbon-900 border border-white/10 shadow-xl",
+          isLocked ? "border-green-500/30" : "border-primary/30"
+        )}>
           {project.vehicle.images?.[0] ? (
             <img 
               src={project.vehicle.images[0]} 
               alt={project.vehicle.model} 
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <Car className="w-8 h-8 text-gray-500" />
+              <Car className="w-10 h-10 text-gray-600" />
             </div>
           )}
         </div>
         
         {/* Info do Veículo */}
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            {isLocked && <Lock className="w-4 h-4 text-green-400" />}
-            <span className={cn(
-              "text-xs font-bold px-2 py-0.5 rounded-full",
-              isLocked ? "bg-green-500/20 text-green-400" : "bg-primary/20 text-primary"
+        <div className="flex-1 text-center sm:text-left w-full">
+          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-2">
+            <div className={cn(
+              "flex items-center gap-1.5 px-3 py-1 rounded-full border backdrop-blur-md",
+              isLocked ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-primary/10 border-primary/20 text-primary"
             )}>
-              {isLocked ? 'PROJETO CONCLUÍDO' : 'VEÍCULO SELECIONADO'}
-            </span>
-            {atrasado && !isLocked && (
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-red-500 text-white animate-pulse">
-                ⚠️ ATRASADO {diasAtraso} DIAS
+              {isLocked ? <Lock className="w-3 h-3" /> : <div className="w-1.5 h-1.5 rounded-full bg-primary luxury-glow animate-pulse" />}
+              <span className="text-[10px] font-bold uppercase tracking-widest">
+                {isLocked ? 'Concluído' : 'Em Execução'}
               </span>
+            </div>
+            
+            {atrasado && !isLocked && (
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400">
+                <AlertCircle className="w-3 h-3" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">
+                  Atrasado {diasAtraso}d
+                </span>
+              </div>
             )}
           </div>
-          <h3 className="text-xl font-bold text-white">
-            {project.vehicle.brand} {project.vehicle.model}
+
+          <h3 className="text-2xl sm:text-3xl font-bold text-white tracking-tight leading-none mb-2">
+            {project.vehicle.brand} <span className="text-primary">{project.vehicle.model}</span>
           </h3>
-          <div className="flex items-center gap-4 text-sm text-gray-400 mt-1 flex-wrap">
-            <span className="font-mono font-bold text-white bg-primary/20 px-2 py-0.5 rounded">
+
+          <div className="flex items-center justify-center sm:justify-start gap-4 text-xs font-medium text-gray-400">
+            <span className="font-mono font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-lg border border-primary/20 tracking-tighter">
               {project.vehicle.plate}
             </span>
+            <div className="w-1 h-1 rounded-full bg-white/10" />
             <span>{project.vehicle.year}</span>
-            <span>{project.vehicle.color}</span>
+            <div className="w-1 h-1 rounded-full bg-white/10" />
+            <span className="capitalize">{project.vehicle.color}</span>
           </div>
         </div>
 
-        {/* Status e Tempo */}
-        <div className="text-right">
-          <div className={cn(
-            "text-3xl font-bold",
-            isLocked ? "text-green-400" : atrasado ? "text-red-400" : "text-primary"
-          )}>
-            {project.progress}%
-          </div>
-          <div className="text-xs text-gray-400">
-            {project.user.name}
-          </div>
-          <div className="mt-2 text-xs">
-            <span className="bg-white/10 px-2 py-1 rounded-full">
-              📅 {diasNaEmpresa} dias na empresa
-            </span>
+        {/* Status e Tempo - Lado direito no desktop, grid no mobile */}
+        <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto pt-4 sm:pt-0 border-t sm:border-t-0 border-white/5 gap-4">
+          <div className="text-right">
+            <div className={cn(
+              "text-4xl sm:text-5xl font-bold tracking-tighter tabular-nums",
+              isLocked ? "text-green-400" : atrasado ? "text-red-400" : "text-primary"
+            )}>
+              {project.progress}<span className="text-xl sm:text-2xl opacity-50">%</span>
+            </div>
+            <div className="text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-widest mt-1">
+              Progresso Real
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Informações de Tempo para o Executor */}
-      <div className="mt-3 pt-3 border-t border-white/10 grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-        {/* Data de Recebimento - Editável */}
-        <div className="bg-white/5 rounded-lg p-2 group relative">
-          <span className="text-gray-400 block flex items-center gap-1">
-            Recebido em
+      {/* Grid de Informações Técnicas - Otimizado para Mobile */}
+      <div className="mt-6 pt-6 border-t border-white/5 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="bg-white/5 rounded-2xl p-3 border border-white/5 group relative">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[9px] text-gray-500 uppercase font-bold tracking-widest">Entrada</span>
             {!isLocked && onUpdateDates && (
               <button 
                 onClick={() => {
                   setEditingDate('received')
                   setTempDate(project.vehicleReceivedDate?.split('T')[0] || project.startDate.split('T')[0])
                 }}
-                className="opacity-0 group-hover:opacity-100 transition-opacity"
-                title="Editar data de recebimento"
-                aria-label="Editar data de recebimento"
+                className="p-1 hover:bg-white/10 rounded-lg transition-all"
+                title="Editar"
               >
                 <Edit3 className="w-3 h-3 text-primary" />
               </button>
             )}
-          </span>
+          </div>
           {editingDate === 'received' ? (
-            <div className="flex items-center gap-1 mt-1">
+            <div className="flex items-center gap-1">
               <input 
                 type="date" 
                 value={tempDate}
                 onChange={(e) => setTempDate(e.target.value)}
-                className="bg-white/10 rounded px-1 py-0.5 text-xs w-full"
-                title="Data de recebimento"
-                aria-label="Data de recebimento"
-                placeholder="dd/mm/aaaa"
+                className="bg-black/40 border border-primary/30 rounded px-2 py-1 text-[10px] w-full text-white focus:outline-none focus:border-primary"
+                title="Data de entrada"
+                placeholder="Data de entrada"
               />
-              <button 
-                onClick={() => handleSaveDate('received')} 
-                className="text-green-400"
-                title="Salvar data"
-                aria-label="Salvar data de recebimento"
-              >
-                <Save className="w-3 h-3" />
-              </button>
-              <button 
-                onClick={() => setEditingDate(null)} 
-                className="text-red-400"
-                title="Cancelar edição"
-                aria-label="Cancelar edição de data"
-              >
-                <X className="w-3 h-3" />
-              </button>
+              <div className="flex flex-col gap-1">
+                <button onClick={() => handleSaveDate('received')} className="text-green-400 p-1 hover:bg-green-400/10 rounded" title="Salvar" aria-label="Salvar data de entrada"><Save className="w-3 h-3" /></button>
+                <button onClick={() => setEditingDate(null)} className="text-red-400 p-1 hover:bg-red-400/10 rounded" title="Cancelar" aria-label="Cancelar edição"><X className="w-3 h-3" /></button>
+              </div>
             </div>
           ) : (
-            <span className="font-bold">
+            <p className="text-sm font-bold text-white">
               {project.vehicleReceivedDate 
                 ? new Date(project.vehicleReceivedDate).toLocaleDateString('pt-BR')
                 : new Date(project.startDate).toLocaleDateString('pt-BR')}
-            </span>
+            </p>
           )}
         </div>
         
-        <div className="bg-white/5 rounded-lg p-2">
-          <span className="text-gray-400 block">Dias na empresa</span>
-          <span className="font-bold text-primary">{diasNaEmpresa} dias</span>
+        <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
+          <span className="text-[9px] text-gray-500 uppercase font-bold tracking-widest block mb-1 text-center">Tempo</span>
+          <p className="text-sm font-bold text-primary text-center">{diasNaEmpresa} dias</p>
         </div>
         
-        {/* Previsão de Entrega - Editável */}
-        <div className="bg-white/5 rounded-lg p-2 group relative">
-          <span className="text-gray-400 block flex items-center gap-1">
-            Previsão entrega
+        <div className="bg-white/5 rounded-2xl p-3 border border-white/5 group relative">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[9px] text-gray-500 uppercase font-bold tracking-widest">Entrega</span>
             {!isLocked && onUpdateDates && (
               <button 
                 onClick={() => {
                   setEditingDate('delivery')
                   setTempDate(project.estimatedDelivery?.split('T')[0] || '')
                 }}
-                className="opacity-0 group-hover:opacity-100 transition-opacity"
-                title="Editar previsão de entrega"
-                aria-label="Editar previsão de entrega"
+                className="p-1 hover:bg-white/10 rounded-lg transition-all"
+                title="Editar"
+                aria-label="Editar data de entrega"
               >
                 <Edit3 className="w-3 h-3 text-primary" />
               </button>
             )}
-          </span>
+          </div>
           {editingDate === 'delivery' ? (
-            <div className="flex items-center gap-1 mt-1">
+            <div className="flex items-center gap-1">
               <input 
                 type="date" 
                 value={tempDate}
                 onChange={(e) => setTempDate(e.target.value)}
-                className="bg-white/10 rounded px-1 py-0.5 text-xs w-full"
-                title="Previsão de entrega"
-                aria-label="Previsão de entrega"
-                placeholder="dd/mm/aaaa"
+                className="bg-black/40 border border-primary/30 rounded px-2 py-1 text-[10px] w-full text-white focus:outline-none focus:border-primary"
+                title="Data de entrega"
+                placeholder="Data de entrega"
               />
-              <button 
-                onClick={() => handleSaveDate('delivery')} 
-                className="text-green-400"
-                title="Salvar data"
-                aria-label="Salvar previsão de entrega"
-              >
-                <Save className="w-3 h-3" />
-              </button>
-              <button 
-                onClick={() => setEditingDate(null)} 
-                className="text-red-400"
-                title="Cancelar edição"
-                aria-label="Cancelar edição de data"
-              >
-                <X className="w-3 h-3" />
-              </button>
+              <div className="flex flex-col gap-1">
+                <button onClick={() => handleSaveDate('delivery')} className="text-green-400 p-1 hover:bg-green-400/10 rounded" title="Salvar" aria-label="Salvar data de entrega"><Save className="w-3 h-3" /></button>
+                <button onClick={() => setEditingDate(null)} className="text-red-400 p-1 hover:bg-red-400/10 rounded" title="Cancelar" aria-label="Cancelar edição"><X className="w-3 h-3" /></button>
+              </div>
             </div>
           ) : (
-            <span className={cn("font-bold", atrasado && !isLocked ? "text-red-400" : "text-green-400")}>
+            <p className={cn("text-sm font-bold", atrasado && !isLocked ? "text-red-400" : "text-green-400")}>
               {project.estimatedDelivery 
                 ? new Date(project.estimatedDelivery).toLocaleDateString('pt-BR')
                 : 'Não definida'}
-            </span>
+            </p>
           )}
         </div>
         
         <div className={cn(
-          "rounded-lg p-2",
-          atrasado && !isLocked ? "bg-red-500/20" : "bg-green-500/20"
+          "rounded-2xl p-3 border",
+          atrasado && !isLocked ? "bg-red-500/10 border-red-500/20" : "bg-green-500/10 border-green-500/20"
         )}>
-          <span className="text-gray-400 block">Status</span>
-          <span className={cn("font-bold", atrasado && !isLocked ? "text-red-400" : "text-green-400")}>
-            {isLocked ? '✓ Concluído' : atrasado ? `⚠️ ${diasAtraso}d atrasado` : `✓ ${diasAtraso}d restantes`}
-          </span>
+          <span className="text-[9px] text-gray-500 uppercase font-bold tracking-widest block mb-1 text-center">Status Final</span>
+          <p className={cn("text-[10px] font-bold text-center leading-tight", atrasado && !isLocked ? "text-red-400" : "text-green-400")}>
+            {isLocked ? 'CONCLUÍDO' : atrasado ? `${diasAtraso}d ATRASO` : `${diasAtraso}d RESTANTES`}
+          </p>
         </div>
       </div>
 
       {isLocked && (
-        <div className="mt-3 pt-3 border-t border-green-500/30 flex items-center gap-2 text-sm text-green-400">
-          <Shield className="w-4 h-4" />
-          <span>Este projeto está concluído. Edições bloqueadas para auditoria.</span>
+        <div className="mt-4 p-3 bg-green-500/10 border border-green-500/20 rounded-xl flex items-center justify-center gap-2 text-[10px] font-bold text-green-400 uppercase tracking-widest">
+          <Shield className="w-3 h-3" />
+          <span>Auditoria: Projeto finalizado e bloqueado para edições</span>
         </div>
       )}
     </div>
@@ -738,17 +719,21 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
                       )}
                     </div>
                     {step.photos.length > 0 ? (
-                      <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                         {(step.photoDetails || step.photos.map(url => ({ url, type: 'during', stage: step.title }))).map((photo: any, idx: number) => {
                           const photoUrl = typeof photo === 'string' ? photo : photo.url
                           const photoType = typeof photo === 'string' ? 'durante' : (photo.type === 'before' ? 'Antes' : photo.type === 'during' ? 'Durante' : photo.type === 'after' ? 'Depois' : photo.type === 'detail' || photo.type === 'details' ? 'Detalhe' : photo.type === 'material' ? 'Material' : photo.type)
                           const photoStage = typeof photo === 'string' ? step.title : photo.stage
                           return (
-                            <div key={idx} className="relative aspect-video rounded-xl overflow-hidden group">
-                              <img src={photoUrl} alt={`${photoStage} - ${photoType}`} className="w-full h-full object-cover" />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2">
-                                <span className="text-xs text-white font-semibold truncate">{photoStage}</span>
-                                <span className="text-xs text-primary">{photoType}</span>
+                            <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden group border border-white/5 bg-carbon-900">
+                              <img 
+                                src={photoUrl} 
+                                alt={`${photoStage} - ${photoType}`} 
+                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-3">
+                                <span className="text-[10px] text-primary font-bold uppercase tracking-widest mb-0.5">{photoType}</span>
+                                <span className="text-xs text-white font-bold truncate leading-tight">{photoStage}</span>
                               </div>
                             </div>
                           )
@@ -756,24 +741,31 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
                         {!isProjectLocked && (
                           <button
                             onClick={(e) => { e.stopPropagation(); setShowPhotoModal(step.id); }}
-                            className="aspect-video rounded-xl border-2 border-dashed border-white/20 flex items-center justify-center hover:border-primary/50 transition-colors"
-                            title="Adicionar foto"
-                            aria-label="Adicionar foto"
+                            className="aspect-square rounded-2xl border-2 border-dashed border-white/10 hover:border-primary/30 bg-white/5 hover:bg-primary/5 transition-all flex flex-col items-center justify-center gap-2 group"
                           >
-                            <Camera className="w-6 h-6 text-gray-500" />
+                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                              <Plus className="w-5 h-5 text-gray-500 group-hover:text-primary" />
+                            </div>
+                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest group-hover:text-primary">Adicionar</span>
                           </button>
                         )}
                       </div>
-                    ) : !isProjectLocked ? (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setShowPhotoModal(step.id); }}
-                        className="w-full p-6 rounded-xl border-2 border-dashed border-white/20 text-center hover:border-primary/50 transition-colors"
-                      >
-                        <Camera className="w-8 h-8 text-gray-500 mx-auto mb-2" />
-                        <p className="text-sm text-gray-400">Adicionar fotos desta etapa</p>
-                      </button>
                     ) : (
-                      <p className="text-sm text-gray-500 italic">Nenhuma foto registrada</p>
+                      <div className="flex flex-col items-center justify-center py-10 bg-white/5 rounded-2xl border border-dashed border-white/10">
+                        <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-3">
+                          <Camera className="w-6 h-6 text-gray-600" />
+                        </div>
+                        <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-4">Nenhuma evidência registrada</p>
+                        {!isProjectLocked && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setShowPhotoModal(step.id); }}
+                            className="flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all active:scale-95"
+                          >
+                            <Plus className="w-4 h-4" />
+                            Registrar Agora
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
 

@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
-  ChevronDown, Share2, Copy, CheckCircle, Plus, QrCode, Link2, MessageCircle, Phone
+  ChevronDown, Share2, Copy, CheckCircle, Plus, QrCode, Link2, MessageCircle, Calendar, Clock, Shield
 } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
 import { Modal } from '../components/ui/Modal'
 import { useAuth } from '../contexts/AuthContext'
-import { useNotifications } from '../contexts/NotificationContext'
 import { useChat } from '../contexts/ChatContext'
 import { useProjects } from '../contexts/ProjectContext'
 import { cn } from '../lib/utils'
@@ -20,7 +19,6 @@ export function Dashboard() {
   const { theme } = useTheme()
   const isDark = theme === 'dark'
   const navigate = useNavigate()
-  const { notifications, unreadCount, markAsRead } = useNotifications()
   const { totalUnreadCount: chatUnreadCount } = useChat()
   const { projects } = useProjects()
 
@@ -304,29 +302,30 @@ export function Dashboard() {
         )}
 
         {/* Hero Section with Car Photo */}
-        <section className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-black/80"></div>
+        <section className="relative overflow-hidden h-[300px] sm:h-[400px] md:h-[500px]">
+          <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-black/90 z-10"></div>
           <img 
             src={selectedProject.vehicle.images[0]} 
             alt={`${selectedProject.vehicle.brand} ${selectedProject.vehicle.model}`}
-            className="w-full h-96 object-cover object-center"
+            className="w-full h-full object-cover object-center scale-105"
           />
-          <div className="absolute inset-0 flex items-center">
-            <div className="max-w-7xl mx-auto px-6 w-full">
+          <div className="absolute inset-0 flex items-end sm:items-center z-20 pb-8 sm:pb-0">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
               <div className="max-w-2xl">
-                <h1 className="text-4xl font-bold mb-4 fade-in visible">
-                  Blindagem {selectedProject.vehicle.brand} {selectedProject.vehicle.model}
+                <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold mb-2 sm:mb-4 fade-in visible tracking-tight leading-tight">
+                  {selectedProject.vehicle.brand} <span className="text-primary">{selectedProject.vehicle.model}</span>
                 </h1>
-                <div className="flex items-center space-x-4 fade-in visible">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-primary rounded-full luxury-glow"></div>
-                    <span className="text-primary font-semibold">
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4 fade-in visible">
+                  <div className="flex items-center space-x-2 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-primary/20">
+                    <div className="w-2 h-2 bg-primary rounded-full luxury-glow animate-pulse"></div>
+                    <span className="text-primary text-xs sm:text-sm font-semibold uppercase tracking-wider">
                       {selectedProject.status === 'completed' ? 'Concluído' : 
                        selectedProject.status === 'in_progress' ? 'Em Andamento' : 'Pendente'}
                     </span>
                   </div>
-                  <div className="text-gray-300">•</div>
-                  <span className="text-gray-300">Iniciado em {new Date(selectedProject.startDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                  <span className="text-gray-300 text-xs sm:text-sm bg-white/5 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
+                    Iniciado {new Date(selectedProject.startDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                  </span>
                 </div>
               </div>
             </div>
@@ -340,36 +339,54 @@ export function Dashboard() {
               {/* Main Content */}
               <div className="lg:col-span-2 space-y-8">
                 {/* Progress Overview */}
-                <div className="glass-effect cinematic-blur p-8 rounded-3xl fade-in visible">
+                <div className="glass-effect cinematic-blur p-5 sm:p-8 rounded-2xl sm:rounded-3xl fade-in visible border border-white/5">
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold">Progresso da Blindagem</h2>
-                    <div className="text-primary text-3xl font-bold">{selectedProject.progress}%</div>
+                    <div>
+                      <h2 className="text-lg sm:text-2xl font-bold">Progresso</h2>
+                      <p className="text-xs sm:text-sm text-gray-400">Status real-time da blindagem</p>
+                    </div>
+                    <div className="text-primary text-2xl sm:text-4xl font-bold tabular-nums">{selectedProject.progress}%</div>
                   </div>
                   <div className="relative">
-                    <div className="w-full bg-white/10 rounded-full h-4 mb-6">
-                      <div 
-                        className="progress-bar-fill h-4 rounded-full transition-all duration-1000"
-                        data-progress={Math.round(selectedProject.progress / 5) * 5}
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-6">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-primary mb-1">{daysElapsed}</div>
-                        <div className="text-sm text-gray-400">Dias decorridos</div>
+                      <div className="w-full bg-white/5 rounded-full h-2 sm:h-4 mb-6 overflow-hidden">
+                        <div 
+                          className={cn(
+                            "h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(212,175,55,0.3)] bg-primary",
+                            selectedProject.progress === 0 && "w-0",
+                            selectedProject.progress > 0 && selectedProject.progress <= 5 && "w-[5%]",
+                            selectedProject.progress > 5 && selectedProject.progress <= 10 && "w-[10%]",
+                            selectedProject.progress > 10 && selectedProject.progress <= 20 && "w-[20%]",
+                            selectedProject.progress > 20 && selectedProject.progress <= 30 && "w-[30%]",
+                            selectedProject.progress > 30 && selectedProject.progress <= 40 && "w-[40%]",
+                            selectedProject.progress > 40 && selectedProject.progress <= 50 && "w-[50%]",
+                            selectedProject.progress > 50 && selectedProject.progress <= 60 && "w-[60%]",
+                            selectedProject.progress > 60 && selectedProject.progress <= 70 && "w-[70%]",
+                            selectedProject.progress > 70 && selectedProject.progress <= 80 && "w-[80%]",
+                            selectedProject.progress > 80 && selectedProject.progress <= 90 && "w-[90%]",
+                            selectedProject.progress > 90 && "w-full"
+                          )}
+                        />
                       </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-white mb-1">{daysRemaining}</div>
-                        <div className="text-sm text-gray-400">Dias restantes</div>
+                    <div className="grid grid-cols-2 gap-4 sm:gap-6">
+                      <div className="bg-white/5 p-3 sm:p-4 rounded-xl border border-white/5 text-center">
+                        <div className="text-xl sm:text-2xl font-bold text-primary mb-0.5">{daysElapsed}</div>
+                        <div className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-widest">Dias Decorridos</div>
+                      </div>
+                      <div className="bg-white/5 p-3 sm:p-4 rounded-xl border border-white/5 text-center">
+                        <div className="text-xl sm:text-2xl font-bold text-white mb-0.5">{daysRemaining}</div>
+                        <div className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-widest">Dias Restantes</div>
                       </div>
                     </div>
                   </div>
-                  <div className="bg-primary/10 border border-primary/30 rounded-2xl p-4 mt-6">
+                  <div className="bg-primary/5 border border-primary/20 rounded-xl sm:rounded-2xl p-4 mt-6">
                     <div className="flex items-center space-x-3">
-                      <i className="ri-calendar-line text-primary text-lg"></i>
+                      <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
+                        <Calendar className="w-5 h-5 text-primary" />
+                      </div>
                       <div>
-                        <div className="font-semibold">Previsão de Entrega</div>
-                        <div className="text-primary text-lg font-bold">
-                          {new Date(selectedProject.estimatedDelivery).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                        <div className="text-[10px] sm:text-xs text-primary/70 uppercase tracking-widest font-bold">Previsão de Entrega</div>
+                        <div className="text-sm sm:text-lg font-bold text-white">
+                          {new Date(selectedProject.estimatedDelivery).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' })}
                         </div>
                       </div>
                     </div>
@@ -377,41 +394,59 @@ export function Dashboard() {
                 </div>
 
                 {/* Timeline */}
-                <div className="glass-effect cinematic-blur p-8 rounded-3xl fade-in visible">
-                  <h2 className="text-2xl font-bold mb-6">Linha do Tempo</h2>
-                  <div className="space-y-6">
+                <div className="glass-effect cinematic-blur p-5 sm:p-8 rounded-2xl sm:rounded-3xl fade-in visible border border-white/5">
+                  <div className="flex items-center justify-between mb-8">
+                    <div>
+                      <h2 className="text-lg sm:text-2xl font-bold text-white">Linha do Tempo</h2>
+                      <p className="text-xs sm:text-sm text-gray-400">Rastreamento etapa por etapa</p>
+                    </div>
+                    <div className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center border border-white/10">
+                      <Clock className="w-5 h-5 text-gray-400" />
+                    </div>
+                  </div>
+                  
+                  <div className="relative space-y-8 before:absolute before:inset-0 before:ml-4 sm:before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-primary/50 before:via-primary/20 before:to-transparent">
                     {selectedProject.timeline.map((step) => (
-                      <div key={step.id} className={cn("flex items-start space-x-4", step.status === 'pending' && "opacity-50")}>
-                        <div className={cn(
-                          "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
-                          step.status === 'completed' ? "bg-primary luxury-glow" :
-                          step.status === 'in_progress' ? "bg-primary luxury-glow animate-pulse" :
-                          "bg-white/20"
-                        )}>
-                          {step.status === 'completed' ? (
-                            <i className="ri-check-line text-black text-sm"></i>
-                          ) : step.status === 'in_progress' ? (
-                            <i className="ri-settings-line text-black text-sm"></i>
-                          ) : (
-                            <i className="ri-time-line text-gray-400 text-sm"></i>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-1">
-                            <h3 className={cn("font-semibold", step.status === 'pending' && "text-gray-500")}>{step.title}</h3>
-                            <span className={cn(
-                              "text-xs",
-                              step.status === 'in_progress' ? "text-primary" : 
-                              step.status === 'pending' ? "text-gray-500" : "text-gray-400"
-                            )}>
-                              {step.status === 'in_progress' ? 'Em andamento' : 
-                               step.status === 'pending' ? 'Pendente' : 
-                               step.date ? new Date(step.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) : ''}
-                            </span>
+                      <div key={step.id} className={cn(
+                        "relative flex items-center justify-between group",
+                        step.status === 'pending' && "opacity-40"
+                      )}>
+                        <div className="flex items-center w-full">
+                          {/* Indicator */}
+                          <div className={cn(
+                            "flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 transition-all duration-500 z-10",
+                            step.status === 'completed' ? "bg-primary border-primary luxury-glow" :
+                            step.status === 'in_progress' ? "bg-black border-primary luxury-glow animate-pulse" :
+                            "bg-black border-white/20"
+                          )}>
+                            {step.status === 'completed' ? (
+                              <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-black" />
+                            ) : step.status === 'in_progress' ? (
+                              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full" />
+                            ) : (
+                              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white/20 rounded-full" />
+                            )}
                           </div>
-                          <p className={cn("text-sm", step.status === 'pending' ? "text-gray-500" : "text-gray-400")}>
-                            {step.description}
-                          </p>
+                          
+                          {/* Content */}
+                          <div className="flex-1 ml-4 sm:ml-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                              <h3 className={cn(
+                                "text-sm sm:text-lg font-bold tracking-tight transition-colors",
+                                step.status === 'in_progress' ? "text-primary" : "text-white"
+                              )}>
+                                {step.title}
+                              </h3>
+                              <time className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded sm:bg-transparent sm:px-0">
+                                {step.status === 'in_progress' ? 'Em andamento' : 
+                                 step.status === 'pending' ? 'Pendente' : 
+                                 step.date ? new Date(step.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : ''}
+                              </time>
+                            </div>
+                            <p className="text-xs sm:text-sm text-gray-400 mt-1 leading-relaxed line-clamp-2 sm:line-clamp-none">
+                              {step.description}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -419,211 +454,149 @@ export function Dashboard() {
                 </div>
 
                 {/* Latest Photos */}
-                <div className="glass-effect cinematic-blur p-8 rounded-3xl fade-in visible">
-                  <h2 className="text-2xl font-bold mb-6">Últimas Fotos da Equipe</h2>
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="glass-effect cinematic-blur p-5 sm:p-8 rounded-2xl sm:rounded-3xl fade-in visible border border-white/5">
+                  <div className="flex items-center justify-between mb-8">
+                    <div>
+                      <h2 className="text-lg sm:text-2xl font-bold text-white">Registros</h2>
+                      <p className="text-xs sm:text-sm text-gray-400">Evidências técnicas da execução</p>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => navigate('/gallery')}
+                      className="text-primary hover:text-primary/80 hover:bg-primary/10 transition-all text-xs sm:text-sm h-8 px-3"
+                    >
+                      Ver Tudo
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 sm:gap-4">
                     {selectedProject.vehicle.images.slice(0, 4).map((image, index) => (
                       <div 
                         key={index}
-                        className="relative group cursor-pointer"
-                        onClick={() => setPhotoModal({ src: image, alt: `Foto ${index + 1}` })}
+                        className="relative aspect-square group cursor-pointer overflow-hidden rounded-xl sm:rounded-2xl border border-white/5"
+                        onClick={() => setPhotoModal({ src: image, alt: `Registro ${index + 1}` })}
                       >
                         <img 
                           src={image} 
-                          alt={`Foto ${index + 1}`}
-                          className="w-full h-32 object-cover rounded-2xl transition-transform group-hover:scale-105"
+                          alt={`Registro ${index + 1}`}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent rounded-2xl"></div>
-                        <div className="absolute bottom-3 left-3 right-3">
-                          <div className="text-xs text-white font-medium">Etapa {index + 1}</div>
-                          <div className="text-xs text-gray-300">
-                            {new Date(selectedProject.startDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
+                        <div className="absolute bottom-3 left-3 right-3 transform translate-y-1 group-hover:translate-y-0 transition-transform">
+                          <div className="text-[10px] sm:text-xs text-primary font-bold uppercase tracking-widest">Etapa {index + 1}</div>
+                          <div className="text-[9px] sm:text-[11px] text-gray-300 font-medium">
+                            {new Date(selectedProject.startDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
                           </div>
                         </div>
                       </div>
                     ))}
                   </div>
-                  <button 
-                    onClick={() => navigate('/gallery')}
-                    className="w-full mt-4 border border-primary/30 text-primary hover:bg-primary/10 py-3 rounded-lg transition-colors whitespace-nowrap"
-                  >
-                    Ver Todas as Fotos
-                  </button>
                 </div>
               </div>
 
-              {/* Sidebar */}
+              {/* Sidebar / Quick Actions Container */}
               <div className="space-y-6">
-                {/* Status Card */}
-                <div className="glass-effect cinematic-blur p-6 rounded-3xl fade-in visible">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center">
-                      <i className="ri-shield-check-line text-primary text-lg"></i>
+                {/* Status Card - Mobile: Horizontal Layout */}
+                <div className="glass-effect cinematic-blur p-5 sm:p-6 rounded-2xl sm:rounded-3xl fade-in visible border border-white/5">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/20 rounded-xl flex items-center justify-center border border-primary/20">
+                      <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                     </div>
                     <div>
-                      <h3 className="font-semibold">Status Atual</h3>
-                      <p className="text-primary text-sm">
+                      <h3 className="text-sm sm:text-base font-bold text-white tracking-tight">Status do Veículo</h3>
+                      <p className="text-[10px] sm:text-xs text-primary font-bold uppercase tracking-widest mt-0.5">
                         {selectedProject.status === 'completed' ? 'Blindagem Concluída' : 
-                         selectedProject.status === 'in_progress' ? 'Blindagem em Andamento' : 'Aguardando Início'}
+                         selectedProject.status === 'in_progress' ? 'Em Execução' : 'Aguardando Início'}
                       </p>
                     </div>
                   </div>
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Nível</span>
-                      <span className="text-white font-medium">{selectedProject.vehicle.blindingLevel}</span>
+                  <div className="grid grid-cols-3 gap-2 py-3 border-y border-white/5">
+                    <div className="text-center">
+                      <p className="text-[9px] text-gray-500 uppercase font-bold tracking-tighter">Nível</p>
+                      <p className="text-xs font-bold text-white mt-1">{selectedProject.vehicle.blindingLevel}</p>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Placa</span>
-                      <span className="text-white font-medium">{selectedProject.vehicle.plate}</span>
+                    <div className="text-center border-x border-white/5 px-2">
+                      <p className="text-[9px] text-gray-500 uppercase font-bold tracking-tighter">Placa</p>
+                      <p className="text-xs font-bold text-white mt-1">{selectedProject.vehicle.plate}</p>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Etapa Atual</span>
-                      <span className="text-white font-medium">{currentStep?.title || 'Concluído'}</span>
+                    <div className="text-center">
+                      <p className="text-[9px] text-gray-500 uppercase font-bold tracking-tighter">Etapa</p>
+                      <p className="text-xs font-bold text-white mt-1 truncate">{currentStep?.title || 'Fim'}</p>
                     </div>
                   </div>
                 </div>
 
-                {/* QR Code Card */}
-                <div className="glass-effect cinematic-blur p-6 rounded-3xl fade-in visible">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center">
-                      <i className="ri-qr-code-line text-primary text-lg"></i>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">QR Code EliteTrace™</h3>
-                      <p className="text-gray-400 text-sm">Compartilhe o progresso</p>
+                {/* Quick Actions - Mobile: Optimized Grid */}
+                <div className="glass-effect cinematic-blur p-5 sm:p-6 rounded-2xl sm:rounded-3xl fade-in visible border border-white/5">
+                  <div className="flex items-center justify-between mb-5">
+                    <h3 className="text-base font-bold text-white tracking-tight">Ações Rápidas</h3>
+                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
+                      <i className="ri-flashlight-line text-primary text-sm"></i>
                     </div>
                   </div>
-                  <div className="p-3 bg-white rounded-xl mb-4">
-                    <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrCodeUrl)}&color=D4AF37`}
-                      alt="QR Code"
-                      className="w-full"
-                    />
-                  </div>
-                  <button
-                    onClick={() => setShowQRModal(true)}
-                    className="w-full gradient-gold text-black font-semibold py-2 rounded-lg transition-all"
-                  >
-                    Ver QR Code Completo
-                  </button>
-                </div>
-
-                {/* Notifications */}
-                <div className="glass-effect cinematic-blur p-6 rounded-3xl fade-in visible">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold">Notificações</h3>
-                    {unreadCount > 0 && (
-                      <div className="bg-primary text-black text-xs px-2 py-1 rounded-full font-semibold">{unreadCount}</div>
-                    )}
-                  </div>
-                  <div className="space-y-4">
-                    {notifications.slice(0, 3).map((notification) => (
-                      <div 
-                        key={notification.id}
-                        className="flex items-start space-x-3 cursor-pointer"
-                        onClick={() => markAsRead(notification.id)}
-                      >
-                        <div className={cn(
-                          "w-2 h-2 rounded-full mt-2",
-                          !notification.read ? "bg-primary luxury-glow" :
-                          notification.type === 'success' ? "bg-green-400" :
-                          notification.type === 'info' ? "bg-blue-400" : "bg-gray-400"
-                        )}></div>
-                        <div>
-                          <p className="text-sm font-medium">{notification.title}</p>
-                          <p className="text-xs text-gray-400">
-                            {notification.message.substring(0, 40)}... • {new Date(notification.timestamp).toLocaleDateString('pt-BR')}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <button 
-                    onClick={() => navigate('/notifications')}
-                    className="w-full mt-4 text-primary hover:bg-primary/10 py-2 rounded-lg transition-colors text-sm whitespace-nowrap"
-                  >
-                    Ver Todas
-                  </button>
-                </div>
-
-                {/* Quick Actions */}
-                <div className="glass-effect cinematic-blur p-6 rounded-3xl fade-in visible">
-                  <h3 className="font-semibold mb-4">Ações Rápidas</h3>
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-col sm:gap-3">
                     <button 
                       onClick={openWhatsApp}
-                      className="w-full bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/30 py-3 rounded-lg transition-colors text-sm whitespace-nowrap flex items-center justify-center"
+                      className="flex flex-col sm:flex-row items-center justify-center gap-2 p-3 bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/20 rounded-xl transition-all"
                     >
-                      <MessageCircle className="w-4 h-4 mr-2" />
-                      WhatsApp {companyInfo.whatsappDisplay}
-                    </button>
-                    <button 
-                      onClick={() => window.open(`tel:${companyInfo.phone.replace(/\D/g, '')}`, '_self')}
-                      className="w-full bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 py-3 rounded-lg transition-colors text-sm whitespace-nowrap flex items-center justify-center"
-                    >
-                      <Phone className="w-4 h-4 mr-2" />
-                      Ligar {companyInfo.phone}
+                      <MessageCircle className="w-5 h-5" />
+                      <span className="text-[10px] sm:text-sm font-bold uppercase tracking-wider">WhatsApp</span>
                     </button>
                     <button 
                       onClick={() => navigate('/chat')}
-                      className="w-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 py-3 rounded-lg transition-colors text-sm whitespace-nowrap flex items-center justify-center"
+                      className="flex flex-col sm:flex-row items-center justify-center gap-2 p-3 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-xl transition-all"
                     >
-                      <i className="ri-chat-3-line mr-2"></i>Chat Interno
-                      {chatUnreadCount > 0 && (
-                        <span className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{chatUnreadCount}</span>
-                      )}
-                    </button>
-                    <button 
-                      onClick={() => navigate('/elite-card')}
-                      className="w-full bg-white/5 hover:bg-white/10 text-white border border-white/20 py-3 rounded-lg transition-colors text-sm whitespace-nowrap flex items-center justify-center"
-                    >
-                      <i className="ri-vip-crown-line mr-2 text-primary"></i>Cartão Elite
+                      <div className="relative">
+                        <i className="ri-chat-3-line text-lg"></i>
+                        {chatUnreadCount > 0 && (
+                          <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] flex items-center justify-center rounded-full border border-black">
+                            {chatUnreadCount}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] sm:text-sm font-bold uppercase tracking-wider">Mensagens</span>
                     </button>
                     <button 
                       onClick={() => navigate('/laudo')}
-                      className="w-full bg-white/5 hover:bg-white/10 text-white border border-white/20 py-3 rounded-lg transition-colors text-sm whitespace-nowrap flex items-center justify-center"
+                      className="flex flex-col sm:flex-row items-center justify-center gap-2 p-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl transition-all"
                     >
-                      <i className="ri-file-shield-line mr-2"></i>Laudo EliteShield
+                      <i className="ri-file-shield-line text-lg text-primary"></i>
+                      <span className="text-[10px] sm:text-sm font-bold uppercase tracking-wider">Laudo</span>
                     </button>
                     <button 
-                      onClick={() => navigate('/revisoes')}
-                      className="w-full bg-white/5 hover:bg-white/10 text-white border border-white/20 py-3 rounded-lg transition-colors text-sm whitespace-nowrap flex items-center justify-center"
+                      onClick={() => navigate('/elite-card')}
+                      className="flex flex-col sm:flex-row items-center justify-center gap-2 p-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl transition-all"
                     >
-                      <i className="ri-calendar-check-line mr-2"></i>Revisões
+                      <i className="ri-vip-crown-line text-lg text-primary"></i>
+                      <span className="text-[10px] sm:text-sm font-bold uppercase tracking-wider">Elite Card</span>
                     </button>
-                    {selectedProject.status === 'completed' && (
-                      <button 
-                        onClick={() => navigate('/entrega')}
-                        className="w-full bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/30 py-3 rounded-lg transition-colors text-sm whitespace-nowrap flex items-center justify-center"
-                      >
-                        <i className="ri-gift-line mr-2"></i>Ver Entrega
-                      </button>
-                    )}
-                    <button 
-                      onClick={() => navigate('/timeline')}
-                      className="w-full bg-white/5 hover:bg-white/10 text-white border border-white/20 py-3 rounded-lg transition-colors text-sm whitespace-nowrap flex items-center justify-center"
+                  </div>
+                </div>
+
+                {/* QR Code Card - Mobile: Compact and Centralized */}
+                <div className="glass-effect cinematic-blur p-5 rounded-2xl sm:rounded-3xl fade-in visible border border-white/5 overflow-hidden relative">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+                  <div className="relative flex flex-col items-center text-center">
+                    <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center mb-3">
+                      <QrCode className="w-5 h-5 text-primary" />
+                    </div>
+                    <h3 className="text-base font-bold text-white mb-1">EliteTrace™ QR</h3>
+                    <p className="text-[10px] text-gray-500 uppercase tracking-widest font-medium mb-4">Acesso público ao histórico</p>
+                    
+                    <div className="p-3 bg-white rounded-2xl mb-4 shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(qrCodeUrl)}&color=D4AF37`}
+                        alt="QR Code"
+                        className="w-24 h-24 sm:w-32 sm:h-32"
+                      />
+                    </div>
+                    
+                    <button
+                      onClick={() => setShowQRModal(true)}
+                      className="w-full py-3 bg-primary text-black text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-primary/90 transition-all shadow-lg"
                     >
-                      <i className="ri-time-line mr-2"></i>Ver Timeline
-                    </button>
-                    <button 
-                      onClick={() => navigate('/achievements')}
-                      className="w-full bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 py-3 rounded-lg transition-colors text-sm whitespace-nowrap flex items-center justify-center"
-                    >
-                      <i className="ri-trophy-line mr-2"></i>Conquistas
-                    </button>
-                    <button 
-                      onClick={() => navigate('/documents')}
-                      className="w-full bg-white/5 hover:bg-white/10 text-white border border-white/20 py-3 rounded-lg transition-colors text-sm whitespace-nowrap flex items-center justify-center"
-                    >
-                      <i className="ri-folder-line mr-2"></i>Meus Documentos
-                    </button>
-                    <button 
-                      onClick={() => navigate('/quotes')}
-                      className="w-full bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 py-3 rounded-lg transition-colors text-sm whitespace-nowrap flex items-center justify-center"
-                    >
-                      <i className="ri-calculator-line mr-2"></i>Solicitar Orçamento
+                      Expandir Código
                     </button>
                   </div>
                 </div>
