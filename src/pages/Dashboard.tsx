@@ -6,6 +6,7 @@ import {
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
 import { Modal } from '../components/ui/Modal'
+import { ProgressBar } from '../components/ui/ProgressBar'
 import { useAuth } from '../contexts/AuthContext'
 import { useChat } from '../contexts/ChatContext'
 import { useProjects } from '../contexts/ProjectContext'
@@ -348,13 +349,7 @@ export function Dashboard() {
                     <div className="text-primary text-xl sm:text-3xl font-bold tabular-nums">{selectedProject.progress}%</div>
                   </div>
                   <div className="relative">
-                    <div className="w-full bg-white/5 rounded-full h-2 mb-4 overflow-hidden relative">
-                      {/* eslint-disable-next-line react/forbid-dom-props */}
-                      <div 
-                        className="absolute top-0 left-0 h-full rounded-full bg-primary transition-all"
-                        style={{ width: `${selectedProject.progress}%` } as React.CSSProperties}
-                      />
-                    </div>
+                    <ProgressBar progress={selectedProject.progress} className="mb-4" />
                     <div className="grid grid-cols-2 gap-3">
                       <div className="bg-white/5 p-3 rounded-lg border border-white/5 text-center">
                         <div className="text-lg font-bold text-primary">{daysElapsed}</div>

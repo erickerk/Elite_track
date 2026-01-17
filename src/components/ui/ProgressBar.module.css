@@ -1,0 +1,46 @@
+.progressContainer {
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 9999px;
+  height: 0.5rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.progressBar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  border-radius: 9999px;
+  background-color: #D4AF37;
+  transition: transform 300ms ease-in-out;
+  transform-origin: left;
+}
+
+.progressBar[data-progress="0"] { transform: scaleX(0); }
+.progressBar[data-progress="1"] { transform: scaleX(0.01); }
+.progressBar[data-progress="2"] { transform: scaleX(0.02); }
+.progressBar[data-progress="3"] { transform: scaleX(0.03); }
+.progressBar[data-progress="4"] { transform: scaleX(0.04); }
+.progressBar[data-progress="5"] { transform: scaleX(0.05); }
+.progressBar[data-progress="10"] { transform: scaleX(0.1); }
+.progressBar[data-progress="15"] { transform: scaleX(0.15); }
+.progressBar[data-progress="20"] { transform: scaleX(0.2); }
+.progressBar[data-progress="25"] { transform: scaleX(0.25); }
+.progressBar[data-progress="30"] { transform: scaleX(0.3); }
+.progressBar[data-progress="35"] { transform: scaleX(0.35); }
+.progressBar[data-progress="40"] { transform: scaleX(0.4); }
+.progressBar[data-progress="45"] { transform: scaleX(0.45); }
+.progressBar[data-progress="50"] { transform: scaleX(0.5); }
+.progressBar[data-progress="55"] { transform: scaleX(0.55); }
+.progressBar[data-progress="60"] { transform: scaleX(0.6); }
+.progressBar[data-progress="65"] { transform: scaleX(0.65); }
+.progressBar[data-progress="70"] { transform: scaleX(0.7); }
+.progressBar[data-progress="75"] { transform: scaleX(0.75); }
+.progressBar[data-progress="80"] { transform: scaleX(0.8); }
+.progressBar[data-progress="85"] { transform: scaleX(0.85); }
+.progressBar[data-progress="90"] { transform: scaleX(0.9); }
+.progressBar[data-progress="95"] { transform: scaleX(0.95); }
+.progressBar[data-progress="100"] { transform: scaleX(1); }
