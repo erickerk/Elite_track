@@ -48,9 +48,9 @@ export function ClientDetailModal({
             <div className="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center">
               <Users className="w-8 h-8 text-primary" />
             </div>
-            <div>
-              <h2 className="text-2xl font-bold">{client.user.name}</h2>
-              <p className="text-gray-400">{client.user.email}</p>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-xl sm:text-2xl font-bold truncate">{client.user.name}</h2>
+              <p className="text-sm text-gray-400 truncate">{client.user.email}</p>
             </div>
           </div>
           <button 
@@ -95,17 +95,17 @@ export function ClientDetailModal({
               Dados Pessoais
             </h3>
             <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Nome:</span>
-                <span className="font-medium">{client.user.name}</span>
+              <div className="flex justify-between items-start gap-4">
+                <span className="text-gray-400 whitespace-nowrap">Nome:</span>
+                <span className="font-medium text-right truncate">{client.user.name}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">E-mail:</span>
-                <span className="font-medium text-sm">{client.user.email}</span>
+              <div className="flex justify-between items-start gap-4">
+                <span className="text-gray-400 whitespace-nowrap">E-mail:</span>
+                <span className="font-medium text-sm text-right truncate">{client.user.email}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Telefone:</span>
-                <span className="font-medium">{client.user.phone}</span>
+              <div className="flex justify-between items-start gap-4">
+                <span className="text-gray-400 whitespace-nowrap">Telefone:</span>
+                <span className="font-medium text-right">{client.user.phone}</span>
               </div>
             </div>
           </div>
@@ -116,21 +116,21 @@ export function ClientDetailModal({
               Veículo Selecionado
             </h3>
             <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Veículo:</span>
-                <span className="font-medium">{client.vehicle.brand} {client.vehicle.model}</span>
+              <div className="flex justify-between items-start gap-4">
+                <span className="text-gray-400 whitespace-nowrap">Veículo:</span>
+                <span className="font-medium text-right truncate">{client.vehicle.brand} {client.vehicle.model}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Ano:</span>
-                <span className="font-medium">{client.vehicle.year}</span>
+              <div className="flex justify-between items-start gap-4">
+                <span className="text-gray-400 whitespace-nowrap">Ano:</span>
+                <span className="font-medium text-right">{client.vehicle.year}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Placa:</span>
-                <span className="font-mono font-medium">{client.vehicle.plate}</span>
+              <div className="flex justify-between items-start gap-4">
+                <span className="text-gray-400 whitespace-nowrap">Placa:</span>
+                <span className="font-mono font-medium text-right">{client.vehicle.plate}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Nível:</span>
-                <span className="font-medium text-primary">{client.vehicle.blindingLevel}</span>
+              <div className="flex justify-between items-start gap-4">
+                <span className="text-gray-400 whitespace-nowrap">Nível:</span>
+                <span className="font-medium text-primary text-right">{client.vehicle.blindingLevel}</span>
               </div>
             </div>
           </div>
@@ -156,9 +156,9 @@ export function ClientDetailModal({
                   )}
                 >
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold">{project.vehicle.brand} {project.vehicle.model}</p>
-                      <p className="text-sm text-gray-400">{project.vehicle.plate} • {project.vehicle.year}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold truncate">{project.vehicle.brand} {project.vehicle.model}</p>
+                      <p className="text-sm text-gray-400 truncate">{project.vehicle.plate} • {project.vehicle.year}</p>
                     </div>
                     <span className={cn(
                       "px-2 py-1 rounded-full text-xs",
@@ -186,15 +186,15 @@ export function ClientDetailModal({
               <p className="text-xs text-gray-400">Progresso</p>
             </div>
             <div className="text-center p-3 bg-white/5 rounded-xl">
-              <p className="text-lg font-bold">{statusConfig[client.status as keyof typeof statusConfig]?.label}</p>
+              <p className="text-sm sm:text-base font-bold truncate">{statusConfig[client.status as keyof typeof statusConfig]?.label}</p>
               <p className="text-xs text-gray-400">Status</p>
             </div>
             <div className="text-center p-3 bg-white/5 rounded-xl">
-              <p className="text-lg font-bold">{new Date(client.startDate).toLocaleDateString('pt-BR')}</p>
+              <p className="text-sm sm:text-base font-bold">{new Date(client.startDate).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}</p>
               <p className="text-xs text-gray-400">Início</p>
             </div>
             <div className="text-center p-3 bg-white/5 rounded-xl">
-              <p className="text-lg font-bold">{new Date(client.estimatedDelivery).toLocaleDateString('pt-BR')}</p>
+              <p className="text-sm sm:text-base font-bold">{new Date(client.estimatedDelivery).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}</p>
               <p className="text-xs text-gray-400">Previsão</p>
             </div>
           </div>
@@ -214,9 +214,9 @@ export function ClientDetailModal({
               <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
                 <i className="ri-id-card-line text-primary"></i>
               </div>
-              <div className="text-left">
-                <p className="font-medium">CNH</p>
-                <p className="text-xs text-gray-400">Carteira de Habilitação</p>
+              <div className="text-left flex-1 min-w-0">
+                <p className="font-medium truncate">CNH</p>
+                <p className="text-xs text-gray-400 truncate">Carteira de Habilitação</p>
               </div>
               <Eye className="w-4 h-4 text-gray-400 ml-auto" />
             </button>
@@ -227,9 +227,9 @@ export function ClientDetailModal({
               <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
                 <i className="ri-car-line text-blue-400"></i>
               </div>
-              <div className="text-left">
-                <p className="font-medium">CRLV</p>
-                <p className="text-xs text-gray-400">Documento do Veículo</p>
+              <div className="text-left flex-1 min-w-0">
+                <p className="font-medium truncate">CRLV</p>
+                <p className="text-xs text-gray-400 truncate">Documento do Veículo</p>
               </div>
               <Eye className="w-4 h-4 text-gray-400 ml-auto" />
             </button>
@@ -240,9 +240,9 @@ export function ClientDetailModal({
               <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
                 <i className="ri-file-shield-2-line text-green-400"></i>
               </div>
-              <div className="text-left">
-                <p className="font-medium">Laudo Técnico</p>
-                <p className="text-xs text-gray-400">EliteShield™</p>
+              <div className="text-left flex-1 min-w-0">
+                <p className="font-medium truncate">Laudo Técnico</p>
+                <p className="text-xs text-gray-400 truncate">EliteShield™</p>
               </div>
               <Download className="w-4 h-4 text-gray-400 ml-auto" />
             </button>
@@ -253,9 +253,9 @@ export function ClientDetailModal({
               <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
                 <i className="ri-file-text-line text-yellow-400"></i>
               </div>
-              <div className="text-left">
-                <p className="font-medium">Contrato</p>
-                <p className="text-xs text-gray-400">Prestação de Serviço</p>
+              <div className="text-left flex-1 min-w-0">
+                <p className="font-medium truncate">Contrato</p>
+                <p className="text-xs text-gray-400 truncate">Prestação de Serviço</p>
               </div>
               <Download className="w-4 h-4 text-gray-400 ml-auto" />
             </button>

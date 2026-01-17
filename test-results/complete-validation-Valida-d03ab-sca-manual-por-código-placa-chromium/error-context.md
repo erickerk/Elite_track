@@ -1,0 +1,259 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e16]:
+      - generic [ref=e17]:
+        - img "Elite Blindagens" [ref=e18]
+        - generic [ref=e19]: EliteTrack™
+      - navigation [ref=e20]:
+        - link "Início" [ref=e21] [cursor=pointer]:
+          - /url: "#inicio"
+        - link "Como Funciona" [ref=e22] [cursor=pointer]:
+          - /url: "#como-funciona"
+        - link "Benefícios" [ref=e23] [cursor=pointer]:
+          - /url: "#beneficios"
+        - link "Preview" [ref=e24] [cursor=pointer]:
+          - /url: "#preview"
+        - link "Confiança" [ref=e25] [cursor=pointer]:
+          - /url: "#confianca"
+        - link "Contato" [ref=e26] [cursor=pointer]:
+          - /url: "#contato"
+      - text: 
+    - generic [ref=e30]:
+      - generic [ref=e33]: Exclusividade Elite
+      - heading "EliteTrack™ Transparência Absoluta" [level=1] [ref=e34]:
+        - text: EliteTrack™
+        - text: Transparência Absoluta
+      - paragraph [ref=e35]: Acompanhe cada detalhe da blindagem em tempo real. Tecnologia avançada para uma experiência premium incomparável.
+      - generic [ref=e36]:
+        - button "Iniciar Experiência" [ref=e37] [cursor=pointer]
+        - link "Consultar Especialista" [ref=e38] [cursor=pointer]:
+          - /url: https://wa.me/5511913123071?text=Olá!%20Gostaria%20de%20falar%20com%20um%20especialista%20sobre%20blindagem%20de%20veículos.
+      - button "Consultar Histórico Acesse status e fotos via placa ou QR Code" [ref=e39] [cursor=pointer]:
+        - img [ref=e41]
+        - generic [ref=e47]:
+          - generic [ref=e48]: Consultar Histórico
+          - generic [ref=e49]: Acesse status e fotos via placa ou QR Code
+        - img [ref=e51]
+  - generic [ref=e55]:
+    - generic [ref=e56]:
+      - heading "O Processo Elite" [level=2] [ref=e57]
+      - paragraph [ref=e58]: Simplicidade e transparência em cada detalhe da execução.
+    - generic [ref=e59]:
+      - generic [ref=e60]:
+        - generic [ref=e63]: 
+        - heading "Agendamento" [level=3] [ref=e64]
+        - paragraph [ref=e65]: Todo o processo já nasce integrado ao EliteTrack™, garantindo rastreabilidade total desde o primeiro dia de blindagem.
+      - generic [ref=e66]:
+        - generic [ref=e69]: 
+        - heading "Monitoramento" [level=3] [ref=e70]
+        - paragraph [ref=e71]: Acompanhe cada etapa com fotos em tempo real e registros técnicos diretamente na palma da sua mão.
+      - generic [ref=e72]:
+        - generic [ref=e75]: 
+        - heading "Certificação" [level=3] [ref=e76]
+        - paragraph [ref=e77]: Receba seu veículo com documentação organizada e histórico permanente do processo com a qualidade Elite.
+  - generic [ref=e79]:
+    - generic [ref=e80]:
+      - heading "Experiência Superior" [level=2] [ref=e81]
+      - paragraph [ref=e82]: Tecnologia automotiva de luxo aplicada à sua segurança.
+    - generic [ref=e83]:
+      - generic [ref=e84]:
+        - generic [ref=e86]: 
+        - heading "Transparência Total" [level=3] [ref=e87]
+        - paragraph [ref=e88]: Visualize cada etapa da blindagem sem intermediários, direto do seu smartphone.
+      - generic [ref=e89]:
+        - generic [ref=e91]: 
+        - heading "Push Real-time" [level=3] [ref=e92]
+        - paragraph [ref=e93]: Receba notificações instantâneas sobre o progresso e novas evidências registradas.
+      - generic [ref=e94]:
+        - generic [ref=e96]: 
+        - heading "Cofre Digital" [level=3] [ref=e97]
+        - paragraph [ref=e98]: Documentação, certificados e laudos técnicos organizados e seguros em nuvem.
+  - generic [ref=e100]:
+    - generic [ref=e101]:
+      - heading "Monitoramento Ativo" [level=2] [ref=e102]
+      - paragraph [ref=e103]: Visualize a interface que você terá em mãos.
+    - generic [ref=e104]:
+      - generic [ref=e107]:
+        - generic [ref=e108]:
+          - heading "Mercedes-Benz S 500" [level=3] [ref=e109]
+          - paragraph [ref=e110]: "Nível NIJ III-A • Registro #2948"
+        - generic [ref=e113]:
+          - paragraph [ref=e114]: Último Log
+          - paragraph [ref=e115]: Hoje, 14:32
+      - generic [ref=e116]:
+        - generic [ref=e117]:
+          - generic [ref=e120]: 
+          - generic [ref=e121]:
+            - generic [ref=e122]:
+              - heading "Check-in Concluído" [level=4] [ref=e123]
+              - generic [ref=e124]: 10/12 09:00
+            - paragraph [ref=e125]: Vistoria cautelar e catalogação de componentes originais finalizada.
+        - generic [ref=e126]:
+          - generic [ref=e129]: 
+          - generic [ref=e130]:
+            - generic [ref=e131]:
+              - heading "Estrutural" [level=4] [ref=e132]
+              - generic [ref=e133]: 11/12 14:20
+            - paragraph [ref=e134]: Desmontagem técnica e preparação da carroceria para aramida.
+        - generic [ref=e135]:
+          - generic [ref=e138]: 
+          - generic [ref=e139]:
+            - generic [ref=e140]:
+              - heading "Instalação Balística" [level=4] [ref=e141]
+              - generic [ref=e142]: Em Execução
+            - paragraph [ref=e143]: Aplicação de UltraLite Armor™ e sobreposição de camadas.
+        - generic [ref=e146]:
+          - generic [ref=e148]: 
+          - generic [ref=e149]:
+            - heading "Qualidade Elite" [level=4] [ref=e150]
+            - paragraph [ref=e151]: Testes de rodagem, infiltração e vedação acústica.
+  - generic [ref=e154]:
+    - generic [ref=e155]:
+      - generic [ref=e156]:
+        - heading "Patrimônio Documentado" [level=2] [ref=e157]
+        - paragraph [ref=e158]: Segurança não é apenas física, é informação organizada e acessível quando você precisar.
+      - generic [ref=e159]:
+        - generic [ref=e160]:
+          - paragraph [ref=e161]: Armazenamento Cloud
+          - paragraph [ref=e162]: Criptografia Militar
+        - generic [ref=e164]: 
+    - generic [ref=e165]:
+      - generic [ref=e166]:
+        - generic [ref=e168]: 
+        - heading "Laudos Técnicos" [level=3] [ref=e169]
+        - paragraph [ref=e170]: Certificação detalhada de cada material e processo aplicado.
+      - generic [ref=e171]:
+        - generic [ref=e173]: 
+        - heading "Notas Fiscais" [level=3] [ref=e174]
+        - paragraph [ref=e175]: Repositório completo da sua documentação fiscal e garantias.
+      - generic [ref=e176]:
+        - generic [ref=e178]: 
+        - heading "Galeria Técnica" [level=3] [ref=e179]
+        - paragraph [ref=e180]: Registro visual de alta definição de cada ponto de proteção.
+      - generic [ref=e181]:
+        - generic [ref=e183]: 
+        - heading "Certificados" [level=3] [ref=e184]
+        - paragraph [ref=e185]: Autenticidade EliteShield™ validada via QR Code único.
+  - generic [ref=e187]:
+    - generic [ref=e188]:
+      - heading "Excelência Certificada" [level=2] [ref=e189]
+      - paragraph [ref=e190]: Compromisso inabalável com os mais altos padrões de segurança.
+    - generic [ref=e191]:
+      - generic [ref=e192]:
+        - generic [ref=e194]: 
+        - heading "ISO 9001" [level=3] [ref=e195]
+        - paragraph [ref=e196]: Qualidade Premium
+      - generic [ref=e197]:
+        - generic [ref=e199]: 
+        - heading "AES-256" [level=3] [ref=e200]
+        - paragraph [ref=e201]: Dados Blindados
+      - generic [ref=e202]:
+        - generic [ref=e204]: 
+        - heading "LGPD" [level=3] [ref=e205]
+        - paragraph [ref=e206]: Privacidade Total
+      - generic [ref=e207]:
+        - generic [ref=e209]: 
+        - heading "25+ Anos" [level=3] [ref=e210]
+        - paragraph [ref=e211]: Liderança de Mercado
+  - generic [ref=e213]:
+    - generic [ref=e215]:
+      - heading "Voz da Confiança" [level=2] [ref=e216]
+      - paragraph [ref=e217]: A satisfação de quem não abre mão do melhor acompanhamento.
+    - generic [ref=e218]:
+      - generic [ref=e219]:
+        - generic [ref=e220]: 
+        - paragraph [ref=e221]: "\"O EliteTrack™ revolucionou minha experiência. Poder acompanhar cada detalhe da blindagem em tempo real trouxe uma tranquilidade que eu nunca havia sentido antes.\""
+        - generic [ref=e222]:
+          - generic [ref=e223]: RM
+          - generic [ref=e224]:
+            - paragraph [ref=e225]: Ricardo Mendes
+            - paragraph [ref=e226]: CEO, Mendes Holdings
+      - generic [ref=e227]:
+        - generic [ref=e228]: 
+        - paragraph [ref=e229]: "\"A transparência é impressionante. Consegui acompanhar minha frota inteira sendo blindada, com documentação completa e atualizações constantes. Serviço premium.\""
+        - generic [ref=e230]:
+          - generic [ref=e231]: MS
+          - generic [ref=e232]:
+            - paragraph [ref=e233]: Marina Silva
+            - paragraph [ref=e234]: Diretora, Silva Transportes
+      - generic [ref=e235]:
+        - generic [ref=e236]: 
+        - paragraph [ref=e237]: "\"Tecnologia de ponta aliada à qualidade Elite. O EliteTrack™ me deu total confiança no processo, desde o primeiro dia até a entrega final do meu veículo.\""
+        - generic [ref=e238]:
+          - generic [ref=e239]: CE
+          - generic [ref=e240]:
+            - paragraph [ref=e241]: Carlos Eduardo
+            - paragraph [ref=e242]: Empresário
+  - generic [ref=e244]:
+    - generic [ref=e245]:
+      - heading "Inicie sua Jornada" [level=2] [ref=e246]
+      - paragraph [ref=e247]: Entre em contato e descubra o padrão Elite de transparência.
+    - generic [ref=e248]:
+      - generic [ref=e249]:
+        - generic [ref=e250]:
+          - generic [ref=e251]:
+            - generic [ref=e253]: 
+            - generic [ref=e254]:
+              - paragraph [ref=e255]: WhatsApp Direto
+              - paragraph [ref=e256]: (11) 9.1312-3071
+          - link "Falar agora " [ref=e257] [cursor=pointer]:
+            - /url: https://wa.me/5511913123071
+            - text: Falar agora
+            - generic [ref=e258]: 
+        - generic [ref=e260]:
+          - generic [ref=e262]: 
+          - generic [ref=e263]:
+            - paragraph [ref=e264]: Localização
+            - paragraph [ref=e265]:
+              - text: São Paulo - SP
+              - text: Atendimento Nacional
+      - generic [ref=e267]:
+        - generic [ref=e268]:
+          - generic [ref=e269]:
+            - text: Nome Completo
+            - 'textbox "Ex: Ricardo Mendes" [ref=e270]'
+          - generic [ref=e271]:
+            - text: E-mail Corporativo
+            - textbox "seu@email.com" [ref=e272]
+        - generic [ref=e273]:
+          - text: WhatsApp
+          - textbox "(11) 9.0000-0000" [ref=e274]
+        - generic [ref=e277] [cursor=pointer]: Desejo falar com um especialista em segurança balística
+        - button "Solicitar Atendimento Premium" [ref=e278] [cursor=pointer]
+  - contentinfo [ref=e279]:
+    - generic [ref=e280]:
+      - generic [ref=e281]:
+        - generic [ref=e282]:
+          - generic [ref=e283]: EliteTrack™
+          - paragraph [ref=e284]: A plataforma de transparência em blindagem mais avançada do Brasil. Desenvolvida pela Elite Blindagem.
+        - generic [ref=e285]:
+          - heading "Empresa" [level=4] [ref=e286]
+          - list [ref=e287]:
+            - listitem [ref=e288]:
+              - link "Sobre Nós" [ref=e289] [cursor=pointer]:
+                - /url: https://elite-blindagens.vercel.app/
+            - listitem [ref=e290]:
+              - link "Contato" [ref=e291] [cursor=pointer]:
+                - /url: https://wa.me/5511913123071?text=Olá!%20Gostaria%20de%20falar%20com%20o%20contato%20da%20Elite%20Blindagens.
+        - generic [ref=e292]:
+          - heading "Suporte" [level=4] [ref=e293]
+          - list [ref=e294]:
+            - listitem [ref=e295]:
+              - link "Central de Ajuda" [ref=e296] [cursor=pointer]:
+                - /url: https://wa.me/5511913123071?text=Olá!%20Preciso%20de%20ajuda%20com%20o%20sistema%20EliteTrack.
+        - generic [ref=e297]:
+          - heading "EliteTrack" [level=4] [ref=e298]
+          - list [ref=e299]:
+            - listitem [ref=e300]:
+              - button "Acessar Sistema" [ref=e301] [cursor=pointer]
+            - listitem [ref=e302]:
+              - button "Consultar Histórico" [ref=e303] [cursor=pointer]
+      - generic [ref=e304]:
+        - paragraph [ref=e305]: © 2025 Elite Blindagem. Todos os direitos reservados.
+        - link "" [ref=e307] [cursor=pointer]:
+          - /url: https://wa.me/5511913123071
+          - generic [ref=e308]: 
+```

@@ -111,15 +111,15 @@ function VehicleHeader({
             )}
           </div>
 
-          <h3 className="text-sm sm:text-base font-bold text-white truncate">
+          <h3 className="text-sm sm:text-base font-bold text-white truncate max-w-[150px] sm:max-w-none">
             {project.vehicle.brand} <span className="text-primary">{project.vehicle.model}</span>
           </h3>
 
-          <div className="flex items-center gap-2 text-[10px] text-gray-400">
-            <span className="font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+          <div className="flex items-center gap-2 text-[10px] text-gray-400 flex-wrap">
+            <span className="font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded whitespace-nowrap">
               {project.vehicle.plate}
             </span>
-            <span className="truncate">{project.vehicle.year} • {project.vehicle.color}</span>
+            <span className="truncate max-w-[100px] sm:max-w-none">{project.vehicle.year} • {project.vehicle.color}</span>
           </div>
         </div>
 
@@ -168,10 +168,10 @@ function VehicleHeader({
               </div>
             </div>
           ) : (
-            <p className="text-sm font-bold text-white">
+            <p className="text-xs sm:text-sm font-bold text-white truncate">
               {project.vehicleReceivedDate 
-                ? new Date(project.vehicleReceivedDate).toLocaleDateString('pt-BR')
-                : new Date(project.startDate).toLocaleDateString('pt-BR')}
+                ? new Date(project.vehicleReceivedDate).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+                : new Date(project.startDate).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
             </p>
           )}
         </div>
@@ -214,10 +214,10 @@ function VehicleHeader({
               </div>
             </div>
           ) : (
-            <p className={cn("text-sm font-bold", atrasado && !isLocked ? "text-red-400" : "text-green-400")}>
+            <p className={cn("text-xs sm:text-sm font-bold truncate", atrasado && !isLocked ? "text-red-400" : "text-green-400")}>
               {project.estimatedDelivery 
-                ? new Date(project.estimatedDelivery).toLocaleDateString('pt-BR')
-                : 'Não definida'}
+                ? new Date(project.estimatedDelivery).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+                : 'A definir'}
             </p>
           )}
         </div>

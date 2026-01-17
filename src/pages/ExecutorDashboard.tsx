@@ -67,19 +67,19 @@ function calculateRevisionReminders(projects: Project[]) {
         projectId: p.id,
       }
     })
-    .filter(Boolean) as Array<{
+    .filter(Boolean) as {
       id: string; clientName: string; vehicle: string; blindingDate: string;
       nextRevisionDate: string; daysUntil: number; phone: string; email: string; projectId: string;
-    }>
+    }[]
 }
 
 // Função para calcular agendamentos baseados em projetos
 function calculateScheduledRevisions(projects: Project[]) {
   const today = new Date()
-  const revisions: Array<{
+  const revisions: {
     id: string; clientName: string; vehicle: string; date: string;
     time: string; type: string; status: string; phone: string; projectId: string;
-  }> = []
+  }[] = []
   
   // Projetos com entrega estimada próxima (próximos 30 dias)
   projects.forEach(p => {
@@ -147,6 +147,7 @@ const ticketPriorityConfig = {
   low: { label: 'Baixa', color: 'bg-gray-500' },
   medium: { label: 'Média', color: 'bg-yellow-500' },
   high: { label: 'Alta', color: 'bg-red-500' },
+  urgent: { label: 'Urgente', color: 'bg-orange-500' },
 }
 
 // Bottom nav mobile - apenas 4 itens essenciais
@@ -226,7 +227,7 @@ export function ExecutorDashboard() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState<string>('pending')
-  // Filtro "Minhas Atividades" vs "Todas" - por padrão mostra todos para garantir visibilidade
+  // Filtro "Minhas Atividades" vs "Todas" - SEMPRE mostra todos por padrão para garantir visibilidade
   const [viewMode, setViewMode] = useState<'mine' | 'all'>('all')
   // Mostrar histórico (projetos concluídos) separadamente
   const [showHistory, setShowHistory] = useState(false)
@@ -517,7 +518,7 @@ export function ExecutorDashboard() {
         console.error('[ExecutorDashboard] Erro ao carregar tickets:', error)
       }
     }
-    loadTickets()
+    void loadTickets()
   }, [projects])
 
   const handleUpdateStep = (stepId: string, updates: Record<string, unknown>) => {
@@ -860,6 +861,7 @@ export function ExecutorDashboard() {
     const newProject: Project = {
       id: `PRJ-${Date.now()}`,
       qrCode: `QR-${Date.now()}-PERMANENT`,
+      executorId: user?.id || user?.email || 'executor@elite.com', // CRÍTICO: Atribuir executor ao projeto
       vehicle: {
         id: `VH-${Date.now()}`,
         brand: newCarData.brand,
@@ -1395,19 +1397,11 @@ ${loginUrl}
           </div>
         </nav>
 
-        {/* FAB - Scanner QR - Mobile Only */}
-        <div className="lg:hidden fixed bottom-20 right-4 z-50 flex flex-col space-y-2">
-          <button
-            onClick={() => setShowQRLookup(true)}
-            className="w-12 h-12 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 transition-all active:scale-95"
-            title="Buscar por Placa"
-            aria-label="Buscar QR por Placa"
-          >
-            <Search className="w-5 h-5" />
-          </button>
+        {/* FAB - Scanner QR - Mobile Only - Posicionamento seguro */}
+        <div className="lg:hidden fixed bottom-24 right-4 z-40 flex flex-col-reverse items-end space-y-reverse space-y-3">
           <button
             onClick={() => navigate('/scan?mode=project')}
-            className="w-14 h-14 bg-primary text-black rounded-full shadow-lg shadow-primary/30 flex items-center justify-center hover:bg-primary/90 transition-all active:scale-95"
+            className="w-14 h-14 bg-primary text-black rounded-full shadow-2xl shadow-primary/30 flex items-center justify-center hover:bg-primary/90 transition-all active:scale-95 border-2 border-primary/50"
             title="Escanear QR Code"
             aria-label="Escanear QR Code"
           >
@@ -1639,7 +1633,7 @@ ${loginUrl}
                 ref={editVehiclePhotoRef}
                 type="file"
                 accept="image/*"
-                onChange={handleEditVehiclePhoto}
+                onChange={(e) => void handleEditVehiclePhoto(e)}
                 className="hidden"
                 aria-label="Editar foto do veículo"
               />
@@ -1852,7 +1846,7 @@ ${loginUrl}
               <div className="rounded-2xl overflow-hidden border border-white/10">
                 <EliteShieldLaudo 
                   project={selectedProject}
-                  onExportPDF={handleExportLaudoPDF}
+                  onExportPDF={() => void handleExportLaudoPDF()}
                   showExportButton={true}
                   compact={true}
                 />
@@ -1909,9 +1903,9 @@ ${loginUrl}
                         <p className="text-xs text-gray-400">Status</p>
                         <p className={cn(
                           "text-sm font-semibold",
-                          statusConfig[selectedProject.status as keyof typeof statusConfig]?.textColor
+                          statusConfig[selectedProject.status]?.textColor
                         )}>
-                          {statusConfig[selectedProject.status as keyof typeof statusConfig]?.label}
+                          {statusConfig[selectedProject.status]?.label}
                         </p>
                       </div>
                     </div>
@@ -2280,7 +2274,7 @@ ${loginUrl}
                           placa: p.vehicle.plate,
                           ano: p.vehicle.year,
                           nivel: p.vehicle.blindingLevel,
-                          status: statusConfig[p.status as keyof typeof statusConfig]?.label || p.status,
+                          status: statusConfig[p.status]?.label || p.status,
                           inicio: p.startDate,
                           previsao: p.estimatedDelivery,
                         })),
@@ -2369,10 +2363,10 @@ ${loginUrl}
                             <div className="text-xs text-gray-400">{project.vehicle.plate}</div>
                             <div className={cn(
                               "text-xs mt-1 px-2 py-0.5 rounded-full inline-block",
-                              statusConfig[project.status as keyof typeof statusConfig]?.color || 'bg-gray-500',
+                              statusConfig[project.status]?.color || 'bg-gray-500',
                               "text-white"
                             )}>
-                              {statusConfig[project.status as keyof typeof statusConfig]?.label || project.status}
+                              {statusConfig[project.status]?.label || project.status}
                             </div>
                           </div>
                           <ChevronRight className="w-5 h-5 text-gray-400" />
@@ -2422,10 +2416,10 @@ ${loginUrl}
                             <span className="text-gray-400">Status:</span>
                             <span className={cn(
                               "px-2 py-0.5 rounded-full text-xs",
-                              statusConfig[project.status as keyof typeof statusConfig]?.color || 'bg-gray-500',
+                              statusConfig[project.status]?.color || 'bg-gray-500',
                               "text-white"
                             )}>
-                              {statusConfig[project.status as keyof typeof statusConfig]?.label || project.status}
+                              {statusConfig[project.status]?.label || project.status}
                             </span>
                           </div>
                         </div>
@@ -2665,8 +2659,8 @@ ${loginUrl}
                         'Assunto': t.subject,
                         'Cliente': t.clientName,
                         'Veículo': t.vehicle,
-                        'Status': ticketStatusConfig[t.status as keyof typeof ticketStatusConfig]?.label || t.status,
-                        'Prioridade': ticketPriorityConfig[t.priority as keyof typeof ticketPriorityConfig]?.label || t.priority,
+                        'Status': ticketStatusConfig[t.status]?.label || t.status,
+                        'Prioridade': ticketPriorityConfig[t.priority]?.label || t.priority,
                         'Data de Criação': new Date(t.createdAt).toLocaleDateString('pt-BR'),
                         'Mensagem': t.message
                       }))
@@ -2822,15 +2816,15 @@ ${loginUrl}
                       <div className="flex items-center gap-3">
                         <div className={cn(
                           "w-2 h-2 rounded-full",
-                          ticketPriorityConfig[ticket.priority as keyof typeof ticketPriorityConfig]?.color
+                          ticketPriorityConfig[ticket.priority]?.color
                         )} />
                         <span className="font-mono text-sm text-gray-400">{ticket.id}</span>
                         <span className={cn(
                           "px-2 py-0.5 rounded-full text-xs",
-                          ticketStatusConfig[ticket.status as keyof typeof ticketStatusConfig]?.color,
+                          ticketStatusConfig[ticket.status]?.color,
                           "text-white"
                         )}>
-                          {ticketStatusConfig[ticket.status as keyof typeof ticketStatusConfig]?.label}
+                          {ticketStatusConfig[ticket.status]?.label}
                         </span>
                       </div>
                       <span className="text-xs text-gray-500">
@@ -3248,7 +3242,7 @@ ${loginUrl}
           </div>
           <div className="flex justify-end space-x-3 mt-6">
             <button onClick={() => setShowLaudoModal(false)} className="px-6 py-3 bg-white/10 rounded-xl">Cancelar</button>
-            <button onClick={handleSaveLaudo} className="px-6 py-3 bg-primary text-black rounded-xl font-semibold flex items-center space-x-2">
+            <button onClick={() => void handleSaveLaudo()} className="px-6 py-3 bg-primary text-black rounded-xl font-semibold flex items-center space-x-2">
               <Save className="w-4 h-4" />
               <span>Salvar Laudo</span>
             </button>
@@ -3637,7 +3631,6 @@ ${loginUrl}
                     title="Selecionar foto do veículo"
                   />
                   {/* Input para câmera - capture funciona apenas em mobile, ignorado em desktop */}
-                  {/* eslint-disable-next-line react/no-unknown-property */}
                   <input 
                     ref={vehicleCameraInputRef}
                     type="file" 
@@ -3705,7 +3698,7 @@ ${loginUrl}
 
           <div className="flex justify-end space-x-3 mt-6">
             <button onClick={() => setShowNewCarModal(false)} className="px-6 py-3 bg-white/10 rounded-xl">Cancelar</button>
-            <button onClick={handleCreateNewCar} className="px-6 py-3 bg-primary text-black rounded-xl font-semibold flex items-center space-x-2">
+            <button onClick={() => void handleCreateNewCar()} className="px-6 py-3 bg-primary text-black rounded-xl font-semibold flex items-center space-x-2">
               <Plus className="w-4 h-4" />
               <span>Criar Projeto</span>
             </button>
@@ -3863,8 +3856,8 @@ ${loginUrl}
               <div className="bg-white/5 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-primary">{selectedTicket.subject}</span>
-                  <span className={cn("px-2 py-0.5 rounded-full text-xs", ticketPriorityConfig[selectedTicket.priority as keyof typeof ticketPriorityConfig]?.color, "text-white")}>
-                    {ticketPriorityConfig[selectedTicket.priority as keyof typeof ticketPriorityConfig]?.label}
+                  <span className={cn("px-2 py-0.5 rounded-full text-xs", ticketPriorityConfig[selectedTicket.priority]?.color, "text-white")}>
+                    {ticketPriorityConfig[selectedTicket.priority]?.label}
                   </span>
                 </div>
                 <p className="text-sm text-gray-300">{selectedTicket.message}</p>
@@ -4467,7 +4460,7 @@ ${loginUrl}
                     onClick={() => {
                       const token = `INV-${Date.now()}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
                       const registerUrl = `${getAppBaseUrl()}/register?token=${token}&project=${foundProject.id}`
-                      QRCode.toDataURL(registerUrl, { width: 400, margin: 3 }).then((url: string) => {
+                      void QRCode.toDataURL(registerUrl, { width: 400, margin: 3 }).then((url: string) => {
                         const link = document.createElement('a')
                         link.href = url
                         link.download = `QR-Cadastro-${foundProject.vehicle.plate}.png`
@@ -4494,7 +4487,7 @@ ${loginUrl}
                   <button
                     onClick={() => {
                       const verifyUrl = `${getAppBaseUrl()}/verify/${foundProject.id}`
-                      QRCode.toDataURL(verifyUrl, { width: 400, margin: 3, color: { dark: '#D4AF37' } }).then((url: string) => {
+                      void QRCode.toDataURL(verifyUrl, { width: 400, margin: 3, color: { dark: '#D4AF37' } }).then((url: string) => {
                         const link = document.createElement('a')
                         link.href = url
                         link.download = `QR-Projeto-${foundProject.vehicle.plate}.png`
@@ -4919,7 +4912,7 @@ ${loginUrl}
       {showNewCarModal && (
         <CreateProjectWizard
           onClose={() => setShowNewCarModal(false)}
-          onCreate={handleWizardCreate}
+          onCreate={(data) => void handleWizardCreate(data)}
           vehiclePhoto={vehiclePhoto}
           onPhotoChange={setVehiclePhoto}
         />

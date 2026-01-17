@@ -1,0 +1,361 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e4]:
+  - complementary [ref=e5]:
+    - generic [ref=e7]:
+      - generic [ref=e9]: E
+      - generic [ref=e10]:
+        - heading "EliteTrack™" [level=1] [ref=e11]
+        - text: Painel do Executor
+    - navigation [ref=e12]:
+      - button "Projetos" [ref=e13] [cursor=pointer]:
+        - img [ref=e14]
+        - generic [ref=e17]: Projetos
+      - button "Timeline" [ref=e18] [cursor=pointer]:
+        - img [ref=e19]
+        - generic [ref=e22]: Timeline
+      - button "Fotos" [ref=e23] [cursor=pointer]:
+        - img [ref=e24]
+        - generic [ref=e28]: Fotos
+      - button "Laudo" [ref=e29] [cursor=pointer]:
+        - img [ref=e30]
+        - generic [ref=e33]: Laudo
+      - button "Cartão" [ref=e34] [cursor=pointer]:
+        - img [ref=e35]
+        - generic [ref=e37]: Cartão
+      - button "Chat" [ref=e38] [cursor=pointer]:
+        - img [ref=e39]
+        - generic [ref=e41]: Chat
+      - button "Clientes" [ref=e42] [cursor=pointer]:
+        - img [ref=e43]
+        - generic [ref=e48]: Clientes
+      - button "Orçamentos" [ref=e49] [cursor=pointer]:
+        - img [ref=e50]
+        - generic [ref=e52]: Orçamentos
+      - button "Tickets" [ref=e53] [cursor=pointer]:
+        - img [ref=e54]
+        - generic [ref=e56]: Tickets
+      - button "Agenda" [ref=e57] [cursor=pointer]:
+        - img [ref=e58]
+        - generic [ref=e60]: Agenda
+    - generic [ref=e61]:
+      - generic [ref=e62]:
+        - generic [ref=e64]: E
+        - generic [ref=e65]:
+          - paragraph [ref=e66]: Executor Elite
+          - paragraph [ref=e67]: Executor
+      - button "Sair" [ref=e68] [cursor=pointer]:
+        - img [ref=e69]
+        - generic [ref=e72]: Sair
+  - generic [ref=e73]:
+    - banner [ref=e74]:
+      - generic [ref=e76]:
+        - heading "Painel de Projetos" [level=2] [ref=e78]
+        - generic [ref=e79]:
+          - button "Notificações" [ref=e81] [cursor=pointer]:
+            - img [ref=e82]
+          - button "Configurações" [ref=e85] [cursor=pointer]:
+            - img [ref=e86]
+          - button "Consultar QR Codes" [ref=e89] [cursor=pointer]:
+            - img [ref=e90]
+            - generic [ref=e93]: QR por Placa
+          - button "Escanear QR Code" [ref=e94] [cursor=pointer]:
+            - img [ref=e95]
+            - generic [ref=e101]: Escanear
+    - main [ref=e102]:
+      - generic [ref=e104]:
+        - generic [ref=e105]:
+          - button "1 TOTAL" [ref=e106] [cursor=pointer]:
+            - generic [ref=e107]:
+              - img [ref=e109]
+              - generic [ref=e114]: "1"
+            - paragraph [ref=e115]: TOTAL
+          - button "0 ATIVOS" [ref=e116] [cursor=pointer]:
+            - generic [ref=e117]:
+              - img [ref=e119]
+              - generic [ref=e122]: "0"
+            - paragraph [ref=e123]: ATIVOS
+          - button "1 FILA" [ref=e124] [cursor=pointer]:
+            - generic [ref=e125]:
+              - img [ref=e127]
+              - generic [ref=e129]: "1"
+            - paragraph [ref=e130]: FILA
+          - button "0 CONCLUÍDOS" [ref=e131] [cursor=pointer]:
+            - generic [ref=e132]:
+              - img [ref=e134]
+              - generic [ref=e137]: "0"
+            - paragraph [ref=e138]: CONCLUÍDOS
+        - generic [ref=e139]:
+          - generic [ref=e140]:
+            - img [ref=e141]
+            - textbox "Buscar projetos" [ref=e144]:
+              - /placeholder: Placa, nome ou código...
+          - generic [ref=e146]:
+            - button "Meus" [ref=e147] [cursor=pointer]
+            - button "Todos" [ref=e148] [cursor=pointer]
+          - generic [ref=e149]:
+            - generic [ref=e150]: "Filtrar por status:"
+            - generic [ref=e151]:
+              - button "Todos (1)" [ref=e152] [cursor=pointer]
+              - button "Pendentes (1)" [ref=e153] [cursor=pointer]
+              - button "Em Andamento (0)" [ref=e154] [cursor=pointer]
+        - button "Novo Projeto" [ref=e156] [cursor=pointer]:
+          - img [ref=e157]
+          - generic [ref=e158]: Novo Projeto
+        - generic [ref=e159]:
+          - generic [ref=e160]:
+            - generic [ref=e161] [cursor=pointer]:
+              - img "Corolla 970" [ref=e162]
+              - img [ref=e164]
+            - generic [ref=e166]:
+              - generic [ref=e167]:
+                - generic [ref=e168]: ✓ SELECIONADO
+                - generic [ref=e169]: Pendente
+              - heading "Cliente Teste 1768408664970" [level=3] [ref=e170]
+              - paragraph [ref=e171]: Toyota Corolla 970
+              - paragraph [ref=e172]: "PLACA: TST-4970"
+          - generic [ref=e173]:
+            - button "Timeline" [ref=e174] [cursor=pointer]:
+              - img [ref=e175]
+              - generic [ref=e178]: Timeline
+            - button "Fotos" [ref=e179] [cursor=pointer]:
+              - img [ref=e180]
+              - generic [ref=e184]: Fotos
+        - generic [ref=e187]:
+          - img "Corolla 970" [ref=e189]
+          - generic [ref=e190]:
+            - generic [ref=e191]:
+              - generic [ref=e192]: Pendente
+              - generic [ref=e193]: "#1b6c"
+            - heading "Cliente Teste 1768408664970" [level=3] [ref=e194]
+            - generic [ref=e195]:
+              - generic [ref=e196]: Toyota Corolla 970
+              - generic [ref=e197]: TST-4970
+            - generic [ref=e201]: 0%
+          - generic [ref=e202]:
+            - button "Timeline" [ref=e203] [cursor=pointer]:
+              - img [ref=e204]
+            - button "Fotos" [ref=e207] [cursor=pointer]:
+              - img [ref=e208]
+  - generic [ref=e214]:
+    - button "Fechar modal" [ref=e215] [cursor=pointer]:
+      - img [ref=e216]
+    - generic [ref=e219]:
+      - generic [ref=e220]:
+        - heading "Cadastrar Novo Veículo" [level=2] [ref=e221]
+        - button "Fechar modal" [ref=e222] [cursor=pointer]:
+          - img [ref=e223]
+      - generic [ref=e226]:
+        - generic [ref=e227]:
+          - heading "Dados do Cliente" [level=3] [ref=e228]
+          - generic [ref=e229]:
+            - generic [ref=e230]:
+              - generic [ref=e231]: Nome / Razão Social *
+              - textbox "Nome do cliente" [ref=e232]:
+                - /placeholder: Nome completo ou Razão Social
+                - text: Cliente Teste 1768633028136
+            - generic [ref=e233]:
+              - generic [ref=e234]: E-mail
+              - textbox "E-mail do cliente" [ref=e235]:
+                - /placeholder: email@exemplo.com
+                - text: cliente1768633028136@teste.com
+            - generic [ref=e236]:
+              - generic [ref=e237]: Telefone
+              - textbox "Telefone do cliente" [ref=e238]:
+                - /placeholder: (11) 99999-9999
+                - text: (11) 99999-8136
+            - generic [ref=e239]:
+              - generic [ref=e240]: CPF/CNPJ
+              - textbox "CPF ou CNPJ do cliente" [ref=e241]:
+                - /placeholder: 000.000.000-00 ou 00.000.000/0000-00
+            - generic [ref=e242]:
+              - generic [ref=e243]: Endereço
+              - textbox "Endereço do cliente" [ref=e244]:
+                - /placeholder: Rua, número, bairro, cidade - UF
+        - generic [ref=e245]:
+          - heading "Dados do Veículo" [level=3] [ref=e246]
+          - generic [ref=e247]:
+            - generic [ref=e248]:
+              - generic [ref=e249]: Marca *
+              - textbox "Marca do veículo" [ref=e250]:
+                - /placeholder: "Ex: Mercedes-Benz"
+                - text: Toyota
+            - generic [ref=e251]:
+              - generic [ref=e252]: Modelo *
+              - textbox "Modelo do veículo" [ref=e253]:
+                - /placeholder: "Ex: GLE 450"
+                - text: Corolla 136
+            - generic [ref=e254]:
+              - generic [ref=e255]: Ano
+              - textbox "Ano do veículo" [ref=e256]:
+                - /placeholder: "2025"
+                - text: "2024"
+            - generic [ref=e257]:
+              - generic [ref=e258]: Placa *
+              - textbox "Placa do veículo" [ref=e259]:
+                - /placeholder: ABC-1D23
+                - text: TST-8136
+            - generic [ref=e260]:
+              - generic [ref=e261]: Cor
+              - textbox "Cor do veículo" [active] [ref=e262]:
+                - /placeholder: Preto
+                - text: Preto
+            - generic [ref=e263]:
+              - generic [ref=e264]: Chassi
+              - textbox "Número do chassi" [ref=e265]:
+                - /placeholder: "****1234"
+            - generic [ref=e266]:
+              - generic [ref=e267]: Versão
+              - textbox "Versão do veículo" [ref=e268]:
+                - /placeholder: "Ex: Sport, Premium"
+            - generic [ref=e269]:
+              - generic [ref=e270]: KM Check-in
+              - textbox "Quilometragem de entrada" [ref=e271]:
+                - /placeholder: "Ex: 15.000"
+            - generic [ref=e272]:
+              - generic [ref=e273]: Tipo de Veículo
+              - combobox "Selecionar tipo de veículo" [ref=e274]:
+                - option "SUV" [selected]
+                - option "Sedan"
+                - option "Hatch"
+                - option "Pickup"
+                - option "Van"
+        - generic [ref=e275]:
+          - heading "Especificações de Blindagem" [level=3] [ref=e276]:
+            - img [ref=e277]
+            - text: Especificações de Blindagem
+          - generic [ref=e279]:
+            - generic [ref=e280]:
+              - generic [ref=e281]: Linha de Blindagem
+              - combobox "Selecionar linha de blindagem" [ref=e282]:
+                - option "UltraLite Armor™ (Premium)" [selected]
+                - option "SafeCore™ (Smart Balance)"
+            - generic [ref=e283]:
+              - generic [ref=e284]: Nível de Proteção
+              - combobox "Selecionar nível de proteção" [ref=e285]:
+                - option "NIJ III-A" [selected]
+                - option "NIJ III"
+            - generic [ref=e286]:
+              - generic [ref=e287]: Uso
+              - combobox "Selecionar tipo de uso" [ref=e288]:
+                - option "Executivo" [selected]
+                - option "Civil"
+            - generic [ref=e289]:
+              - generic [ref=e290]: Fabricante Vidros
+              - combobox "Selecionar fabricante de vidros" [ref=e291]:
+                - option "SafeMax" [selected]
+                - option "Argus"
+            - generic [ref=e292]:
+              - generic [ref=e293]: Espessura Vidros (mm)
+              - textbox "Espessura dos vidros em mm" [ref=e294]:
+                - /placeholder: "21"
+                - text: "21"
+            - generic [ref=e295]:
+              - generic [ref=e296]: Garantia Vidros (anos)
+              - textbox "Garantia dos vidros em anos" [ref=e297]:
+                - /placeholder: "10"
+                - text: "10"
+            - generic [ref=e298]:
+              - generic [ref=e299]: Camadas Aramida
+              - textbox "Número de camadas de aramida" [ref=e300]:
+                - /placeholder: 8-11
+                - text: "9"
+            - generic [ref=e301]:
+              - generic [ref=e302]: Fabricante Opacos
+              - combobox "Selecionar fabricante de materiais opacos" [ref=e303]:
+                - option "NextOne" [selected]
+                - option "Tensylon"
+        - generic [ref=e304]:
+          - heading "Responsáveis Técnicos" [level=3] [ref=e305]:
+            - img [ref=e306]
+            - text: Responsáveis Técnicos
+          - generic [ref=e311]:
+            - generic [ref=e312]:
+              - generic [ref=e313]: Responsável Técnico
+              - textbox "Nome do responsável técnico" [ref=e314]:
+                - /placeholder: Nome | Cargo
+            - generic [ref=e315]:
+              - generic [ref=e316]: Supervisor Técnico
+              - textbox "Nome do supervisor técnico" [ref=e317]:
+                - /placeholder: Nome | Cargo
+        - generic [ref=e318]:
+          - heading "Datas do Processo" [level=3] [ref=e319]:
+            - img [ref=e320]
+            - text: Datas do Processo
+          - generic [ref=e322]:
+            - generic [ref=e323]:
+              - generic [ref=e324]: Data de Recebimento *
+              - textbox "Data que o veículo chegou" [ref=e325]: 2026-01-17
+              - paragraph [ref=e326]: Quando o veículo chegou na empresa
+            - generic [ref=e327]:
+              - generic [ref=e328]: Início do Processo
+              - textbox "Data de início do processo" [ref=e329]
+              - paragraph [ref=e330]: Quando a blindagem iniciou
+            - generic [ref=e331]:
+              - generic [ref=e332]: Previsão de Entrega
+              - textbox "Previsão de entrega" [ref=e333]
+              - paragraph [ref=e334]: Data estimada de conclusão
+        - generic [ref=e335]:
+          - heading "Foto do Veículo" [level=3] [ref=e336]
+          - generic [ref=e338]:
+            - generic [ref=e339]: Foto Inicial
+            - generic [ref=e340]:
+              - img "Foto do veículo" [ref=e341]
+              - button "Remover foto" [ref=e342] [cursor=pointer]:
+                - img [ref=e343]
+        - generic [ref=e347]:
+          - img [ref=e348]
+          - generic [ref=e354]:
+            - heading "Vinculação via QR Code" [level=4] [ref=e355]
+            - paragraph [ref=e356]: Após criar o projeto, um QR Code único será gerado. O cliente deve escanear este código para acessar o acompanhamento do veículo. O e-mail informado será usado para criar a conta do cliente.
+      - generic [ref=e357]:
+        - button "Cancelar" [ref=e358] [cursor=pointer]
+        - button "Criar Projeto" [ref=e359] [cursor=pointer]:
+          - img [ref=e360]
+          - generic [ref=e361]: Criar Projeto
+  - generic [ref=e363]:
+    - generic [ref=e364]:
+      - generic [ref=e365]:
+        - heading "Novo Projeto" [level=2] [ref=e366]
+        - button "Fechar" [ref=e367] [cursor=pointer]:
+          - img [ref=e368]
+      - generic [ref=e371]:
+        - generic [ref=e373]:
+          - img [ref=e375]
+          - generic [ref=e378]: Cliente
+        - generic [ref=e381]:
+          - img [ref=e383]
+          - generic [ref=e387]: Veículo
+        - generic [ref=e390]:
+          - img [ref=e392]
+          - generic [ref=e394]: Blindagem
+        - generic [ref=e397]:
+          - img [ref=e399]
+          - generic [ref=e402]: Revisão
+    - generic [ref=e404]:
+      - heading "Dados do Cliente" [level=3] [ref=e405]
+      - generic [ref=e406]:
+        - generic [ref=e407]: Nome Completo *
+        - textbox "João da Silva" [ref=e408]
+      - generic [ref=e409]:
+        - generic [ref=e410]:
+          - generic [ref=e411]: Email *
+          - textbox "joao@email.com" [ref=e412]
+        - generic [ref=e413]:
+          - generic [ref=e414]: Telefone *
+          - textbox "(11) 99999-9999" [ref=e415]
+      - generic [ref=e416]:
+        - generic [ref=e417]: CPF/CNPJ
+        - textbox "000.000.000-00" [ref=e418]
+      - generic [ref=e419]:
+        - generic [ref=e420]: Endereço
+        - textbox "Rua Exemplo, 123 - Bairro - Cidade/UF" [ref=e421]
+    - generic [ref=e422]:
+      - button "Cancelar" [ref=e423] [cursor=pointer]:
+        - img [ref=e424]
+        - generic [ref=e426]: Cancelar
+      - button "Próximo" [ref=e427] [cursor=pointer]:
+        - generic [ref=e428]: Próximo
+        - img [ref=e429]
+```

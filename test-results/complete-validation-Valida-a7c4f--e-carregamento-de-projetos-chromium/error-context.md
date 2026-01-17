@@ -1,0 +1,142 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e4]:
+  - complementary [ref=e5]:
+    - generic [ref=e7]:
+      - generic [ref=e9]: E
+      - generic [ref=e10]:
+        - heading "EliteTrack™" [level=1] [ref=e11]
+        - text: Painel do Executor
+    - navigation [ref=e12]:
+      - button "Projetos" [ref=e13] [cursor=pointer]:
+        - img [ref=e14]
+        - generic [ref=e17]: Projetos
+      - button "Timeline" [ref=e18] [cursor=pointer]:
+        - img [ref=e19]
+        - generic [ref=e22]: Timeline
+      - button "Fotos" [ref=e23] [cursor=pointer]:
+        - img [ref=e24]
+        - generic [ref=e28]: Fotos
+      - button "Laudo" [ref=e29] [cursor=pointer]:
+        - img [ref=e30]
+        - generic [ref=e33]: Laudo
+      - button "Cartão" [ref=e34] [cursor=pointer]:
+        - img [ref=e35]
+        - generic [ref=e37]: Cartão
+      - button "Chat" [ref=e38] [cursor=pointer]:
+        - img [ref=e39]
+        - generic [ref=e41]: Chat
+      - button "Clientes" [ref=e42] [cursor=pointer]:
+        - img [ref=e43]
+        - generic [ref=e48]: Clientes
+      - button "Orçamentos" [ref=e49] [cursor=pointer]:
+        - img [ref=e50]
+        - generic [ref=e52]: Orçamentos
+      - button "Tickets" [ref=e53] [cursor=pointer]:
+        - img [ref=e54]
+        - generic [ref=e56]: Tickets
+      - button "Agenda" [ref=e57] [cursor=pointer]:
+        - img [ref=e58]
+        - generic [ref=e60]: Agenda
+    - generic [ref=e61]:
+      - generic [ref=e62]:
+        - generic [ref=e64]: J
+        - generic [ref=e65]:
+          - paragraph [ref=e66]: Joao
+          - paragraph [ref=e67]: Executor
+      - button "Sair" [ref=e68] [cursor=pointer]:
+        - img [ref=e69]
+        - generic [ref=e72]: Sair
+  - generic [ref=e73]:
+    - banner [ref=e74]:
+      - generic [ref=e76]:
+        - heading "Painel de Projetos" [level=2] [ref=e78]
+        - generic [ref=e79]:
+          - button "Notificações" [ref=e81] [cursor=pointer]:
+            - img [ref=e82]
+            - generic [ref=e85]: "1"
+          - button "Configurações" [ref=e86] [cursor=pointer]:
+            - img [ref=e87]
+          - button "Consultar QR Codes" [ref=e90] [cursor=pointer]:
+            - img [ref=e91]
+            - generic [ref=e94]: QR por Placa
+          - button "Escanear QR Code" [ref=e95] [cursor=pointer]:
+            - img [ref=e96]
+            - generic [ref=e102]: Escanear
+    - main [ref=e103]:
+      - generic [ref=e105]:
+        - generic [ref=e106]:
+          - button "1 TOTAL" [ref=e107] [cursor=pointer]:
+            - generic [ref=e108]:
+              - img [ref=e110]
+              - generic [ref=e115]: "1"
+            - paragraph [ref=e116]: TOTAL
+          - button "0 ATIVOS" [ref=e117] [cursor=pointer]:
+            - generic [ref=e118]:
+              - img [ref=e120]
+              - generic [ref=e123]: "0"
+            - paragraph [ref=e124]: ATIVOS
+          - button "1 FILA" [ref=e125] [cursor=pointer]:
+            - generic [ref=e126]:
+              - img [ref=e128]
+              - generic [ref=e130]: "1"
+            - paragraph [ref=e131]: FILA
+          - button "0 CONCLUÍDOS" [ref=e132] [cursor=pointer]:
+            - generic [ref=e133]:
+              - img [ref=e135]
+              - generic [ref=e138]: "0"
+            - paragraph [ref=e139]: CONCLUÍDOS
+        - generic [ref=e140]:
+          - generic [ref=e141]:
+            - img [ref=e142]
+            - textbox "Buscar projetos" [ref=e145]:
+              - /placeholder: Placa, nome ou código...
+          - generic [ref=e147]:
+            - button "Meus" [ref=e148] [cursor=pointer]
+            - button "Todos" [ref=e149] [cursor=pointer]
+          - generic [ref=e150]:
+            - generic [ref=e151]: "Filtrar por status:"
+            - generic [ref=e152]:
+              - button "Todos (1)" [ref=e153] [cursor=pointer]
+              - button "Pendentes (1)" [ref=e154] [cursor=pointer]
+              - button "Em Andamento (0)" [ref=e155] [cursor=pointer]
+        - button "Novo Projeto" [ref=e157] [cursor=pointer]:
+          - img [ref=e158]
+          - generic [ref=e159]: Novo Projeto
+        - generic [ref=e160]:
+          - generic [ref=e161]:
+            - generic [ref=e162] [cursor=pointer]:
+              - img "Corolla 970" [ref=e163]
+              - img [ref=e165]
+            - generic [ref=e167]:
+              - generic [ref=e168]:
+                - generic [ref=e169]: ✓ SELECIONADO
+                - generic [ref=e170]: Pendente
+              - heading "Cliente Teste 1768408664970" [level=3] [ref=e171]
+              - paragraph [ref=e172]: Toyota Corolla 970
+              - paragraph [ref=e173]: "PLACA: TST-4970"
+          - generic [ref=e174]:
+            - button "Timeline" [ref=e175] [cursor=pointer]:
+              - img [ref=e176]
+              - generic [ref=e179]: Timeline
+            - button "Fotos" [ref=e180] [cursor=pointer]:
+              - img [ref=e181]
+              - generic [ref=e185]: Fotos
+        - generic [ref=e188]:
+          - img "Corolla 970" [ref=e190]
+          - generic [ref=e191]:
+            - generic [ref=e192]:
+              - generic [ref=e193]: Pendente
+              - generic [ref=e194]: "#1b6c"
+            - heading "Cliente Teste 1768408664970" [level=3] [ref=e195]
+            - generic [ref=e196]:
+              - generic [ref=e197]: Toyota Corolla 970
+              - generic [ref=e198]: TST-4970
+            - generic [ref=e202]: 0%
+          - generic [ref=e203]:
+            - button "Timeline" [ref=e204] [cursor=pointer]:
+              - img [ref=e205]
+            - button "Fotos" [ref=e208] [cursor=pointer]:
+              - img [ref=e209]
+```

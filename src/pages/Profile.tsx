@@ -247,7 +247,7 @@ export function Profile() {
                   </span>
                 </div>
                 <p className="text-sm text-gray-500 font-medium mb-6">
-                  Membro ativo • Tesla Edition
+                  Membro ativo • Elite Blindagens
                 </p>
                 
                 <div className="grid grid-cols-3 gap-3 sm:gap-6 max-w-sm mx-auto md:mx-0">
@@ -256,12 +256,12 @@ export function Profile() {
                     <div className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">Frota</div>
                   </div>
                   <div className="bg-white/[0.03] border border-white/5 p-3 rounded-2xl text-center">
-                    <div className="text-lg font-bold text-primary tracking-tight">Tesla</div>
-                    <div className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">Style</div>
+                    <div className="text-lg font-bold text-primary tracking-tight">Elite</div>
+                    <div className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">Member</div>
                   </div>
                   <div className="bg-white/[0.03] border border-white/5 p-3 rounded-2xl text-center">
-                    <div className="text-lg font-bold text-primary tracking-tight">24/7</div>
-                    <div className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">Suporte</div>
+                    <div className="text-lg font-bold text-primary tracking-tight">Breve</div>
+                    <div className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">Atendimento</div>
                   </div>
                 </div>
               </div>
@@ -469,7 +469,7 @@ export function Profile() {
               {/* Action Buttons */}
               <div className="lg:col-span-2 flex justify-end gap-3 pt-3">
                 <button className="px-4 py-2.5 bg-white/5 text-white text-xs font-semibold rounded-lg border border-white/10 active:scale-95">Descartar</button>
-                <button onClick={savePersonalData} className="px-4 py-2.5 bg-primary text-black text-xs font-bold rounded-lg active:scale-95">Salvar</button>
+                <button onClick={() => void savePersonalData()} className="px-4 py-2.5 bg-primary text-black text-xs font-bold rounded-lg active:scale-95">Salvar</button>
               </div>
             </div>
           )}
