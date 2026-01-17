@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node", "vite/client", "playwright"],
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["tests", "src/vite-env.d.ts"]
+}

@@ -14,6 +14,7 @@ import { Modal } from '../components/ui/Modal'
 import { NotificationPanel } from '../components/ui/NotificationPanel'
 import { ProgressBar } from '../components/ui/ProgressBar'
 import { ExecutorChat, ExecutorTimeline, ExecutorPhotos, ClientDetailModal, MobileDrawer } from '../components/executor'
+import { CreateProjectWizard, type NewProjectData } from '../components/executor/CreateProjectWizard'
 import { exportToExcel, formatDateBR, formatPhone } from '../utils/exportToExcel'
 import { useAuth } from '../contexts/AuthContext'
 // Nota: registerTempPassword é usado para registrar senhas temporárias para novos clientes
@@ -551,43 +552,56 @@ export function ExecutorDashboard() {
         return step
       })
 
-      // Calcular novo progresso
+      // CRÍTICO: Calcular progresso baseado APENAS em timeline_steps completed
+      const totalSteps = updatedTimeline.length
       const completedSteps = updatedTimeline.filter(s => s.status === 'completed').length
-      const newProgress = Math.round((completedSteps / updatedTimeline.length) * 100)
+      const newProgress = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0
 
-      // Determinar status do projeto
+      // Determinar status do projeto baseado em progresso
       let projectStatus: 'pending' | 'in_progress' | 'completed' | 'delivered' = 'pending'
       if (newProgress === 100) {
         projectStatus = 'completed'
+        console.log(`[ExecutorDashboard] 🎉 Projeto ${currentProject.id} COMPLETO (${completedSteps}/${totalSteps} etapas)`)
       } else if (newProgress > 0 || updatedTimeline.some(s => s.status === 'in_progress')) {
         projectStatus = 'in_progress'
       }
 
-      // Criar projeto atualizado
+      // Criar projeto atualizado com dados sincronizados
       const updatedProject: Project = {
         ...currentProject,
         timeline: updatedTimeline,
-        progress: newProgress,
+        progress: newProgress, // SEMPRE reflete timeline real
         status: projectStatus,
         completedDate: newProgress === 100 ? new Date().toISOString() : currentProject.completedDate
       }
 
-      // Sincronizar com Supabase (fora do setState para evitar problemas)
-      setTimeout(() => {
-        updateGlobalProject(updatedProject.id, updatedProject)
+      console.log(`[ExecutorDashboard] 📊 Atualização: Progresso ${newProgress}% (${completedSteps}/${totalSteps}), Status: ${projectStatus}`)
+
+      // Sincronizar IMEDIATAMENTE com Supabase
+      updateGlobalProject(updatedProject.id, updatedProject).then(() => {
+        console.log(`[ExecutorDashboard] ✅ Projeto ${updatedProject.id} sincronizado com Supabase`)
         
         // Notificação de sucesso
         const stepName = updatedTimeline.find(s => s.id === stepId)?.title || 'Etapa'
         addNotification({
-          type: 'success',
-          title: updates.status === 'completed' ? 'Etapa Concluída' : 'Etapa Atualizada',
-          message: updates.status === 'completed' 
-            ? `"${stepName}" foi concluída! Progresso: ${newProgress}%`
-            : `A etapa foi atualizada com sucesso. Progresso: ${newProgress}%`,
+          type: newProgress === 100 ? 'success' : 'success',
+          title: newProgress === 100 ? '🎉 Projeto Concluído!' : updates.status === 'completed' ? 'Etapa Concluída' : 'Etapa Atualizada',
+          message: newProgress === 100
+            ? `Todas as etapas foram concluídas! Projeto pronto para entrega.`
+            : updates.status === 'completed' 
+              ? `"${stepName}" concluída! Progresso: ${newProgress}%`
+              : `Etapa atualizada. Progresso: ${newProgress}%`,
           projectId: currentProject.id,
           stepId,
         })
-      }, 0)
+      }).catch((err) => {
+        console.error(`[ExecutorDashboard] ❌ Erro ao sincronizar projeto:`, err)
+        addNotification({
+          type: 'error',
+          title: 'Erro de Sincronização',
+          message: 'A atualização local foi feita, mas não foi sincronizada com o servidor. Verifique sua conexão.',
+        })
+      })
 
       return updatedProject
     })
@@ -725,6 +739,43 @@ export function ExecutorDashboard() {
         message: 'Erro ao gerar o PDF do laudo.',
       })
     }
+  }
+
+  // Nova função para criar projeto a partir do Wizard
+  const handleWizardCreate = async (wizardData: NewProjectData) => {
+    // Mapear dados do wizard para o formato do newCarData
+    setNewCarData({
+      ...newCarData,
+      clientName: wizardData.clientName,
+      clientEmail: wizardData.clientEmail,
+      clientPhone: wizardData.clientPhone,
+      clientCpfCnpj: wizardData.clientCpfCnpj,
+      clientAddress: wizardData.clientAddress,
+      brand: wizardData.brand,
+      model: wizardData.model,
+      year: wizardData.year,
+      plate: wizardData.plate,
+      color: wizardData.color,
+      chassis: wizardData.chassis,
+      kmCheckin: wizardData.kmCheckin,
+      vehicleType: wizardData.vehicleType,
+      vehicleReceivedDate: wizardData.vehicleReceivedDate,
+      processStartDate: wizardData.processStartDate,
+      estimatedDeliveryDate: wizardData.estimatedDeliveryDate,
+      blindingLine: wizardData.blindingLine,
+      protectionLevel: wizardData.protectionLevel,
+      usageType: wizardData.usageType,
+      glassManufacturer: wizardData.glassManufacturer,
+      glassThickness: wizardData.glassThickness,
+      glassWarrantyYears: wizardData.glassWarrantyYears,
+      aramidLayers: wizardData.aramidLayers,
+      opaqueManufacturer: wizardData.opaqueManufacturer,
+      technicalResponsible: wizardData.technicalResponsible,
+      supervisorName: wizardData.supervisorName,
+    })
+    
+    // Chamar função existente de criação
+    await handleCreateNewCar()
   }
 
   const handleCreateNewCar = async () => {
@@ -1370,52 +1421,52 @@ ${loginUrl}
           {/* Dashboard Tab */}
           {activeTab === 'dashboard' && (
             <div className="space-y-4 md:space-y-6">
-              {/* Stats - Premium Horizontal Scroll on Mobile */}
-              <div className="flex lg:grid lg:grid-cols-4 gap-3 md:gap-4 overflow-x-auto pb-4 md:pb-0 scrollbar-hide -mx-3 px-3 md:mx-0 md:px-0">
+              {/* Stats - Grid 2x2 Mobile, 4 cols Desktop */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
                 <button 
                   onClick={() => { setShowHistory(false); setFilterStatus('all'); }}
                   className={cn(
-                    "flex-shrink-0 w-28 md:w-auto bg-white/5 rounded-2xl p-3 md:p-4 border transition-all active:scale-95",
-                    filterStatus === 'all' && !showHistory ? "border-primary ring-1 ring-primary/30 bg-primary/5" : "border-white/5"
+                    "app-card-surface rounded-xl p-3 border transition-all active:scale-95",
+                    filterStatus === 'all' && !showHistory ? "border-primary ring-2 ring-primary/30 bg-primary/10" : "border-white/10"
                   )}
                 >
-                  <div className="flex flex-col items-center md:flex-row md:justify-between md:mb-2 gap-1">
-                    <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <Users className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
+                      <Users className="w-5 h-5 text-primary" />
                     </div>
-                    <span className="text-xl md:text-2xl font-bold tracking-tight">{stats.total}</span>
+                    <span className="text-2xl font-bold">{stats.total}</span>
                   </div>
-                  <p className="text-[10px] md:text-sm text-gray-500 font-bold uppercase tracking-widest text-center md:text-left mt-1">Total</p>
+                  <p className="text-xs text-gray-400 font-semibold">TOTAL</p>
                 </button>
                 <button 
                   onClick={() => { setShowHistory(false); setFilterStatus('in_progress'); }}
                   className={cn(
-                    "flex-shrink-0 w-28 md:w-auto bg-white/5 rounded-2xl p-3 md:p-4 border transition-all active:scale-95",
-                    filterStatus === 'in_progress' && !showHistory ? "border-yellow-400 ring-1 ring-yellow-400/30 bg-yellow-400/5" : "border-white/5"
+                    "app-card-surface rounded-xl p-3 border transition-all active:scale-95",
+                    filterStatus === 'in_progress' && !showHistory ? "border-yellow-400 ring-2 ring-yellow-400/30 bg-yellow-400/10" : "border-white/10"
                   )}
                 >
-                  <div className="flex flex-col items-center md:flex-row md:justify-between md:mb-2 gap-1">
-                    <div className="w-8 h-8 bg-yellow-400/10 rounded-lg flex items-center justify-center">
-                      <Clock className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" />
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="w-10 h-10 bg-yellow-400/20 rounded-lg flex items-center justify-center">
+                      <Clock className="w-5 h-5 text-yellow-400" />
                     </div>
-                    <span className="text-xl md:text-2xl font-bold tracking-tight">{stats.inProgress}</span>
+                    <span className="text-2xl font-bold">{stats.inProgress}</span>
                   </div>
-                  <p className="text-[10px] md:text-sm text-gray-500 font-bold uppercase tracking-widest text-center md:text-left mt-1">Ativos</p>
+                  <p className="text-xs text-gray-400 font-semibold">ATIVOS</p>
                 </button>
                 <button 
                   onClick={() => { setShowHistory(false); setFilterStatus('pending'); }}
                   className={cn(
-                    "flex-shrink-0 w-28 md:w-auto bg-white/5 rounded-2xl p-3 md:p-4 border transition-all active:scale-95",
-                    filterStatus === 'pending' && !showHistory ? "border-orange-400 ring-1 ring-orange-400/30 bg-orange-400/5" : "border-white/5"
+                    "app-card-surface rounded-xl p-3 border transition-all active:scale-95",
+                    filterStatus === 'pending' && !showHistory ? "border-orange-400 ring-2 ring-orange-400/30 bg-orange-400/10" : "border-white/10"
                   )}
                 >
-                  <div className="flex flex-col items-center md:flex-row md:justify-between md:mb-2 gap-1">
-                    <div className="w-8 h-8 bg-orange-400/10 rounded-lg flex items-center justify-center">
-                      <AlertCircle className="w-4 h-4 md:w-5 md:h-5 text-orange-400" />
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="w-10 h-10 bg-orange-400/20 rounded-lg flex items-center justify-center">
+                      <AlertCircle className="w-5 h-5 text-orange-400" />
                     </div>
-                    <span className="text-xl md:text-2xl font-bold tracking-tight">{stats.pending}</span>
+                    <span className="text-2xl font-bold">{stats.pending}</span>
                   </div>
-                  <p className="text-[10px] md:text-sm text-gray-500 font-bold uppercase tracking-widest text-center md:text-left mt-1">Fila</p>
+                  <p className="text-xs text-gray-400 font-semibold">FILA</p>
                 </button>
                 <button 
                   onClick={() => { 
@@ -1428,17 +1479,17 @@ ${loginUrl}
                     }
                   }}
                   className={cn(
-                    "flex-shrink-0 w-28 md:w-auto bg-white/5 rounded-2xl p-3 md:p-4 border transition-all active:scale-95",
-                    showHistory ? "border-green-400 ring-1 ring-green-400/30 bg-green-400/5" : "border-white/5"
+                    "app-card-surface rounded-xl p-3 border transition-all active:scale-95",
+                    showHistory ? "border-green-400 ring-2 ring-green-400/30 bg-green-400/10" : "border-white/10"
                   )}
                 >
-                  <div className="flex flex-col items-center md:flex-row md:justify-between md:mb-2 gap-1">
-                    <div className="w-8 h-8 bg-green-400/10 rounded-lg flex items-center justify-center">
-                      <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-green-400" />
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="w-10 h-10 bg-green-400/20 rounded-lg flex items-center justify-center">
+                      <CheckCircle className="w-5 h-5 text-green-400" />
                     </div>
-                    <span className="text-xl md:text-2xl font-bold tracking-tight">{stats.completed}</span>
+                    <span className="text-2xl font-bold">{stats.completed}</span>
                   </div>
-                  <p className="text-[10px] md:text-sm text-gray-500 font-bold uppercase tracking-widest text-center md:text-left mt-1">Histórico</p>
+                  <p className="text-xs text-gray-400 font-semibold">CONCLUÍDOS</p>
                 </button>
               </div>
 
@@ -1593,49 +1644,54 @@ ${loginUrl}
                 aria-label="Editar foto do veículo"
               />
 
-              {/* Destaque do Veículo Selecionado - Compacto Mobile */}
+              {/* Veículo Selecionado - Destaque Premium */}
               {isSelectedProjectInFiltered && selectedProject && (
-                <div className="bg-primary/10 border border-primary/30 rounded-xl p-3 mb-3 app-card-surface">
-                  <div className="flex items-center gap-3">
+                <div className="bg-gradient-to-r from-primary/20 to-primary/5 border-2 border-primary rounded-2xl p-4 app-card-surface shadow-lg shadow-primary/10">
+                  <div className="flex items-center gap-3 mb-3">
                     <div 
-                      className="w-12 h-12 rounded-lg overflow-hidden bg-carbon-900 flex-shrink-0 border border-primary/30 relative group cursor-pointer"
+                      className="w-16 h-16 rounded-xl overflow-hidden bg-carbon-900 flex-shrink-0 border-2 border-primary relative group cursor-pointer"
                       onClick={() => editVehiclePhotoRef.current?.click()}
                     >
                       {selectedProject.vehicle.images?.[0] ? (
                         <img src={selectedProject.vehicle.images[0]} alt={selectedProject.vehicle.model} className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center"><Car className="w-5 h-5 text-gray-500" /></div>
+                        <div className="w-full h-full flex items-center justify-center"><Car className="w-6 h-6 text-gray-500" /></div>
                       )}
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Edit3 className="w-4 h-4 text-white" />
+                      </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 mb-0.5">
-                        <span className="bg-primary text-black px-1.5 py-0.5 rounded text-[9px] font-bold">✓</span>
-                        <span className={cn("px-1.5 py-0.5 rounded text-[9px] font-bold", statusConfig[selectedProject.status]?.color, "text-white")}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="bg-primary text-black px-2 py-0.5 rounded-md text-xs font-bold">✓ SELECIONADO</span>
+                        <span className={cn("px-2 py-0.5 rounded-md text-xs font-bold", statusConfig[selectedProject.status]?.color, "text-white")}>
                           {statusConfig[selectedProject.status]?.label}
                         </span>
                       </div>
-                      <h3 className="text-sm font-bold text-white truncate">{selectedProject.user.name}</h3>
-                      <p className="text-[10px] text-gray-400 truncate">
-                        {selectedProject.vehicle.brand} {selectedProject.vehicle.model} • 
-                        <span className="font-mono text-primary ml-1">{selectedProject.vehicle.plate}</span>
+                      <h3 className="text-base font-bold text-white">{selectedProject.user.name}</h3>
+                      <p className="text-sm text-gray-300 font-medium">
+                        {selectedProject.vehicle.brand} {selectedProject.vehicle.model}
+                      </p>
+                      <p className="text-xs text-gray-400 font-mono">
+                        PLACA: <span className="text-primary font-bold">{selectedProject.vehicle.plate}</span>
                       </p>
                     </div>
-                    <div className="flex gap-1.5 flex-shrink-0">
-                      <button
-                        onClick={() => handleSetActiveTab('timeline')}
-                        className="p-2 bg-primary text-black rounded-lg"
-                        title="Timeline"
-                      >
-                        <Clock className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => { setFoundProject(selectedProject); setShowQRLookup(true); }}
-                        className="p-2 bg-blue-500 text-white rounded-lg"
-                        title="QR Codes"
-                      >
-                        <QrCode className="w-4 h-4" />
-                      </button>
-                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => handleSetActiveTab('timeline')}
+                      className="flex items-center justify-center gap-2 bg-primary text-black py-2.5 rounded-xl font-bold hover:bg-primary/90 transition-colors"
+                    >
+                      <Clock className="w-4 h-4" />
+                      <span>Timeline</span>
+                    </button>
+                    <button
+                      onClick={() => handleSetActiveTab('photos')}
+                      className="flex items-center justify-center gap-2 bg-blue-500 text-white py-2.5 rounded-xl font-bold hover:bg-blue-600 transition-colors"
+                    >
+                      <Image className="w-4 h-4" />
+                      <span>Fotos</span>
+                    </button>
                   </div>
                 </div>
               )}
@@ -4858,6 +4914,16 @@ ${loginUrl}
         userAvatar={user?.avatar}
         chatUnreadCount={chatUnreadCount}
       />
+
+      {/* Wizard Criar Projeto */}
+      {showNewCarModal && (
+        <CreateProjectWizard
+          onClose={() => setShowNewCarModal(false)}
+          onCreate={handleWizardCreate}
+          vehiclePhoto={vehiclePhoto}
+          onPhotoChange={setVehiclePhoto}
+        />
+      )}
     </div>
   )
 }

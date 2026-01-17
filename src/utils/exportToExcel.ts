@@ -38,16 +38,27 @@ export function exportToExcel<T extends Record<string, unknown>>(
   const BOM = '\uFEFF'
   const csvContent = BOM + headers + '\n' + rows.join('\n')
 
-  // Criar blob e download
+  // Criar blob e download com nome descritivo
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
-  link.download = `${filename}_${new Date().toISOString().split('T')[0]}.csv`
+  
+  // Nome descritivo: elite_track_projetos_2026-01-17.csv
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+  const day = String(today.getDate()).padStart(2, '0')
+  const descriptiveFilename = `elite_track_${filename}_${year}-${month}-${day}.csv`
+  
+  link.download = descriptiveFilename
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
   URL.revokeObjectURL(url)
+  
+  // Feedback ao usuário
+  console.log(`✅ Relatório baixado: ${descriptiveFilename}`)
 }
 
 /**

@@ -106,6 +106,10 @@ export function Dashboard() {
   }
 
   const currentStep = selectedProject.timeline.find(step => step.status === 'in_progress')
+  const totalSteps = selectedProject.timeline?.length || 0
+  const completedSteps = selectedProject.timeline.filter(step => step.status === 'completed').length
+  const timelineProgress = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : selectedProject.progress
+  const displayProgress = typeof selectedProject.progress === 'number' ? selectedProject.progress : timelineProgress
 
   const qrCodeUrl = `${getAppBaseUrl()}/verify/${selectedProject.id}`
 
@@ -221,84 +225,87 @@ export function Dashboard() {
         {/* Vehicle Selector for multiple vehicles */}
         {userProjects.length > 1 && (
           <div className="max-w-7xl mx-auto px-6 pt-4 app-mobile-shell">
-            <button
-              onClick={() => setShowVehicleSelector(!showVehicleSelector)}
-              className="w-full flex items-center justify-between p-3 rounded-xl glass-effect"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg overflow-hidden">
-                  <img
-                    src={selectedProject.vehicle.images[0]}
-                    alt={selectedProject.vehicle.model}
-                    className="w-full h-full object-cover"
-                  />
+            <div className="relative">
+              <button
+                onClick={() => setShowVehicleSelector(!showVehicleSelector)}
+                className="w-full app-card-surface border border-white/5 rounded-2xl flex items-center justify-between p-4 transition-all hover:border-primary/40"
+              >
+                <div className="flex items-center gap-3 text-left">
+                  <div className="w-12 h-12 rounded-xl overflow-hidden border border-white/10">
+                    <img
+                      src={selectedProject.vehicle.images[0]}
+                      alt={selectedProject.vehicle.model}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold tracking-tight">{selectedProject.vehicle.brand} {selectedProject.vehicle.model}</p>
+                    <p className="text-xs text-gray-400">Placa {selectedProject.vehicle.plate}</p>
+                  </div>
                 </div>
-                <div className="text-left">
-                  <p className="font-semibold text-sm">
-                    {selectedProject.vehicle.brand} {selectedProject.vehicle.model}
-                  </p>
-                  <p className="text-xs text-gray-400">{selectedProject.vehicle.plate}</p>
+                <div className="flex items-center gap-2">
+                  <Badge variant={selectedProject.status === 'completed' ? 'success' : 'info'} size="sm">
+                    {displayProgress}%
+                  </Badge>
+                  <span className="text-[10px] uppercase tracking-widest text-gray-500">{selectedProject.status === 'completed' ? 'Concluído' : 'Ativo'}</span>
+                  <ChevronDown className={cn('w-5 h-5 transition-transform text-primary', showVehicleSelector && 'rotate-180')} />
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant={selectedProject.status === 'completed' ? 'success' : 'info'} size="sm">
-                  {selectedProject.progress}%
-                </Badge>
-                <ChevronDown className={cn('w-4 h-4 transition-transform text-primary', showVehicleSelector && 'rotate-180')} />
-              </div>
-            </button>
+              </button>
 
-            {showVehicleSelector && (
-              <div className="mt-2 space-y-2">
-                {userProjects.map((project) => (
+              {showVehicleSelector && (
+                <div className="mt-3 space-y-2 rounded-2xl border border-white/10 bg-black/70 backdrop-blur-xl p-3">
+                  {userProjects.map((project) => (
+                    <button
+                      key={project.id}
+                      onClick={() => {
+                        setSelectedProject(project)
+                        setShowVehicleSelector(false)
+                      }}
+                      className={cn(
+                        'w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left',
+                        project.id === selectedProject.id
+                          ? 'bg-primary/10 border border-primary/40'
+                          : 'bg-white/5 border border-white/10 hover:border-primary/30'
+                      )}
+                    >
+                      <div className="w-12 h-10 rounded-lg overflow-hidden border border-white/10">
+                        <img
+                          src={project.vehicle.images[0]}
+                          alt={project.vehicle.model}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold">{project.vehicle.brand} {project.vehicle.model}</p>
+                        <p className="text-xs text-gray-400">{project.vehicle.plate} • {project.vehicle.blindingLevel}</p>
+                      </div>
+                      <div className="flex flex-col items-end text-xs">
+                        <Badge variant={project.status === 'completed' ? 'success' : 'info'} size="sm">
+                          {project.progress}%
+                        </Badge>
+                        <span className="text-[10px] text-gray-500 mt-1 uppercase tracking-widest">{project.status === 'completed' ? 'Finalizado' : 'Ativo'}</span>
+                      </div>
+                    </button>
+                  ))}
+
                   <button
-                    key={project.id}
                     onClick={() => {
-                      setSelectedProject(project)
                       setShowVehicleSelector(false)
+                      setShowAddVehicleModal(true)
                     }}
-                    className={cn(
-                      'w-full flex items-center gap-3 p-3 rounded-xl border transition-all',
-                      project.id === selectedProject.id
-                        ? 'border-primary/50 bg-primary/10'
-                        : 'border-white/10 bg-white/5'
-                    )}
+                    className="w-full flex items-center gap-3 p-3 rounded-xl border border-dashed border-primary/50 bg-primary/5 hover:bg-primary/10 transition-all"
                   >
-                    <div className="w-12 h-10 rounded-lg overflow-hidden">
-                      <img
-                        src={project.vehicle.images[0]}
-                        alt={project.vehicle.model}
-                        className="w-full h-full object-cover"
-                      />
+                    <div className="w-12 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                      <Plus className="w-5 h-5 text-primary" />
                     </div>
                     <div className="flex-1 text-left">
-                      <p className="font-medium text-sm">{project.vehicle.brand} {project.vehicle.model}</p>
-                      <p className="text-xs text-gray-400">{project.vehicle.plate} • {project.vehicle.blindingLevel}</p>
+                      <p className="font-medium text-sm text-primary">Cadastrar novo veículo</p>
+                      <p className="text-xs text-gray-400">Utilize QR Code ou link recebido</p>
                     </div>
-                    <Badge variant={project.status === 'completed' ? 'success' : 'info'} size="sm">
-                      {project.progress}%
-                    </Badge>
                   </button>
-                ))}
-                
-                {/* Botão para adicionar novo veículo */}
-                <button
-                  onClick={() => {
-                    setShowVehicleSelector(false)
-                    setShowAddVehicleModal(true)
-                  }}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl border border-dashed border-primary/50 bg-primary/5 hover:bg-primary/10 transition-all"
-                >
-                  <div className="w-12 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-                    <Plus className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="font-medium text-sm text-primary">Cadastrar Novo Veículo</p>
-                    <p className="text-xs text-gray-400">Via QR Code ou link recebido</p>
-                  </div>
-                </button>
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -346,10 +353,10 @@ export function Dashboard() {
                       <h2 className="text-base sm:text-xl font-bold">Progresso</h2>
                       <p className="text-[10px] sm:text-xs text-gray-500">Status da blindagem</p>
                     </div>
-                    <div className="text-primary text-xl sm:text-3xl font-bold tabular-nums">{selectedProject.progress}%</div>
+                    <div className="text-primary text-xl sm:text-3xl font-bold tabular-nums">{displayProgress}%</div>
                   </div>
                   <div className="relative">
-                    <ProgressBar progress={selectedProject.progress} className="mb-4" />
+                    <ProgressBar progress={displayProgress} className="mb-4" />
                     <div className="grid grid-cols-2 gap-3">
                       <div className="bg-white/5 p-3 rounded-lg border border-white/5 text-center">
                         <div className="text-lg font-bold text-primary">{daysElapsed}</div>

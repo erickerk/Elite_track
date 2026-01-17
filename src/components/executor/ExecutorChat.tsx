@@ -96,51 +96,51 @@ export function ExecutorChat({ onBack }: ExecutorChatProps) {
   }
 
   return (
-    <div className="h-[calc(100vh-200px)] flex bg-carbon-900 rounded-3xl overflow-hidden border border-white/10">
+    <div className="h-[calc(100vh-160px)] md:h-[calc(100vh-200px)] flex bg-carbon-900 rounded-2xl md:rounded-3xl overflow-hidden border border-white/10">
       {/* Conversations List */}
       <div className={cn(
-        "w-full md:w-80 border-r border-white/10 flex flex-col",
+        "w-full md:w-80 lg:w-96 border-r border-white/10 flex flex-col bg-carbon-900",
         selectedConversation && "hidden md:flex"
       )}>
         {/* Header */}
-        <div className="p-4 border-b border-white/10">
-          <div className="flex items-center justify-between mb-4">
+        <div className="p-3 md:p-4 border-b border-white/10">
+          <div className="flex items-center justify-between gap-2 mb-3">
             {onBack && (
               <button
                 onClick={onBack}
-                className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center hover:bg-white/20 transition-colors md:hidden"
+                className="w-9 h-9 bg-white/10 rounded-xl flex items-center justify-center hover:bg-white/20 transition-colors md:hidden flex-shrink-0"
                 aria-label="Voltar"
               >
-                <ArrowLeft className="w-5 h-5" />
+                <ArrowLeft className="w-4 h-4" />
               </button>
             )}
-            <h2 className="text-lg font-bold">Mensagens</h2>
+            <h2 className="text-base md:text-lg font-bold flex-1">Conversas</h2>
             <button
               onClick={() => setShowNewConversation(!showNewConversation)}
-              className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center hover:bg-primary/30 transition-colors"
+              className="w-9 h-9 bg-primary/20 rounded-xl flex items-center justify-center hover:bg-primary/30 transition-colors flex-shrink-0"
               title="Nova conversa"
               aria-label="Iniciar nova conversa"
             >
-              {showNewConversation ? <X className="w-5 h-5 text-primary" /> : <Plus className="w-5 h-5 text-primary" />}
+              {showNewConversation ? <X className="w-4 h-4 text-primary" /> : <Plus className="w-4 h-4 text-primary" />}
             </button>
           </div>
           
           {/* Seletor de cliente para nova conversa */}
           {showNewConversation && (
-            <div className="mb-4 p-3 bg-primary/10 rounded-xl border border-primary/30">
-              <p className="text-sm text-primary font-medium mb-2">Selecione um cliente:</p>
+            <div className="mb-3 p-3 bg-primary/10 rounded-xl border border-primary/30">
+              <p className="text-xs md:text-sm text-primary font-semibold mb-2">⚡ Iniciar nova conversa:</p>
               {clientsWithoutConversation.length === 0 ? (
-                <p className="text-xs text-gray-400">Todos os clientes já têm conversa</p>
+                <p className="text-xs text-gray-400">Todos os clientes ativos já possuem conversa.</p>
               ) : (
-                <div className="max-h-40 overflow-y-auto space-y-2">
+                <div className="max-h-32 overflow-y-auto space-y-1.5">
                   {clientsWithoutConversation.map(project => (
                     <button
                       key={project.id}
-                      onClick={() => handleStartNewConversation(project.id)}
-                      className="w-full p-2 bg-white/5 hover:bg-white/10 rounded-lg text-left transition-colors"
+                      onClick={() => void handleStartNewConversation(project.id)}
+                      className="w-full p-2 bg-white/5 hover:bg-white/10 rounded-lg text-left transition-colors active:scale-95"
                     >
-                      <p className="font-medium text-sm">{project.user.name}</p>
-                      <p className="text-xs text-gray-400">{project.vehicle.brand} {project.vehicle.model}</p>
+                      <p className="font-semibold text-xs md:text-sm truncate">{project.user.name}</p>
+                      <p className="text-[10px] md:text-xs text-gray-400 truncate">{project.vehicle.brand} {project.vehicle.model} • {project.vehicle.plate}</p>
                     </button>
                   ))}
                 </div>

@@ -222,28 +222,43 @@ export function Chat() {
 
       {/* Main Content */}
       <main className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black">
-        {/* Navigation Tabs */}
+        {/* Navigation Tabs - compact premium */}
         <section className="py-4">
           <div className="max-w-7xl mx-auto px-6">
-            <div className="flex justify-between items-center flex-wrap gap-4">
-              <div className="glass-effect cinematic-blur rounded-full p-1 inline-flex">
-                <button onClick={() => navigate('/timeline')} className="px-6 py-3 rounded-full text-white/60 hover:text-white transition-colors whitespace-nowrap">Timeline</button>
-                <button onClick={() => navigate('/gallery')} className="px-6 py-3 rounded-full text-white/60 hover:text-white transition-colors whitespace-nowrap">Galeria de Mídia</button>
-                <button onClick={() => navigate('/laudo')} className="px-6 py-3 rounded-full text-white/60 hover:text-white transition-colors whitespace-nowrap">Documentos</button>
-                <button className="px-6 py-3 rounded-full bg-primary text-black font-semibold whitespace-nowrap">Suporte</button>
+            <div className="glass-effect cinematic-blur rounded-2xl px-3 py-2 flex items-center justify-between gap-3 border border-white/10">
+              <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+                {[
+                  { label: 'Timeline', to: '/timeline' },
+                  { label: 'Galeria', to: '/gallery' },
+                  { label: 'Documentos', to: '/laudo' },
+                  { label: 'Suporte', to: '/chat', active: true },
+                ].map((item) => (
+                  <button
+                    key={item.label}
+                    onClick={() => navigate(item.to)}
+                    className={cn(
+                      'px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap border',
+                      item.active
+                        ? 'bg-primary text-black border-primary'
+                        : 'bg-white/5 text-white/70 border-white/10 hover:border-primary/40 hover:text-white'
+                    )}
+                  >
+                    {item.label}
+                  </button>
+                ))}
               </div>
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-green-400 font-semibold text-sm">Online</span>
+              <div className="flex items-center gap-3 text-xs sm:text-sm text-gray-300">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <span className="text-green-400 font-semibold">Online</span>
                 </div>
                 <a 
                   href={getPhoneLink()} 
-                  className="flex items-center space-x-2 hover:text-primary transition-colors"
+                  className="flex items-center gap-2 hover:text-primary transition-colors"
                   title="Ligar para Elite Blindagens"
                 >
                   <i className="ri-phone-line text-primary text-sm"></i>
-                  <span className="text-white text-sm hover:text-primary">{COMPANY_INFO.phoneFormatted}</span>
+                  <span className="text-white/80 hover:text-primary">{COMPANY_INFO.phoneFormatted}</span>
                 </a>
               </div>
             </div>

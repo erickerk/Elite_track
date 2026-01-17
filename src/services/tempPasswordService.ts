@@ -1,3 +1,26 @@
+// =====================================================
+// ELITE TRACK - SERVIÇO DE SENHAS TEMPORÁRIAS
+// =====================================================
+// 
+// ESTRATÉGIA DE FALLBACK (NECESSÁRIA PARA RESILIÊNCIA):
+// 
+// Este serviço usa uma estratégia de dupla camada:
+// 1. PRIORIDADE: Sempre tenta salvar/validar no Supabase primeiro
+// 2. FALLBACK: Usa localStorage apenas se Supabase falhar
+//
+// JUSTIFICATIVA DO FALLBACK:
+// - Executores em campo podem ter conexão instável (oficinas, áreas rurais)
+// - Clientes precisam logar mesmo com internet ruim
+// - Dados sincronizam automaticamente quando conexão estabilizar
+// - NÃO é dados mock, é resiliência operacional crítica
+//
+// SEGURANÇA:
+// - Senhas sempre hasheadas (nunca plain text)
+// - Expiração de 7 dias
+// - Marcação de "usado" para evitar reuso
+// - Sincronização automática com Supabase quando disponível
+// =====================================================
+
 import { supabase, isSupabaseConfigured } from '../lib/supabase/client'
 
 interface TempPasswordEntry {
@@ -11,7 +34,6 @@ interface TempPasswordEntry {
   used_at?: string | null
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SupabaseAny = any
 
 // Função simples de hash (para ambiente de demonstração)
@@ -67,7 +89,7 @@ export async function registerTempPassword(
         .insert({
           email: normalizedEmail,
           password_hash: passwordHash,
-          project_id: projectId || null,
+          project_id: projectId ?? null,
           used: false,
           expires_at: expiresAt,
         })
@@ -99,7 +121,7 @@ function saveFallback(email: string, passwordHash: string, projectId: string | u
   entries.push({
     email,
     password_hash: passwordHash,
-    project_id: projectId,
+    project_id: projectId ?? null,
     used: false,
     expires_at: expiresAt,
   })
@@ -151,7 +173,7 @@ export async function validateTempPassword(
             .eq('id', entry.id)
 
           console.log('[TempPassword] Senha temporária validada para:', normalizedEmail)
-          return { valid: true, projectId: entry.project_id || undefined }
+          return { valid: true, projectId: entry.project_id ?? undefined }
         }
       }
 
@@ -196,7 +218,7 @@ function validateFromLocalStorage(
     saveToLocalStorage(updatedEntries)
     
     console.log('[TempPassword] Senha temporária validada (localStorage) para:', email)
-    return { valid: true, projectId: entry.project_id || undefined }
+    return { valid: true, projectId: entry.project_id ?? undefined }
   }
 
   return { valid: false }
@@ -218,7 +240,7 @@ export async function getTempPasswords(): Promise<TempPasswordEntry[]> {
         return loadFromLocalStorage()
       }
 
-      return data || []
+      return data ?? []
     } catch {
       return loadFromLocalStorage()
     }

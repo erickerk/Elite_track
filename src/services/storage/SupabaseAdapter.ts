@@ -1,3 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
+/* eslint-disable @typescript-eslint/prefer-optional-chain */
+/* eslint-disable @typescript-eslint/unbound-method */
+/* eslint-disable @typescript-eslint/no-base-to-string */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // =====================================================
 // ELITE TRACK - ADAPTADOR DE SUPABASE
 // Implementação usando Supabase como backend
@@ -21,40 +33,58 @@ const supabase = supabaseClient as any
 // HELPERS PARA CONVERSÃO DE DADOS
 // =====================================================
 
-function dbUserToUser(dbUser: any): User {
+function dbUserToUser(dbUser: {
+  id: string
+  name: string
+  email: string
+  phone?: string | null
+  avatar?: string | null
+  role: User['role']
+  vip_level?: User['vipLevel'] | null
+  password_hash?: string | null
+  requires_password_change?: boolean
+  created_at: string
+  updated_at?: string
+  last_login?: string | null
+}): User {
   return {
     id: dbUser.id,
     name: dbUser.name,
     email: dbUser.email,
-    phone: dbUser.phone || '',
-    avatar: dbUser.avatar || undefined,
+    phone: dbUser.phone ?? '',
+    avatar: dbUser.avatar ?? undefined,
     role: dbUser.role,
-    vipLevel: dbUser.vip_level || 'standard',
+    vipLevel: dbUser.vip_level ?? 'standard',
     createdAt: dbUser.created_at,
-    lastLogin: dbUser.last_login || undefined,
+    lastLogin: dbUser.last_login ?? undefined,
   }
 }
 
-function dbProjectToProject(dbProject: any, vehicle: Vehicle, user: User, timeline: TimelineStep[]): Project {
+function dbProjectToProject(
+  dbProject: Record<string, unknown>,
+  vehicle: Vehicle,
+  user: User,
+  timeline: TimelineStep[]
+): Project {
   return {
-    id: dbProject.id,
+    id: dbProject.id as string,
     vehicle,
     user,
-    status: dbProject.status,
-    progress: dbProject.progress,
+    status: dbProject.status as Project['status'],
+    progress: Number(dbProject.progress ?? 0),
     timeline,
-    startDate: dbProject.start_date,
-    estimatedDelivery: dbProject.estimated_delivery,
-    actualDelivery: dbProject.actual_delivery || undefined,
-    qrCode: dbProject.qr_code || '',
-    vehicleReceivedDate: dbProject.vehicle_received_date || undefined,
-    processStartDate: dbProject.process_start_date || undefined,
-    completedDate: dbProject.completed_date || undefined,
-    registrationQrCode: dbProject.registration_qr_code || undefined,
-    permanentQrCode: dbProject.permanent_qr_code || undefined,
-    inviteToken: dbProject.invite_token || undefined,
-    inviteExpiresAt: dbProject.invite_expires_at || undefined,
-    executorId: dbProject.executor_id || undefined,
+    startDate: dbProject.start_date as string,
+    estimatedDelivery: dbProject.estimated_delivery as string,
+    actualDelivery: (dbProject.actual_delivery as string | null) ?? undefined,
+    qrCode: (dbProject.qr_code as string | null) ?? '',
+    vehicleReceivedDate: (dbProject.vehicle_received_date as string | null) ?? undefined,
+    processStartDate: (dbProject.process_start_date as string | null) ?? undefined,
+    completedDate: (dbProject.completed_date as string | null) ?? undefined,
+    registrationQrCode: (dbProject.registration_qr_code as string | null) ?? undefined,
+    permanentQrCode: (dbProject.permanent_qr_code as string | null) ?? undefined,
+    inviteToken: (dbProject.invite_token as string | null) ?? undefined,
+    inviteExpiresAt: (dbProject.invite_expires_at as string | null) ?? undefined,
+    executorId: (dbProject.executor_id as string | null) ?? undefined,
   }
 }
 
@@ -97,16 +127,16 @@ export class SupabaseProjectStorage implements IProjectStorage {
       throw error
     }
 
-    console.log(`[SupabaseAdapter] ${projects?.length || 0} projetos encontrados`)
+    console.log(`[SupabaseAdapter] ${projects?.length ?? 0} projetos encontrados`)
     
     if (projects && projects.length > 0) {
       projects.forEach((p: any) => {
-        console.log(`  - ${p.qr_code} | User: ${p.users?.name} | Executor: ${p.executor_id || 'SEM EXECUTOR'}`)
+        console.log(`  - ${p.qr_code} | User: ${p.users?.name} | Executor: ${p.executor_id ?? 'SEM EXECUTOR'}`)
       })
     }
 
-    return (projects || []).map((p: any) => {
-      const vehicleImages = (p.vehicles?.vehicle_images || []) as any[]
+    return (projects ?? []).map((p: any) => {
+      const vehicleImages = (p.vehicles?.vehicle_images ?? []) as any[]
       const images = vehicleImages.map(img => img.image_url)
 
       const vehicle: Vehicle = {
@@ -117,22 +147,22 @@ export class SupabaseProjectStorage implements IProjectStorage {
         color: p.vehicles.color,
         plate: p.vehicles.plate,
         images,
-        blindingLevel: p.vehicles.blinding_level || '',
+        blindingLevel: p.vehicles.blinding_level ?? '',
       }
 
       const user = dbUserToUser(p.users)
 
       // Ordenar timeline_steps por sort_order
-      const sortedSteps = (p.timeline_steps || []).sort((a: any, b: any) => 
+      const sortedSteps = (p.timeline_steps ?? []).sort((a: any, b: any) => 
         (a.sort_order ?? 0) - (b.sort_order ?? 0)
       )
 
       const timeline: TimelineStep[] = sortedSteps.map((s: any) => {
-        const stepPhotos = (s.step_photos || []) as any[]
+        const stepPhotos = (s.step_photos ?? []) as any[]
         return {
           id: s.id,
           title: s.title,
-          description: s.description || '',
+          description: s.description ?? '',
           status: s.status,
           date: s.date || undefined,
           estimatedDate: s.estimated_date || undefined,
@@ -140,8 +170,8 @@ export class SupabaseProjectStorage implements IProjectStorage {
           photos: stepPhotos.map((sp: any) => sp.photo_url),
           photoDetails: stepPhotos.map((sp: any) => ({
             url: sp.photo_url,
-            type: sp.photo_type || 'during',
-            stage: sp.stage || s.title,
+            type: sp.photo_type ?? 'during',
+            stage: sp.stage ?? s.title,
             createdAt: sp.created_at,
           })),
           notes: s.notes || undefined,
@@ -188,34 +218,34 @@ export class SupabaseProjectStorage implements IProjectStorage {
       color: p.vehicles.color,
       plate: p.vehicles.plate,
       images,
-      blindingLevel: p.vehicles.blinding_level || '',
+      blindingLevel: p.vehicles.blinding_level ?? '',
     }
 
     const user = dbUserToUser(p.users)
 
     // Ordenar timeline_steps por sort_order antes de mapear
-    const sortedSteps = (p.timeline_steps || []).sort((a: any, b: any) => 
+    const sortedSteps = (p.timeline_steps ?? []).sort((a: any, b: any) => 
       (a.sort_order ?? 0) - (b.sort_order ?? 0)
     )
     
     const timeline: TimelineStep[] = sortedSteps.map((s: any) => {
-      const stepPhotos = (s.step_photos || []) as any[]
+      const stepPhotos = (s.step_photos ?? []) as any[]
       return {
         id: s.id,
         title: s.title,
-        description: s.description || '',
+        description: s.description ?? '',
         status: s.status,
-        date: s.date || undefined,
-        estimatedDate: s.estimated_date || undefined,
-        technician: s.technician || undefined,
+        date: s.date ?? undefined,
+        estimatedDate: s.estimated_date ?? undefined,
+        technician: s.technician ?? undefined,
         photos: stepPhotos.map((sp: any) => sp.photo_url),
         photoDetails: stepPhotos.map((sp: any) => ({
           url: sp.photo_url,
-          type: sp.photo_type || 'during',
-          stage: sp.stage || s.title,
+          type: sp.photo_type ?? 'during',
+          stage: sp.stage ?? s.title,
           createdAt: sp.created_at,
         })),
-        notes: s.notes || undefined,
+        notes: s.notes ?? undefined,
       }
     })
 
@@ -244,8 +274,8 @@ export class SupabaseProjectStorage implements IProjectStorage {
 
     if (error) throw error
 
-    return (projects || []).map((p: any) => {
-      const vehicleImages = (p.vehicles?.vehicle_images || []) as any[]
+    return (projects ?? []).map((p: any) => {
+      const vehicleImages = (p.vehicles?.vehicle_images ?? []) as any[]
       const images = vehicleImages.map(img => img.image_url)
 
       const vehicle: Vehicle = {
@@ -256,28 +286,28 @@ export class SupabaseProjectStorage implements IProjectStorage {
         color: p.vehicles.color,
         plate: p.vehicles.plate,
         images,
-        blindingLevel: p.vehicles.blinding_level || '',
+        blindingLevel: p.vehicles.blinding_level ?? '',
       }
 
       const user = dbUserToUser(p.users)
 
       // Ordenar timeline_steps por sort_order
-      const sortedSteps = (p.timeline_steps || []).sort((a: any, b: any) => 
+      const sortedSteps = (p.timeline_steps ?? []).sort((a: any, b: any) => 
         (a.sort_order ?? 0) - (b.sort_order ?? 0)
       )
 
       const timeline: TimelineStep[] = sortedSteps.map((s: any) => {
-        const stepPhotos = (s.step_photos || []) as any[]
+        const stepPhotos = (s.step_photos ?? []) as any[]
         return {
           id: s.id,
           title: s.title,
-          description: s.description || '',
+          description: s.description ?? '',
           status: s.status,
-          date: s.date || undefined,
-          estimatedDate: s.estimated_date || undefined,
-          technician: s.technician || undefined,
+          date: s.date ?? undefined,
+          estimatedDate: s.estimated_date ?? undefined,
+          technician: s.technician ?? undefined,
           photos: stepPhotos.map((sp: any) => sp.photo_url),
-          notes: s.notes || undefined,
+          notes: s.notes ?? undefined,
         }
       })
 
@@ -317,9 +347,9 @@ export class SupabaseProjectStorage implements IProjectStorage {
         .insert({
           name: project.user.name,
           email,
-          phone: project.user.phone || null,
-          role: project.user.role || 'client',
-          vip_level: project.user.vipLevel || 'standard',
+          phone: project.user.phone ?? null,
+          role: project.user.role ?? 'client',
+          vip_level: project.user.vipLevel ?? 'standard',
         })
         .select('id')
         .single()

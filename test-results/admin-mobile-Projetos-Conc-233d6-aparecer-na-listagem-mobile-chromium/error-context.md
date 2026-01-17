@@ -1,0 +1,123 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e5]:
+  - banner [ref=e6]:
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - button "Abrir menu" [ref=e10] [cursor=pointer]:
+          - img [ref=e11]
+        - heading "Projetos" [level=2] [ref=e14]
+        - generic [ref=e15]:
+          - button "Ir para Projetos" [ref=e16] [cursor=pointer]:
+            - img [ref=e17]
+            - generic [ref=e20]: Projetos
+          - button "Ir para Timeline" [ref=e21] [cursor=pointer]:
+            - img [ref=e22]
+            - generic [ref=e25]: Timeline
+          - button "Ir para Fotos" [ref=e26] [cursor=pointer]:
+            - img [ref=e27]
+            - generic [ref=e31]: Fotos
+          - button "Ir para Chat" [ref=e32] [cursor=pointer]:
+            - img [ref=e33]
+            - generic [ref=e35]: Chat
+      - generic [ref=e36]:
+        - button "Notificações" [ref=e38] [cursor=pointer]:
+          - img [ref=e39]
+        - button "Sair do sistema" [ref=e42] [cursor=pointer]:
+          - img [ref=e43]
+  - navigation [ref=e46]:
+    - generic [ref=e47]:
+      - button "Projetos" [ref=e48] [cursor=pointer]:
+        - img [ref=e50]
+        - generic [ref=e53]: Projetos
+      - button "Timeline" [ref=e54] [cursor=pointer]:
+        - img [ref=e56]
+        - generic [ref=e59]: Timeline
+      - button "Chat" [ref=e60] [cursor=pointer]:
+        - img [ref=e62]
+        - generic [ref=e64]: Chat
+      - button "Clientes" [ref=e65] [cursor=pointer]:
+        - img [ref=e67]
+        - generic [ref=e72]: Clientes
+  - generic [ref=e73]:
+    - button "Buscar QR por Placa" [ref=e74] [cursor=pointer]:
+      - img [ref=e75]
+    - button "Escanear QR Code" [ref=e78] [cursor=pointer]:
+      - img [ref=e79]
+  - main [ref=e85]:
+    - generic [ref=e87]:
+      - generic [ref=e88]:
+        - button "1 TOTAL" [ref=e89] [cursor=pointer]:
+          - generic [ref=e90]:
+            - img [ref=e92]
+            - generic [ref=e97]: "1"
+          - paragraph [ref=e98]: TOTAL
+        - button "0 ATIVOS" [ref=e99] [cursor=pointer]:
+          - generic [ref=e100]:
+            - img [ref=e102]
+            - generic [ref=e105]: "0"
+          - paragraph [ref=e106]: ATIVOS
+        - button "1 FILA" [ref=e107] [cursor=pointer]:
+          - generic [ref=e108]:
+            - img [ref=e110]
+            - generic [ref=e112]: "1"
+          - paragraph [ref=e113]: FILA
+        - button "0 CONCLUÍDOS" [ref=e114] [cursor=pointer]:
+          - generic [ref=e115]:
+            - img [ref=e117]
+            - generic [ref=e120]: "0"
+          - paragraph [ref=e121]: CONCLUÍDOS
+      - generic [ref=e122]:
+        - generic [ref=e123]:
+          - img [ref=e124]
+          - textbox "Buscar projetos" [ref=e127]:
+            - /placeholder: Placa, nome ou código...
+        - generic [ref=e129]:
+          - button "Meus" [ref=e130] [cursor=pointer]
+          - button "Todos" [ref=e131] [cursor=pointer]
+        - generic [ref=e132]:
+          - generic [ref=e133]: "Filtrar por status:"
+          - generic [ref=e134]:
+            - button "Todos (1)" [ref=e135] [cursor=pointer]
+            - button "Pendentes (1)" [ref=e136] [cursor=pointer]
+            - button "Em Andamento (0)" [ref=e137] [cursor=pointer]
+      - button "Novo Projeto" [ref=e139] [cursor=pointer]:
+        - img [ref=e140]
+        - generic [ref=e141]: Novo Projeto
+      - generic [ref=e142]:
+        - generic [ref=e143]:
+          - generic [ref=e144] [cursor=pointer]:
+            - img "Corolla 970" [ref=e145]
+            - img [ref=e147]
+          - generic [ref=e149]:
+            - generic [ref=e150]:
+              - generic [ref=e151]: ✓ SELECIONADO
+              - generic [ref=e152]: Pendente
+            - heading "Cliente Teste 1768408664970" [level=3] [ref=e153]
+            - paragraph [ref=e154]: Toyota Corolla 970
+            - paragraph [ref=e155]: "PLACA: TST-4970"
+        - generic [ref=e156]:
+          - button "Timeline" [ref=e157] [cursor=pointer]:
+            - img [ref=e158]
+            - generic [ref=e161]: Timeline
+          - button "Fotos" [ref=e162] [cursor=pointer]:
+            - img [ref=e163]
+            - generic [ref=e167]: Fotos
+      - generic [ref=e170]:
+        - img "Corolla 970" [ref=e172]
+        - generic [ref=e173]:
+          - generic [ref=e174]:
+            - generic [ref=e175]: Pendente
+            - generic [ref=e176]: "#1b6c"
+          - heading "Cliente Teste 1768408664970" [level=3] [ref=e177]
+          - generic [ref=e178]:
+            - generic [ref=e179]: Toyota Corolla 970
+            - generic [ref=e180]: TST-4970
+          - generic [ref=e184]: 0%
+        - generic [ref=e185]:
+          - button "Timeline" [ref=e186] [cursor=pointer]:
+            - img [ref=e187]
+          - button "Fotos" [ref=e190] [cursor=pointer]:
+            - img [ref=e191]
+```

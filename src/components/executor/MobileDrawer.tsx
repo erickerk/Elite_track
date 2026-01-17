@@ -88,6 +88,7 @@ export function MobileDrawer({
         className={cn(
           "fixed inset-y-0 left-0 w-72 bg-carbon-900 border-r border-white/10 z-50 lg:hidden",
           "transform transition-transform duration-300 ease-out",
+          "flex flex-col",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
