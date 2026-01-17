@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { Modal } from '../components/ui/Modal'
 import { NotificationPanel } from '../components/ui/NotificationPanel'
+import { ProgressBar } from '../components/ui/ProgressBar'
 import { ExecutorChat, ExecutorTimeline, ExecutorPhotos, ClientDetailModal, MobileDrawer } from '../components/executor'
 import { exportToExcel, formatDateBR, formatPhone } from '../utils/exportToExcel'
 import { useAuth } from '../contexts/AuthContext'
@@ -153,6 +154,13 @@ const mobileNavItems = [
   { id: 'timeline' as TabType, label: 'Timeline', icon: Clock },
   { id: 'chat' as TabType, label: 'Chat', icon: MessageCircle },
   { id: 'clients' as TabType, label: 'Clientes', icon: Users },
+]
+
+const quickMenuItems = [
+  { id: 'dashboard' as TabType, label: 'Projetos', icon: Home },
+  { id: 'timeline' as TabType, label: 'Timeline', icon: Clock },
+  { id: 'photos' as TabType, label: 'Fotos', icon: Image },
+  { id: 'chat' as TabType, label: 'Chat', icon: MessageCircle },
 ]
 
 // Todos os itens para sidebar desktop e drawer
@@ -1185,6 +1193,28 @@ ${loginUrl}
                     </p>
                   )}
                 </div>
+
+              {/* Quick Access Menu - Mobile Friendly */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4 lg:hidden">
+                {quickMenuItems.map((item) => {
+                  const Icon = item.icon
+                  const isActive = activeTab === item.id
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => handleSetActiveTab(item.id)}
+                      className={cn(
+                        "flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border transition-all active:scale-95 app-card-surface",
+                        isActive ? "border-primary bg-primary/10" : "border-white/10 bg-white/5"
+                      )}
+                      aria-label={`Ir para ${item.label}`}
+                    >
+                      <Icon className={cn("w-5 h-5", isActive ? "text-primary" : "text-gray-400")}/>
+                      <span className="text-xs font-semibold text-white">{item.label}</span>
+                    </button>
+                  )
+                })}
+              </div>
               </div>
 
               {/* Desktop: Page Title */}
@@ -1336,6 +1366,7 @@ ${loginUrl}
 
         {/* Main Content Area */}
         <main className="flex-1 p-3 md:p-6 overflow-y-auto overflow-x-hidden">
+          <div className="app-mobile-shell space-y-6">
           {/* Dashboard Tab */}
           {activeTab === 'dashboard' && (
             <div className="space-y-4 md:space-y-6">
@@ -1564,7 +1595,7 @@ ${loginUrl}
 
               {/* Destaque do Veículo Selecionado - Compacto Mobile */}
               {isSelectedProjectInFiltered && selectedProject && (
-                <div className="bg-primary/10 border border-primary/30 rounded-xl p-3 mb-3">
+                <div className="bg-primary/10 border border-primary/30 rounded-xl p-3 mb-3 app-card-surface">
                   <div className="flex items-center gap-3">
                     <div 
                       className="w-12 h-12 rounded-lg overflow-hidden bg-carbon-900 flex-shrink-0 border border-primary/30 relative group cursor-pointer"
@@ -1627,7 +1658,7 @@ ${loginUrl}
                       key={project.id}
                       onClick={() => setSelectedProject(project)}
                       className={cn(
-                        "group bg-white/5 rounded-xl p-3 border transition-all active:scale-[0.98] overflow-hidden",
+                        "group bg-white/5 app-card-surface rounded-xl p-3 border transition-all active:scale-[0.98] overflow-hidden",
                         isSelected ? "border-primary/40 bg-primary/5" : "border-white/5"
                       )}
                     >
@@ -1667,12 +1698,8 @@ ${loginUrl}
 
                           {/* Progress bar compacto */}
                           <div className="mt-1.5 flex items-center gap-2">
-                            <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden relative">
-                              {/* eslint-disable-next-line react/forbid-dom-props */}
-                              <div 
-                                className="absolute top-0 left-0 h-full bg-primary transition-all"
-                                style={{ width: `${project.progress}%` } as React.CSSProperties}
-                              />
+                            <div className="flex-1">
+                              <ProgressBar progress={project.progress} className="h-1" />
                             </div>
                             <span className="text-[10px] text-primary font-bold">{project.progress}%</span>
                           </div>
@@ -3010,6 +3037,13 @@ ${loginUrl}
               </div>
             </div>
           )}
+
+          {activeTab !== 'dashboard' && (
+            <div className="space-y-4">
+              {/* conteúdo extra permanece igual, já que blocos internos cuidam dos estilos */}
+            </div>
+          )}
+          </div>
         </main>
       </div>
 

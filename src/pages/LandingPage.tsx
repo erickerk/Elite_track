@@ -202,6 +202,26 @@ export function LandingPage() {
           background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
           animation: shimmer 2s infinite;
         }
+        .mobile-shell {
+          width: 100%;
+          max-width: 480px;
+          margin: 0 auto;
+          padding-left: 1rem;
+          padding-right: 1rem;
+        }
+        @media (min-width: 768px) {
+          .mobile-shell {
+            max-width: 1200px;
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+          }
+        }
+        .mobile-card {
+          border-radius: 18px;
+          background: linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        }
         @keyframes shimmer {
           0% { left: -100%; }
           100% { left: 100%; }
@@ -255,10 +275,10 @@ export function LandingPage() {
         </header>
 
         {/* Hero Content */}
-        <div className="relative z-20 px-4 sm:px-6 flex items-center min-h-[90vh] pt-20 sm:pt-24">
-          <div className="max-w-7xl mx-auto w-full">
-            <div className="max-w-5xl">
-              <div className="glass-effect cinematic-blur p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] premium-shadow mb-8 border border-white/10">
+        <div className="relative z-20 px-4 sm:px-6 flex items-center min-h-[90vh] pt-20 sm:pt-24 justify-center">
+          <div className="mobile-shell w-full">
+            <div className="max-w-5xl mx-auto">
+              <div className="glass-effect cinematic-blur p-5 sm:p-10 rounded-2xl sm:rounded-[3rem] premium-shadow mb-8 border border-white/10 mobile-card">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 mb-6 animate-fade-in">
                   <div className="w-1.5 h-1.5 rounded-full bg-primary luxury-glow animate-pulse"></div>
                   <span className="text-[10px] sm:text-xs font-bold text-primary uppercase tracking-[0.2em]">Exclusividade Elite</span>
@@ -291,7 +311,7 @@ export function LandingPage() {
                 {/* Consultar Histórico - Redesenhado para Mobile */}
                 <button
                   onClick={() => setShowConsultaModal(true)}
-                  className="w-full bg-white/[0.03] hover:bg-white/[0.08] backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-white/10 hover:border-primary/40 transition-all duration-500 group flex items-center gap-4"
+                  className="w-full bg-white/[0.05] hover:bg-white/[0.08] backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-white/10 hover:border-primary/40 transition-all duration-500 group flex items-center gap-4 mobile-card"
                 >
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
                     <QrCode className="w-6 h-6 text-primary" />
@@ -313,7 +333,7 @@ export function LandingPage() {
       {/* Como Funciona */}
       <section id="como-funciona" className="py-16 sm:py-24 px-4 sm:px-6 bg-black relative">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-        <div className="max-w-7xl mx-auto">
+        <div className="mobile-shell">
           <div className="text-center mb-16 sm:mb-20 fade-in">
             <h2 className="text-3xl sm:text-5xl font-bold mb-6 tracking-tight">O Processo <span className="text-primary font-light italic">Elite</span></h2>
             <p className="text-base sm:text-xl text-gray-500 max-w-2xl mx-auto font-medium">
@@ -321,7 +341,7 @@ export function LandingPage() {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-            <div className="glass-effect p-8 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] border border-white/5 hover:border-primary/20 transition-all duration-500 group relative overflow-hidden">
+            <div className="glass-effect p-6 sm:p-10 rounded-2xl sm:rounded-[2.5rem] border border-white/5 hover:border-primary/20 transition-all duration-500 group relative overflow-hidden mobile-card">
               <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all"></div>
               <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center bg-white/[0.03] rounded-2xl mb-8 group-hover:bg-primary/10 transition-all duration-500 border border-white/10 group-hover:border-primary/30">
                 <i className="ri-calendar-check-line text-3xl text-primary"></i>
@@ -331,7 +351,7 @@ export function LandingPage() {
                 Todo o processo já nasce integrado ao EliteTrack™, garantindo rastreabilidade total desde o primeiro dia de blindagem.
               </p>
             </div>
-            <div className="glass-effect p-8 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] border border-white/5 hover:border-primary/20 transition-all duration-500 group relative overflow-hidden">
+            <div className="glass-effect p-6 sm:p-10 rounded-2xl sm:rounded-[2.5rem] border border-white/5 hover:border-primary/20 transition-all duration-500 group relative overflow-hidden mobile-card">
               <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all"></div>
               <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center bg-white/[0.03] rounded-2xl mb-8 group-hover:bg-primary/10 transition-all duration-500 border border-white/10 group-hover:border-primary/30">
                 <i className="ri-eye-line text-3xl text-primary"></i>
@@ -341,7 +361,7 @@ export function LandingPage() {
                 Acompanhe cada etapa com fotos em tempo real e registros técnicos diretamente na palma da sua mão.
               </p>
             </div>
-            <div className="glass-effect p-8 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] border border-white/5 hover:border-primary/20 transition-all duration-500 group relative overflow-hidden">
+            <div className="glass-effect p-6 sm:p-10 rounded-2xl sm:rounded-[2.5rem] border border-white/5 hover:border-primary/20 transition-all duration-500 group relative overflow-hidden mobile-card">
               <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all"></div>
               <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center bg-white/[0.03] rounded-2xl mb-8 group-hover:bg-primary/10 transition-all duration-500 border border-white/10 group-hover:border-primary/30">
                 <i className="ri-shield-check-line text-3xl text-primary"></i>

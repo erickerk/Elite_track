@@ -184,7 +184,7 @@ export function Dashboard() {
     <div className="bg-black text-white font-['Inter'] overflow-x-hidden min-h-screen">
       {/* Header */}
       <header className="glass-effect border-b border-white/10 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-7xl mx-auto px-6 py-4 app-mobile-shell">
           <div className="flex items-center justify-between">
             <img src="/logo-elite.png" alt="Elite Blindagens" className="h-10 w-auto object-contain cursor-pointer" onClick={() => navigate('/dashboard')} />
             <div className="flex items-center space-x-4">
@@ -220,7 +220,7 @@ export function Dashboard() {
       <main className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black">
         {/* Vehicle Selector for multiple vehicles */}
         {userProjects.length > 1 && (
-          <div className="max-w-7xl mx-auto px-6 pt-4">
+          <div className="max-w-7xl mx-auto px-6 pt-4 app-mobile-shell">
             <button
               onClick={() => setShowVehicleSelector(!showVehicleSelector)}
               className="w-full flex items-center justify-between p-3 rounded-xl glass-effect"
@@ -311,7 +311,7 @@ export function Dashboard() {
             className="w-full h-full object-cover object-center scale-105"
           />
           <div className="absolute inset-0 flex items-end sm:items-center z-20 pb-8 sm:pb-0">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full app-mobile-shell">
               <div className="max-w-2xl">
                 <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold mb-2 sm:mb-4 fade-in visible tracking-tight leading-tight">
                   {selectedProject.vehicle.brand} <span className="text-primary">{selectedProject.vehicle.model}</span>
@@ -335,12 +335,12 @@ export function Dashboard() {
 
         {/* Dashboard Content */}
         <section className="py-12">
-          <div className="max-w-7xl mx-auto px-6">
+          <div className="max-w-7xl mx-auto px-6 app-mobile-shell">
             <div className="grid lg:grid-cols-3 gap-8">
               {/* Main Content */}
               <div className="lg:col-span-2 space-y-8">
                 {/* Progress Overview - Compacto */}
-                <div className="glass-effect p-4 sm:p-6 rounded-xl sm:rounded-2xl fade-in visible border border-white/5">
+                <div className="glass-effect app-card-surface p-4 sm:p-6 rounded-xl sm:rounded-2xl fade-in visible border border-white/5">
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <h2 className="text-base sm:text-xl font-bold">Progresso</h2>
@@ -375,10 +375,10 @@ export function Dashboard() {
                 </div>
 
                 {/* Timeline - Compacto Mobile */}
-                <div className="glass-effect p-4 sm:p-6 rounded-xl sm:rounded-2xl fade-in visible border border-white/5 overflow-hidden">
+                <div className="glass-effect app-card-surface p-4 sm:p-6 rounded-xl sm:rounded-2xl fade-in visible border border-white/5 overflow-hidden">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h2 className="text-base sm:text-xl font-bold text-white">Timeline</h2>
+                      <h2 className="text-base sm:text-xl font-bold text-white app-mobile-title">Timeline</h2>
                       <p className="text-[10px] sm:text-xs text-gray-500">Etapas da blindagem</p>
                     </div>
                     <Clock className="w-5 h-5 text-gray-500" />
@@ -434,10 +434,10 @@ export function Dashboard() {
                 </div>
 
                 {/* Latest Photos - Compacto */}
-                <div className="glass-effect p-4 sm:p-6 rounded-xl sm:rounded-2xl fade-in visible border border-white/5">
+                <div className="glass-effect app-card-surface p-4 sm:p-6 rounded-xl sm:rounded-2xl fade-in visible border border-white/5">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h2 className="text-base sm:text-xl font-bold text-white">Fotos</h2>
+                      <h2 className="text-base sm:text-xl font-bold text-white app-mobile-title">Fotos</h2>
                       <p className="text-[10px] sm:text-xs text-gray-500">Registros da execução</p>
                     </div>
                     <Button 
@@ -450,7 +450,7 @@ export function Dashboard() {
                     </Button>
                   </div>
 
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {selectedProject.vehicle.images.slice(0, 4).map((image, index) => (
                       <div 
                         key={index}
@@ -474,7 +474,7 @@ export function Dashboard() {
               {/* Sidebar / Quick Actions Container */}
               <div className="space-y-6">
                 {/* Status Card - Mobile: Horizontal Layout */}
-                <div className="glass-effect cinematic-blur p-5 sm:p-6 rounded-2xl sm:rounded-3xl fade-in visible border border-white/5">
+                <div className="glass-effect app-card-surface p-5 sm:p-6 rounded-2xl sm:rounded-3xl fade-in visible border border-white/5">
                   <div className="flex items-center gap-4 mb-4">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/20 rounded-xl flex items-center justify-center border border-primary/20">
                       <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
@@ -504,54 +504,66 @@ export function Dashboard() {
                 </div>
 
                 {/* Quick Actions - Mobile: Optimized Grid */}
-                <div className="glass-effect cinematic-blur p-5 sm:p-6 rounded-2xl sm:rounded-3xl fade-in visible border border-white/5">
+                <div className="glass-effect app-card-surface p-5 sm:p-6 rounded-2xl sm:rounded-3xl fade-in visible border border-white/5">
                   <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-base font-bold text-white tracking-tight">Ações Rápidas</h3>
+                    <h3 className="text-base font-bold text-white tracking-tight app-mobile-title">Ações Rápidas</h3>
                     <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
                       <i className="ri-flashlight-line text-primary text-sm"></i>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-col sm:gap-3">
-                    <button 
-                      onClick={openWhatsApp}
-                      className="flex flex-col sm:flex-row items-center justify-center gap-2 p-3 bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/20 rounded-xl transition-all"
-                    >
-                      <MessageCircle className="w-5 h-5" />
-                      <span className="text-[10px] sm:text-sm font-bold uppercase tracking-wider">WhatsApp</span>
-                    </button>
-                    <button 
-                      onClick={() => navigate('/chat')}
-                      className="flex flex-col sm:flex-row items-center justify-center gap-2 p-3 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-xl transition-all"
-                    >
-                      <div className="relative">
-                        <i className="ri-chat-3-line text-lg"></i>
-                        {chatUnreadCount > 0 && (
-                          <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] flex items-center justify-center rounded-full border border-black">
-                            {chatUnreadCount}
-                          </span>
+                    {[
+                      {
+                        label: 'WhatsApp',
+                        icon: <MessageCircle className="w-5 h-5" />,
+                        onClick: openWhatsApp,
+                        bg: 'bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20'
+                      },
+                      {
+                        label: 'Mensagens',
+                        icon: (
+                          <div className="relative">
+                            <i className="ri-chat-3-line text-lg"></i>
+                            {chatUnreadCount > 0 && (
+                              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] flex items-center justify-center rounded-full border border-black">
+                                {chatUnreadCount}
+                              </span>
+                            )}
+                          </div>
+                        ),
+                        onClick: () => navigate('/chat'),
+                        bg: 'bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20'
+                      },
+                      {
+                        label: 'Laudo',
+                        icon: <i className="ri-file-shield-line text-lg text-primary"></i>,
+                        onClick: () => navigate('/laudo'),
+                        bg: 'bg-white/5 text-white border border-white/10 hover:bg-white/10'
+                      },
+                      {
+                        label: 'Elite Card',
+                        icon: <i className="ri-vip-crown-line text-lg text-primary"></i>,
+                        onClick: () => navigate('/elite-card'),
+                        bg: 'bg-white/5 text-white border border-white/10 hover:bg-white/10'
+                      }
+                    ].map((action) => (
+                      <button
+                        key={action.label}
+                        onClick={action.onClick}
+                        className={cn(
+                          'flex flex-col sm:flex-row items-center justify-center gap-2 p-3 rounded-xl transition-all text-center sm:text-left',
+                          action.bg
                         )}
-                      </div>
-                      <span className="text-[10px] sm:text-sm font-bold uppercase tracking-wider">Mensagens</span>
-                    </button>
-                    <button 
-                      onClick={() => navigate('/laudo')}
-                      className="flex flex-col sm:flex-row items-center justify-center gap-2 p-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl transition-all"
-                    >
-                      <i className="ri-file-shield-line text-lg text-primary"></i>
-                      <span className="text-[10px] sm:text-sm font-bold uppercase tracking-wider">Laudo</span>
-                    </button>
-                    <button 
-                      onClick={() => navigate('/elite-card')}
-                      className="flex flex-col sm:flex-row items-center justify-center gap-2 p-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl transition-all"
-                    >
-                      <i className="ri-vip-crown-line text-lg text-primary"></i>
-                      <span className="text-[10px] sm:text-sm font-bold uppercase tracking-wider">Elite Card</span>
-                    </button>
+                      >
+                        {action.icon}
+                        <span className="text-[11px] sm:text-sm font-semibold tracking-tight">{action.label}</span>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
                 {/* QR Code Card - Mobile: Compact and Centralized */}
-                <div className="glass-effect cinematic-blur p-5 rounded-2xl sm:rounded-3xl fade-in visible border border-white/5 overflow-hidden relative">
+                <div className="glass-effect app-card-surface p-5 rounded-2xl sm:rounded-3xl fade-in visible border border-white/5 overflow-hidden relative">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -mr-16 -mt-16 blur-3xl"></div>
                   <div className="relative flex flex-col items-center text-center">
                     <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center mb-3">
@@ -578,7 +590,7 @@ export function Dashboard() {
                 </div>
 
                 {/* Elite Rescue Card */}
-                <div className="glass-effect cinematic-blur p-6 rounded-3xl fade-in visible border border-red-500/20">
+                <div className="glass-effect app-card-surface p-6 rounded-3xl fade-in visible border border-red-500/20">
                   <div className="flex items-center space-x-3 mb-4">
                     <div className="w-12 h-12 bg-red-500/20 rounded-2xl flex items-center justify-center">
                       <i className="ri-truck-line text-red-500 text-lg"></i>
