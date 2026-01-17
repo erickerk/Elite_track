@@ -338,54 +338,40 @@ export function Dashboard() {
             <div className="grid lg:grid-cols-3 gap-8">
               {/* Main Content */}
               <div className="lg:col-span-2 space-y-8">
-                {/* Progress Overview */}
-                <div className="glass-effect cinematic-blur p-5 sm:p-8 rounded-2xl sm:rounded-3xl fade-in visible border border-white/5">
-                  <div className="flex items-center justify-between mb-6">
+                {/* Progress Overview - Compacto */}
+                <div className="glass-effect p-4 sm:p-6 rounded-xl sm:rounded-2xl fade-in visible border border-white/5">
+                  <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h2 className="text-lg sm:text-2xl font-bold">Progresso</h2>
-                      <p className="text-xs sm:text-sm text-gray-400">Status real-time da blindagem</p>
+                      <h2 className="text-base sm:text-xl font-bold">Progresso</h2>
+                      <p className="text-[10px] sm:text-xs text-gray-500">Status da blindagem</p>
                     </div>
-                    <div className="text-primary text-2xl sm:text-4xl font-bold tabular-nums">{selectedProject.progress}%</div>
+                    <div className="text-primary text-xl sm:text-3xl font-bold tabular-nums">{selectedProject.progress}%</div>
                   </div>
                   <div className="relative">
-                      <div className="w-full bg-white/5 rounded-full h-2 sm:h-4 mb-6 overflow-hidden">
-                        <div 
-                          className={cn(
-                            "h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(212,175,55,0.3)] bg-primary",
-                            selectedProject.progress === 0 && "w-0",
-                            selectedProject.progress > 0 && selectedProject.progress <= 5 && "w-[5%]",
-                            selectedProject.progress > 5 && selectedProject.progress <= 10 && "w-[10%]",
-                            selectedProject.progress > 10 && selectedProject.progress <= 20 && "w-[20%]",
-                            selectedProject.progress > 20 && selectedProject.progress <= 30 && "w-[30%]",
-                            selectedProject.progress > 30 && selectedProject.progress <= 40 && "w-[40%]",
-                            selectedProject.progress > 40 && selectedProject.progress <= 50 && "w-[50%]",
-                            selectedProject.progress > 50 && selectedProject.progress <= 60 && "w-[60%]",
-                            selectedProject.progress > 60 && selectedProject.progress <= 70 && "w-[70%]",
-                            selectedProject.progress > 70 && selectedProject.progress <= 80 && "w-[80%]",
-                            selectedProject.progress > 80 && selectedProject.progress <= 90 && "w-[90%]",
-                            selectedProject.progress > 90 && "w-full"
-                          )}
-                        />
+                    <div className="w-full bg-white/5 rounded-full h-2 mb-4 overflow-hidden relative">
+                      {/* eslint-disable-next-line react/forbid-dom-props */}
+                      <div 
+                        className="absolute top-0 left-0 h-full rounded-full bg-primary transition-all"
+                        style={{ width: `${selectedProject.progress}%` } as React.CSSProperties}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-white/5 p-3 rounded-lg border border-white/5 text-center">
+                        <div className="text-lg font-bold text-primary">{daysElapsed}</div>
+                        <div className="text-[9px] text-gray-500 uppercase">Dias</div>
                       </div>
-                    <div className="grid grid-cols-2 gap-4 sm:gap-6">
-                      <div className="bg-white/5 p-3 sm:p-4 rounded-xl border border-white/5 text-center">
-                        <div className="text-xl sm:text-2xl font-bold text-primary mb-0.5">{daysElapsed}</div>
-                        <div className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-widest">Dias Decorridos</div>
-                      </div>
-                      <div className="bg-white/5 p-3 sm:p-4 rounded-xl border border-white/5 text-center">
-                        <div className="text-xl sm:text-2xl font-bold text-white mb-0.5">{daysRemaining}</div>
-                        <div className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-widest">Dias Restantes</div>
+                      <div className="bg-white/5 p-3 rounded-lg border border-white/5 text-center">
+                        <div className="text-lg font-bold text-white">{daysRemaining}</div>
+                        <div className="text-[9px] text-gray-500 uppercase">Restantes</div>
                       </div>
                     </div>
                   </div>
-                  <div className="bg-primary/5 border border-primary/20 rounded-xl sm:rounded-2xl p-4 mt-6">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
-                        <Calendar className="w-5 h-5 text-primary" />
-                      </div>
+                  <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 mt-4">
+                    <div className="flex items-center gap-3">
+                      <Calendar className="w-5 h-5 text-primary flex-shrink-0" />
                       <div>
-                        <div className="text-[10px] sm:text-xs text-primary/70 uppercase tracking-widest font-bold">Previsão de Entrega</div>
-                        <div className="text-sm sm:text-lg font-bold text-white">
+                        <div className="text-[9px] text-primary/70 uppercase font-bold">Entrega Prevista</div>
+                        <div className="text-sm font-bold text-white">
                           {new Date(selectedProject.estimatedDelivery).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' })}
                         </div>
                       </div>
@@ -393,101 +379,96 @@ export function Dashboard() {
                   </div>
                 </div>
 
-                {/* Timeline */}
-                <div className="glass-effect cinematic-blur p-5 sm:p-8 rounded-2xl sm:rounded-3xl fade-in visible border border-white/5">
-                  <div className="flex items-center justify-between mb-8">
+                {/* Timeline - Compacto Mobile */}
+                <div className="glass-effect p-4 sm:p-6 rounded-xl sm:rounded-2xl fade-in visible border border-white/5 overflow-hidden">
+                  <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h2 className="text-lg sm:text-2xl font-bold text-white">Linha do Tempo</h2>
-                      <p className="text-xs sm:text-sm text-gray-400">Rastreamento etapa por etapa</p>
+                      <h2 className="text-base sm:text-xl font-bold text-white">Timeline</h2>
+                      <p className="text-[10px] sm:text-xs text-gray-500">Etapas da blindagem</p>
                     </div>
-                    <div className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center border border-white/10">
-                      <Clock className="w-5 h-5 text-gray-400" />
-                    </div>
+                    <Clock className="w-5 h-5 text-gray-500" />
                   </div>
                   
-                  <div className="relative space-y-8 before:absolute before:inset-0 before:ml-4 sm:before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-primary/50 before:via-primary/20 before:to-transparent">
+                  <div className="space-y-3">
                     {selectedProject.timeline.map((step) => (
                       <div key={step.id} className={cn(
-                        "relative flex items-center justify-between group",
-                        step.status === 'pending' && "opacity-40"
+                        "flex items-start gap-3 p-3 rounded-lg border transition-all",
+                        step.status === 'completed' ? "bg-green-500/5 border-green-500/20" :
+                        step.status === 'in_progress' ? "bg-primary/5 border-primary/20" :
+                        "bg-white/5 border-white/5 opacity-50"
                       )}>
-                        <div className="flex items-center w-full">
-                          {/* Indicator */}
-                          <div className={cn(
-                            "flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 transition-all duration-500 z-10",
-                            step.status === 'completed' ? "bg-primary border-primary luxury-glow" :
-                            step.status === 'in_progress' ? "bg-black border-primary luxury-glow animate-pulse" :
-                            "bg-black border-white/20"
-                          )}>
-                            {step.status === 'completed' ? (
-                              <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-black" />
-                            ) : step.status === 'in_progress' ? (
-                              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full" />
-                            ) : (
-                              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white/20 rounded-full" />
-                            )}
+                        {/* Indicator */}
+                        <div className={cn(
+                          "flex items-center justify-center w-6 h-6 rounded-full flex-shrink-0 mt-0.5",
+                          step.status === 'completed' ? "bg-green-500" :
+                          step.status === 'in_progress' ? "bg-primary" :
+                          "bg-white/10"
+                        )}>
+                          {step.status === 'completed' ? (
+                            <CheckCircle className="w-3.5 h-3.5 text-white" />
+                          ) : step.status === 'in_progress' ? (
+                            <div className="w-1.5 h-1.5 bg-black rounded-full" />
+                          ) : (
+                            <div className="w-1.5 h-1.5 bg-white/30 rounded-full" />
+                          )}
+                        </div>
+                        
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <h3 className={cn(
+                              "text-sm font-semibold truncate",
+                              step.status === 'in_progress' ? "text-primary" : 
+                              step.status === 'completed' ? "text-green-400" : "text-gray-400"
+                            )}>
+                              {step.title}
+                            </h3>
+                            <span className="text-[9px] text-gray-500 flex-shrink-0">
+                              {step.status === 'in_progress' ? '● Ativo' : 
+                               step.status === 'pending' ? '○' : 
+                               step.date ? new Date(step.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : '✓'}
+                            </span>
                           </div>
-                          
-                          {/* Content */}
-                          <div className="flex-1 ml-4 sm:ml-6">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                              <h3 className={cn(
-                                "text-sm sm:text-lg font-bold tracking-tight transition-colors",
-                                step.status === 'in_progress' ? "text-primary" : "text-white"
-                              )}>
-                                {step.title}
-                              </h3>
-                              <time className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded sm:bg-transparent sm:px-0">
-                                {step.status === 'in_progress' ? 'Em andamento' : 
-                                 step.status === 'pending' ? 'Pendente' : 
-                                 step.date ? new Date(step.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : ''}
-                              </time>
-                            </div>
-                            <p className="text-xs sm:text-sm text-gray-400 mt-1 leading-relaxed line-clamp-2 sm:line-clamp-none">
-                              {step.description}
-                            </p>
-                          </div>
+                          <p className="text-[10px] text-gray-500 mt-0.5 line-clamp-1">
+                            {step.description}
+                          </p>
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Latest Photos */}
-                <div className="glass-effect cinematic-blur p-5 sm:p-8 rounded-2xl sm:rounded-3xl fade-in visible border border-white/5">
-                  <div className="flex items-center justify-between mb-8">
+                {/* Latest Photos - Compacto */}
+                <div className="glass-effect p-4 sm:p-6 rounded-xl sm:rounded-2xl fade-in visible border border-white/5">
+                  <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h2 className="text-lg sm:text-2xl font-bold text-white">Registros</h2>
-                      <p className="text-xs sm:text-sm text-gray-400">Evidências técnicas da execução</p>
+                      <h2 className="text-base sm:text-xl font-bold text-white">Fotos</h2>
+                      <p className="text-[10px] sm:text-xs text-gray-500">Registros da execução</p>
                     </div>
                     <Button 
                       variant="ghost" 
                       size="sm"
                       onClick={() => navigate('/gallery')}
-                      className="text-primary hover:text-primary/80 hover:bg-primary/10 transition-all text-xs sm:text-sm h-8 px-3"
+                      className="text-primary text-xs h-7 px-2"
                     >
-                      Ver Tudo
+                      Ver Mais
                     </Button>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="grid grid-cols-4 gap-2">
                     {selectedProject.vehicle.images.slice(0, 4).map((image, index) => (
                       <div 
                         key={index}
-                        className="relative aspect-square group cursor-pointer overflow-hidden rounded-xl sm:rounded-2xl border border-white/5"
+                        className="relative aspect-square cursor-pointer overflow-hidden rounded-lg border border-white/10"
                         onClick={() => setPhotoModal({ src: image, alt: `Registro ${index + 1}` })}
                       >
                         <img 
                           src={image} 
                           alt={`Registro ${index + 1}`}
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          className="w-full h-full object-cover"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
-                        <div className="absolute bottom-3 left-3 right-3 transform translate-y-1 group-hover:translate-y-0 transition-transform">
-                          <div className="text-[10px] sm:text-xs text-primary font-bold uppercase tracking-widest">Etapa {index + 1}</div>
-                          <div className="text-[9px] sm:text-[11px] text-gray-300 font-medium">
-                            {new Date(selectedProject.startDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
-                          </div>
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1 py-0.5">
+                          <span className="text-[8px] text-gray-300">{index + 1}</span>
                         </div>
                       </div>
                     ))}

@@ -1077,35 +1077,6 @@ ${loginUrl}
     })
   }
 
-  // Função para tornar o projeto "meu" - atribuir o executor atual como responsável
-  const handleTakeProject = async (project: Project) => {
-    if (!user?.id) {
-      addNotification({
-        type: 'error',
-        title: 'Erro',
-        message: 'Usuário não identificado',
-      })
-      return
-    }
-
-    try {
-      await updateGlobalProject(project.id, { executorId: user.id })
-      await refreshProjects()
-      addNotification({
-        type: 'success',
-        title: 'Projeto Atribuído',
-        message: `Você agora é o responsável por ${project.vehicle.plate}`,
-      })
-    } catch (error) {
-      console.error('Erro ao atribuir projeto:', error)
-      addNotification({
-        type: 'error',
-        title: 'Erro',
-        message: 'Não foi possível atribuir o projeto',
-      })
-    }
-  }
-
   return (
     <div className="min-h-screen bg-black text-white font-['Inter'] flex overflow-x-hidden">
       {/* Sidebar */}
@@ -1591,72 +1562,48 @@ ${loginUrl}
                 aria-label="Editar foto do veículo"
               />
 
-              {/* Destaque do Veículo Selecionado */}
+              {/* Destaque do Veículo Selecionado - Compacto Mobile */}
               {isSelectedProjectInFiltered && selectedProject && (
-                <div className="bg-primary/10 border-2 border-primary rounded-2xl p-4 mb-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div 
-                        className="w-16 h-16 rounded-xl overflow-hidden bg-carbon-900 flex-shrink-0 ring-2 ring-primary relative group cursor-pointer"
-                        onClick={() => editVehiclePhotoRef.current?.click()}
-                        title="Clique para editar a foto"
-                      >
-                        {selectedProject.vehicle.images?.[0] ? (
-                          <img src={selectedProject.vehicle.images[0]} alt={selectedProject.vehicle.model} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center"><Car className="w-8 h-8 text-gray-500" /></div>
-                        )}
-                        {/* Overlay de edição */}
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <Camera className="w-6 h-6 text-white" />
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="bg-primary text-black px-2 py-0.5 rounded-full text-xs font-bold">📍 SELECIONADO</span>
-                          <span className={cn("px-2 py-0.5 rounded-full text-xs font-bold", statusConfig[selectedProject.status]?.color, "text-white")}>
-                            {statusConfig[selectedProject.status]?.label}
-                          </span>
-                        </div>
-                        <h3 className="text-lg font-bold text-white">{selectedProject.user.name}</h3>
-                        <p className="text-sm text-gray-300">
-                          {selectedProject.vehicle.brand} {selectedProject.vehicle.model} • 
-                          <span className="font-mono font-bold text-primary ml-1">{selectedProject.vehicle.plate}</span>
-                        </p>
-                      </div>
+                <div className="bg-primary/10 border border-primary/30 rounded-xl p-3 mb-3">
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="w-12 h-12 rounded-lg overflow-hidden bg-carbon-900 flex-shrink-0 border border-primary/30 relative group cursor-pointer"
+                      onClick={() => editVehiclePhotoRef.current?.click()}
+                    >
+                      {selectedProject.vehicle.images?.[0] ? (
+                        <img src={selectedProject.vehicle.images[0]} alt={selectedProject.vehicle.model} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center"><Car className="w-5 h-5 text-gray-500" /></div>
+                      )}
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <button
-                        onClick={() => { setFoundProject(selectedProject); setShowQRLookup(true); }}
-                        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl font-semibold text-sm transition-colors"
-                      >
-                        <QrCode className="w-4 h-4" />
-                        Enviar QR Codes
-                      </button>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className="bg-primary text-black px-1.5 py-0.5 rounded text-[9px] font-bold">✓</span>
+                        <span className={cn("px-1.5 py-0.5 rounded text-[9px] font-bold", statusConfig[selectedProject.status]?.color, "text-white")}>
+                          {statusConfig[selectedProject.status]?.label}
+                        </span>
+                      </div>
+                      <h3 className="text-sm font-bold text-white truncate">{selectedProject.user.name}</h3>
+                      <p className="text-[10px] text-gray-400 truncate">
+                        {selectedProject.vehicle.brand} {selectedProject.vehicle.model} • 
+                        <span className="font-mono text-primary ml-1">{selectedProject.vehicle.plate}</span>
+                      </p>
+                    </div>
+                    <div className="flex gap-1.5 flex-shrink-0">
                       <button
                         onClick={() => handleSetActiveTab('timeline')}
-                        className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-black px-4 py-2 rounded-xl font-semibold text-sm transition-colors"
+                        className="p-2 bg-primary text-black rounded-lg"
+                        title="Timeline"
                       >
                         <Clock className="w-4 h-4" />
-                        Ver Timeline
                       </button>
                       <button
-                        onClick={() => setShowPublicPreview(true)}
-                        className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl font-semibold text-sm transition-colors"
+                        onClick={() => { setFoundProject(selectedProject); setShowQRLookup(true); }}
+                        className="p-2 bg-blue-500 text-white rounded-lg"
+                        title="QR Codes"
                       >
-                        <ExternalLink className="w-4 h-4" />
-                        Preview Público
+                        <QrCode className="w-4 h-4" />
                       </button>
-                      {/* Botão "Tornar Meu" - só aparece se o projeto não for do executor atual */}
-                      {selectedProject.executorId !== user?.id && (
-                        <button
-                          onClick={() => handleTakeProject(selectedProject)}
-                          className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl font-semibold text-sm transition-colors"
-                        >
-                          <Users className="w-4 h-4" />
-                          Tornar Meu
-                        </button>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -1669,8 +1616,8 @@ ${loginUrl}
                 </div>
               )}
 
-              {/* Projects Grid - Premium Mobile Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
+              {/* Projects Grid - Cards Compactos Mobile */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 sm:gap-3">
                 {filteredProjects.map((project) => {
                   const config = statusConfig[project.status]
                   const isSelected = selectedProject?.id === project.id
@@ -1680,117 +1627,74 @@ ${loginUrl}
                       key={project.id}
                       onClick={() => setSelectedProject(project)}
                       className={cn(
-                        "group relative bg-white/5 rounded-2xl p-4 border transition-all duration-300 active:scale-[0.98] overflow-hidden",
-                        isSelected ? "border-primary/50 bg-primary/5 ring-1 ring-primary/20" : "border-white/5 hover:border-white/20"
+                        "group bg-white/5 rounded-xl p-3 border transition-all active:scale-[0.98] overflow-hidden",
+                        isSelected ? "border-primary/40 bg-primary/5" : "border-white/5"
                       )}
                     >
-                      {/* Glow Effect on Selected */}
-                      {isSelected && (
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full -mr-12 -mt-12 blur-2xl animate-pulse"></div>
-                      )}
-
-                      <div className="flex items-start gap-4">
-                        {/* Vehicle Photo - Premium Proportion */}
+                      <div className="flex items-center gap-3">
+                        {/* Vehicle Photo - Compacto */}
                         <div className={cn(
-                          "w-20 h-20 md:w-24 md:h-20 rounded-xl overflow-hidden bg-carbon-900 flex-shrink-0 border border-white/10 transition-transform duration-500 group-hover:scale-105",
-                          isSelected && "border-primary/30"
+                          "w-14 h-14 rounded-lg overflow-hidden bg-carbon-900 flex-shrink-0 border",
+                          isSelected ? "border-primary/30" : "border-white/10"
                         )}>
                           {project.vehicle.images?.[0] ? (
                             <img src={project.vehicle.images[0]} alt={project.vehicle.model} className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-white/5"><Car className="w-8 h-8 text-gray-600" /></div>
+                            <div className="w-full h-full flex items-center justify-center"><Car className="w-6 h-6 text-gray-600" /></div>
                           )}
                         </div>
                         
-                        {/* Info Column */}
+                        {/* Info - Compacto */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-1.5 mb-0.5">
                             <span className={cn(
-                              "text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border",
-                              project.status === 'in_progress' ? "text-yellow-400 border-yellow-400/20 bg-yellow-400/5" :
-                              project.status === 'completed' ? "text-green-400 border-green-400/20 bg-green-400/5" :
-                              "text-gray-400 border-white/10 bg-white/5"
+                              "text-[9px] font-bold px-1.5 py-0.5 rounded",
+                              project.status === 'in_progress' ? "text-yellow-400 bg-yellow-400/10" :
+                              project.status === 'completed' ? "text-green-400 bg-green-400/10" :
+                              "text-gray-400 bg-white/5"
                             )}>
                               {config.label}
                             </span>
-                            <span className="text-[10px] font-mono font-bold text-gray-500">#{project.id.slice(-4)}</span>
+                            <span className="text-[9px] font-mono text-gray-600">#{project.id.slice(-4)}</span>
                           </div>
 
-                          <h3 className={cn("font-bold truncate text-base md:text-lg tracking-tight", isSelected ? "text-white" : "text-gray-200")}>
-                            {project.user.name}
-                          </h3>
+                          <h3 className="text-sm font-bold text-white truncate">{project.user.name}</h3>
                           
-                          <p className="text-xs text-gray-500 font-medium truncate mb-2">
-                            {project.vehicle.brand} <span className="text-gray-400">{project.vehicle.model}</span>
-                          </p>
+                          <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                            <span className="truncate">{project.vehicle.brand} {project.vehicle.model}</span>
+                            <span className="font-mono text-primary font-bold flex-shrink-0">{project.vehicle.plate}</span>
+                          </div>
 
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-1.5 bg-black/40 px-2 py-1 rounded-lg border border-white/5">
-                              <div className="w-1.5 h-1.5 rounded-full bg-primary luxury-glow"></div>
-                              <span className="font-mono text-xs font-bold text-primary">{project.vehicle.plate}</span>
+                          {/* Progress bar compacto */}
+                          <div className="mt-1.5 flex items-center gap-2">
+                            <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden relative">
+                              {/* eslint-disable-next-line react/forbid-dom-props */}
+                              <div 
+                                className="absolute top-0 left-0 h-full bg-primary transition-all"
+                                style={{ width: `${project.progress}%` } as React.CSSProperties}
+                              />
                             </div>
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter">Progresso</span>
-                                <span className="text-[10px] text-primary font-bold">{project.progress}%</span>
-                              </div>
-                              <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                                <div 
-                                  className={cn(
-                                    "h-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(212,175,55,0.3)] bg-primary",
-                                    project.progress === 0 && "w-0",
-                                    project.progress > 0 && project.progress <= 5 && "w-[5%]",
-                                    project.progress > 5 && project.progress <= 10 && "w-[10%]",
-                                    project.progress > 10 && project.progress <= 20 && "w-[20%]",
-                                    project.progress > 20 && project.progress <= 30 && "w-[30%]",
-                                    project.progress > 30 && project.progress <= 40 && "w-[40%]",
-                                    project.progress > 40 && project.progress <= 50 && "w-[50%]",
-                                    project.progress > 50 && project.progress <= 60 && "w-[60%]",
-                                    project.progress > 60 && project.progress <= 70 && "w-[70%]",
-                                    project.progress > 70 && project.progress <= 80 && "w-[80%]",
-                                    project.progress > 80 && project.progress <= 90 && "w-[90%]",
-                                    project.progress > 90 && "w-full"
-                                  )}
-                                />
-                              </div>
-                            </div>
+                            <span className="text-[10px] text-primary font-bold">{project.progress}%</span>
                           </div>
                         </div>
-                      </div>
 
-                      {/* Bottom Actions - Premium mobile horizontal menu */}
-                      <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
+                        {/* Quick Actions */}
+                        <div className="flex flex-col gap-1 flex-shrink-0">
                           <button
                             onClick={(e) => { e.stopPropagation(); handleSetActiveTab('timeline'); setSelectedProject(project); }}
-                            className="p-2.5 bg-white/5 rounded-xl hover:bg-primary/20 text-gray-400 hover:text-primary transition-all active:scale-90"
+                            className="p-1.5 bg-white/5 rounded-lg text-gray-400 hover:text-primary"
                             title="Timeline"
                           >
-                            <Clock className="w-4 h-4" />
+                            <Clock className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); handleSetActiveTab('photos'); setSelectedProject(project); }}
-                            className="p-2.5 bg-white/5 rounded-xl hover:bg-blue-500/20 text-gray-400 hover:text-blue-400 transition-all active:scale-90"
+                            className="p-1.5 bg-white/5 rounded-lg text-gray-400 hover:text-blue-400"
                             title="Fotos"
                           >
-                            <Image className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleSetActiveTab('chat'); setSelectedProject(project); }}
-                            className="p-2.5 bg-white/5 rounded-xl hover:bg-green-500/20 text-gray-400 hover:text-green-400 transition-all active:scale-90"
-                            title="Chat"
-                          >
-                            <MessageCircle className="w-4 h-4" />
+                            <Image className="w-3.5 h-3.5" />
                           </button>
                         </div>
-                        
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setSelectedProject(project); handleSetActiveTab('timeline'); }}
-                          className="flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all active:scale-95"
-                        >
-                          Gerenciar
-                          <ChevronRight className="w-3 h-3" />
-                        </button>
                       </div>
                     </div>
                   )

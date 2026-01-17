@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { 
   Camera, Upload, X, Check, Image as ImageIcon, 
-  Folder, Tag, Clock, ChevronDown, Car, Lock, Shield
+  Folder, Tag, Clock, ChevronDown, Car, Lock
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import type { Project, TimelineStep } from '../../types'
@@ -18,63 +18,53 @@ interface ExecutorPhotosProps {
 function VehicleHeader({ project, isLocked }: { project: Project; isLocked: boolean }) {
   return (
     <div className={cn(
-      "rounded-2xl p-4 sm:p-6 mb-6 border transition-all duration-500",
+      "rounded-xl p-3 sm:p-4 mb-4 border transition-all duration-300",
       isLocked 
-        ? "bg-green-500/5 border-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.1)]" 
-        : "bg-primary/5 border-primary/30 shadow-[0_0_20px_rgba(212,175,55,0.1)]"
+        ? "bg-green-500/5 border-green-500/20" 
+        : "bg-primary/5 border-primary/20"
     )}>
-      <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-        {/* Foto do Veículo - Premium Scale */}
+      <div className="flex items-center gap-3">
+        {/* Foto do Veículo - Compacta no mobile */}
         <div className={cn(
-          "w-full sm:w-24 h-40 sm:h-24 rounded-2xl overflow-hidden flex-shrink-0 bg-carbon-900 border border-white/10 shadow-xl",
+          "w-14 h-14 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0 bg-carbon-900 border",
           isLocked ? "border-green-500/30" : "border-primary/30"
         )}>
           {project.vehicle.images?.[0] ? (
             <img 
               src={project.vehicle.images[0]} 
               alt={project.vehicle.model} 
-              className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
+              className="w-full h-full object-cover"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <Car className="w-10 h-10 text-gray-600" />
+              <Car className="w-6 h-6 text-gray-600" />
             </div>
           )}
         </div>
         
-        {/* Info do Veículo */}
-        <div className="flex-1 text-center sm:text-left w-full">
-          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-2">
+        {/* Info do Veículo - Compacto */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
             <div className={cn(
-              "flex items-center gap-1.5 px-3 py-1 rounded-full border backdrop-blur-md",
-              isLocked ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-primary/10 border-primary/20 text-primary"
+              "flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide",
+              isLocked ? "bg-green-500/20 text-green-400" : "bg-primary/20 text-primary"
             )}>
-              {isLocked ? <Lock className="w-3 h-3" /> : <div className="w-1.5 h-1.5 rounded-full bg-primary luxury-glow animate-pulse" />}
-              <span className="text-[10px] font-bold uppercase tracking-widest">
-                {isLocked ? 'CONCLUÍDO' : 'EM EXECUÇÃO'}
-              </span>
+              {isLocked ? <Lock className="w-2.5 h-2.5" /> : <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />}
+              <span>{isLocked ? 'OK' : 'ATIVO'}</span>
             </div>
           </div>
 
-          <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight leading-none mb-2">
+          <h3 className="text-sm sm:text-base font-bold text-white truncate">
             {project.vehicle.brand} <span className="text-primary">{project.vehicle.model}</span>
           </h3>
 
-          <div className="flex items-center justify-center sm:justify-start gap-4 text-xs font-medium text-gray-400">
-            <span className="font-mono font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-lg border border-primary/20 tracking-tighter">
+          <div className="flex items-center gap-2 text-[10px] text-gray-400">
+            <span className="font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
               {project.vehicle.plate}
             </span>
-            <div className="w-1 h-1 rounded-full bg-white/10" />
-            <span>{project.user.name}</span>
+            <span className="truncate">{project.user.name}</span>
           </div>
         </div>
-
-        {isLocked && (
-          <div className="w-full sm:w-auto p-3 bg-green-500/10 border border-green-500/20 rounded-xl flex items-center justify-center gap-2 text-[10px] font-bold text-green-400 uppercase tracking-widest">
-            <Shield className="w-3 h-3" />
-            <span>Finalizado</span>
-          </div>
-        )}
       </div>
     </div>
   )
@@ -223,123 +213,112 @@ export function ExecutorPhotos({ project, onUploadPhoto }: ExecutorPhotosProps) 
       {/* Cabeçalho do Veículo Selecionado */}
       <VehicleHeader project={project} isLocked={isProjectLocked} />
 
-      {/* Summary Header - Premium Mobile Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white/5 rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center text-center group hover:border-primary/30 transition-all">
-          <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
-            <ImageIcon className="w-5 h-5 text-primary" />
-          </div>
-          <div className="text-2xl font-bold text-white tracking-tight">{allPhotos.length}</div>
-          <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Total de Fotos</div>
+      {/* Summary Header - Compacto no Mobile */}
+      <div className="grid grid-cols-4 gap-2">
+        <div className="bg-white/5 rounded-xl p-2 sm:p-3 border border-white/5 text-center">
+          <ImageIcon className="w-4 h-4 text-primary mx-auto mb-1" />
+          <div className="text-lg font-bold text-white">{allPhotos.length}</div>
+          <div className="text-[8px] text-gray-500 uppercase">Fotos</div>
         </div>
-        <div className="bg-white/5 rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center text-center group hover:border-blue-400/30 transition-all">
-          <div className="w-10 h-10 bg-blue-400/10 rounded-xl flex items-center justify-center mb-3 group-hover:bg-blue-400/20 transition-colors">
-            <Folder className="w-5 h-5 text-blue-400" />
-          </div>
-          <div className="text-2xl font-bold text-white tracking-tight">{project.timeline.filter(s => s.photos.length > 0).length}</div>
-          <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Etapas Ativas</div>
+        <div className="bg-white/5 rounded-xl p-2 sm:p-3 border border-white/5 text-center">
+          <Folder className="w-4 h-4 text-blue-400 mx-auto mb-1" />
+          <div className="text-lg font-bold text-white">{project.timeline.filter(s => s.photos.length > 0).length}</div>
+          <div className="text-[8px] text-gray-500 uppercase">Etapas</div>
         </div>
-        <div className="bg-white/5 rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center text-center group hover:border-yellow-400/30 transition-all">
-          <div className="w-10 h-10 bg-yellow-400/10 rounded-xl flex items-center justify-center mb-3 group-hover:bg-yellow-400/20 transition-colors">
-            <Clock className="w-5 h-5 text-yellow-400" />
-          </div>
-          <div className="text-2xl font-bold text-white tracking-tight">{project.timeline.filter(s => s.status === 'in_progress').length}</div>
-          <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Em Andamento</div>
+        <div className="bg-white/5 rounded-xl p-2 sm:p-3 border border-white/5 text-center">
+          <Clock className="w-4 h-4 text-yellow-400 mx-auto mb-1" />
+          <div className="text-lg font-bold text-white">{project.timeline.filter(s => s.status === 'in_progress').length}</div>
+          <div className="text-[8px] text-gray-500 uppercase">Ativas</div>
         </div>
-        <div className="bg-white/5 rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center text-center group hover:border-green-400/30 transition-all">
-          <div className="w-10 h-10 bg-green-400/10 rounded-xl flex items-center justify-center mb-3 group-hover:bg-green-400/20 transition-colors">
-            <Check className="w-5 h-5 text-green-400" />
-          </div>
-          <div className="text-2xl font-bold text-white tracking-tight">{project.timeline.filter(s => s.status === 'completed').length}</div>
-          <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Concluídas</div>
+        <div className="bg-white/5 rounded-xl p-2 sm:p-3 border border-white/5 text-center">
+          <Check className="w-4 h-4 text-green-400 mx-auto mb-1" />
+          <div className="text-lg font-bold text-white">{project.timeline.filter(s => s.status === 'completed').length}</div>
+          <div className="text-[8px] text-gray-500 uppercase">OK</div>
         </div>
       </div>
 
-      {/* Photos by Step */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-bold">Fotos por Etapa</h3>
+      {/* Photos by Step - Layout Compacto Mobile */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wide">Fotos por Etapa</h3>
         
         {project.timeline.map((step) => {
           const statusColor = step.status === 'completed' ? 'text-green-400' :
                              step.status === 'in_progress' ? 'text-primary' : 'text-gray-400'
           
           return (
-            <div key={step.id} className="bg-white/5 rounded-2xl overflow-hidden">
-              {/* Step Header */}
-              <div className="p-4 border-b border-white/10 flex items-center justify-between">
-                <div className="flex items-center space-x-3">
+            <div key={step.id} className="bg-white/5 rounded-xl overflow-hidden border border-white/5">
+              {/* Step Header - Compacto */}
+              <div className="p-3 border-b border-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
                   <div className={cn(
-                    "w-3 h-3 rounded-full",
+                    "w-2 h-2 rounded-full flex-shrink-0",
                     step.status === 'completed' ? "bg-green-500" :
                     step.status === 'in_progress' ? "bg-primary" : "bg-gray-500"
                   )} />
-                  <div>
-                    <h4 className="font-semibold">{step.title}</h4>
-                    <p className={cn("text-xs", statusColor)}>
-                      {step.status === 'completed' ? 'Concluída' :
-                       step.status === 'in_progress' ? 'Em Andamento' : 'Pendente'}
-                      {' • '}{step.photos.length} foto(s)
+                  <div className="min-w-0 flex-1">
+                    <h4 className="text-sm font-medium truncate">{step.title}</h4>
+                    <p className={cn("text-[10px]", statusColor)}>
+                      {step.status === 'completed' ? '✓' :
+                       step.status === 'in_progress' ? '●' : '○'}
+                      {' '}{step.photos.length} foto(s)
                     </p>
                   </div>
                 </div>
                 {!isProjectLocked && (
                   <button
                     onClick={() => openUploadModal(step)}
-                    className="flex items-center space-x-2 bg-primary/20 text-primary px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary/30 transition-colors"
+                    className="flex items-center gap-1 bg-primary/20 text-primary px-2 py-1.5 rounded-lg text-xs font-medium"
                   >
-                    <Camera className="w-4 h-4" />
-                    <span>Adicionar</span>
+                    <Camera className="w-3 h-3" />
+                    <span className="hidden sm:inline">Add</span>
                   </button>
                 )}
               </div>
 
-              {/* Photos Grid */}
-              <div className="p-4">
+              {/* Photos Grid - 4 colunas no mobile, mais compacto */}
+              <div className="p-2">
                 {step.photos.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                    {step.photos.map((photo, idx) => (
-                      <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden group border border-white/5 bg-carbon-900 shadow-lg">
+                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5">
+                    {step.photos.slice(0, 8).map((photo, idx) => (
+                      <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-white/10 bg-carbon-900">
                         <img 
                           src={photo} 
-                          alt={`${step.title} - Foto ${idx + 1}`}
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          alt={`Foto ${idx + 1}`}
+                          className="w-full h-full object-cover"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-3">
-                          <span className="text-[10px] text-primary font-bold uppercase tracking-widest mb-0.5 truncate">Foto {idx + 1}</span>
-                          <span className="text-xs text-white font-bold truncate leading-tight">{step.title}</span>
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1 py-0.5">
+                          <span className="text-[8px] text-gray-300">{idx + 1}</span>
                         </div>
                       </div>
                     ))}
-                    {/* Add Photo Button - apenas se não bloqueado */}
-                    {!isProjectLocked && (
+                    {step.photos.length > 8 && (
+                      <div className="aspect-square rounded-lg bg-white/10 flex items-center justify-center">
+                        <span className="text-xs text-gray-400">+{step.photos.length - 8}</span>
+                      </div>
+                    )}
+                    {/* Add Photo Button - compacto */}
+                    {!isProjectLocked && step.photos.length < 8 && (
                       <button
                         onClick={() => openUploadModal(step)}
-                        className="aspect-square rounded-2xl border-2 border-dashed border-white/10 hover:border-primary/30 bg-white/5 hover:bg-primary/5 transition-all flex flex-col items-center justify-center gap-2 group"
+                        className="aspect-square rounded-lg border border-dashed border-white/20 flex items-center justify-center"
                         title="Adicionar foto"
                         aria-label="Adicionar foto"
                       >
-                        <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                          <Camera className="w-5 h-5 text-gray-500 group-hover:text-primary" />
-                        </div>
-                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest group-hover:text-primary">Adicionar</span>
+                        <Camera className="w-4 h-4 text-gray-500" />
                       </button>
                     )}
                   </div>
                 ) : !isProjectLocked ? (
                   <button
                     onClick={() => openUploadModal(step)}
-                    className="w-full py-10 rounded-2xl border-2 border-dashed border-white/10 flex flex-col items-center justify-center hover:border-primary/50 hover:bg-primary/5 transition-all group"
+                    className="w-full py-6 rounded-lg border border-dashed border-white/10 flex flex-col items-center justify-center gap-1"
                   >
-                    <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
-                      <Camera className="w-6 h-6 text-gray-600 group-hover:text-primary" />
-                    </div>
-                    <p className="text-sm text-gray-400 font-bold uppercase tracking-widest group-hover:text-primary transition-colors">Adicionar Evidências</p>
-                    <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-tighter">Clique para selecionar arquivos</p>
+                    <Camera className="w-5 h-5 text-gray-500" />
+                    <p className="text-[10px] text-gray-500">Adicionar fotos</p>
                   </button>
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-8 bg-white/5 rounded-2xl border border-white/5 opacity-50">
-                    <Shield className="w-8 h-8 text-gray-600 mb-2" />
-                    <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">Nenhuma foto registrada</p>
+                  <div className="flex items-center justify-center py-4 text-gray-600">
+                    <p className="text-[10px]">Sem fotos</p>
                   </div>
                 )}
               </div>

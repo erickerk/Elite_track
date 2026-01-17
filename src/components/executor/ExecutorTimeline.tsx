@@ -66,82 +66,70 @@ function VehicleHeader({
   
   return (
     <div className={cn(
-      "rounded-2xl p-4 sm:p-6 mb-6 border transition-all duration-500",
+      "rounded-xl p-3 sm:p-4 mb-4 border transition-all",
       atrasado && !isLocked
-        ? "bg-red-500/5 border-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.1)]"
+        ? "bg-red-500/5 border-red-500/20"
         : isLocked 
-          ? "bg-green-500/5 border-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.1)]" 
-          : "bg-primary/5 border-primary/30 shadow-[0_0_20px_rgba(212,175,55,0.1)]"
+          ? "bg-green-500/5 border-green-500/20" 
+          : "bg-primary/5 border-primary/20"
     )}>
-      <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-        {/* Foto do Veículo - Premium Scale */}
+      <div className="flex items-center gap-3">
+        {/* Foto do Veículo - Compacta */}
         <div className={cn(
-          "w-full sm:w-32 h-40 sm:h-32 rounded-2xl overflow-hidden flex-shrink-0 bg-carbon-900 border border-white/10 shadow-xl",
+          "w-14 h-14 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0 bg-carbon-900 border",
           isLocked ? "border-green-500/30" : "border-primary/30"
         )}>
           {project.vehicle.images?.[0] ? (
             <img 
               src={project.vehicle.images[0]} 
               alt={project.vehicle.model} 
-              className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
+              className="w-full h-full object-cover"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <Car className="w-10 h-10 text-gray-600" />
+              <Car className="w-6 h-6 text-gray-600" />
             </div>
           )}
         </div>
         
-        {/* Info do Veículo */}
-        <div className="flex-1 text-center sm:text-left w-full">
-          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-2">
+        {/* Info do Veículo - Compacto */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 mb-1">
             <div className={cn(
-              "flex items-center gap-1.5 px-3 py-1 rounded-full border backdrop-blur-md",
-              isLocked ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-primary/10 border-primary/20 text-primary"
+              "flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase",
+              isLocked ? "bg-green-500/20 text-green-400" : "bg-primary/20 text-primary"
             )}>
-              {isLocked ? <Lock className="w-3 h-3" /> : <div className="w-1.5 h-1.5 rounded-full bg-primary luxury-glow animate-pulse" />}
-              <span className="text-[10px] font-bold uppercase tracking-widest">
-                {isLocked ? 'Concluído' : 'Em Execução'}
-              </span>
+              {isLocked ? <Lock className="w-2.5 h-2.5" /> : <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />}
+              <span>{isLocked ? 'OK' : 'ATIVO'}</span>
             </div>
             
             {atrasado && !isLocked && (
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400">
-                <AlertCircle className="w-3 h-3" />
-                <span className="text-[10px] font-bold uppercase tracking-widest">
-                  Atrasado {diasAtraso}d
-                </span>
+              <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 text-[9px] font-bold">
+                <AlertCircle className="w-2.5 h-2.5" />
+                <span>-{diasAtraso}d</span>
               </div>
             )}
           </div>
 
-          <h3 className="text-2xl sm:text-3xl font-bold text-white tracking-tight leading-none mb-2">
+          <h3 className="text-sm sm:text-base font-bold text-white truncate">
             {project.vehicle.brand} <span className="text-primary">{project.vehicle.model}</span>
           </h3>
 
-          <div className="flex items-center justify-center sm:justify-start gap-4 text-xs font-medium text-gray-400">
-            <span className="font-mono font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-lg border border-primary/20 tracking-tighter">
+          <div className="flex items-center gap-2 text-[10px] text-gray-400">
+            <span className="font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
               {project.vehicle.plate}
             </span>
-            <div className="w-1 h-1 rounded-full bg-white/10" />
-            <span>{project.vehicle.year}</span>
-            <div className="w-1 h-1 rounded-full bg-white/10" />
-            <span className="capitalize">{project.vehicle.color}</span>
+            <span className="truncate">{project.vehicle.year} • {project.vehicle.color}</span>
           </div>
         </div>
 
-        {/* Status e Tempo - Lado direito no desktop, grid no mobile */}
-        <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto pt-4 sm:pt-0 border-t sm:border-t-0 border-white/5 gap-4">
-          <div className="text-right">
-            <div className={cn(
-              "text-4xl sm:text-5xl font-bold tracking-tighter tabular-nums",
-              isLocked ? "text-green-400" : atrasado ? "text-red-400" : "text-primary"
-            )}>
-              {project.progress}<span className="text-xl sm:text-2xl opacity-50">%</span>
-            </div>
-            <div className="text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-widest mt-1">
-              Progresso Real
-            </div>
+        {/* Progresso - Compacto */}
+        <div className="text-right flex-shrink-0">
+          <div className={cn(
+            "text-2xl sm:text-3xl font-bold tabular-nums",
+            isLocked ? "text-green-400" : atrasado ? "text-red-400" : "text-primary"
+          )}>
+            {project.progress}<span className="text-sm opacity-50">%</span>
           </div>
         </div>
       </div>
