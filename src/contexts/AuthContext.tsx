@@ -356,11 +356,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
 
           persistedUser = {
-            id: (data as any).id,
-            name: (data as any).name,
-            email: (data as any).email,
-            phone: (data as any).phone || '',
-            role: (data as any).role === 'super_admin' ? 'admin' : (data as any).role,
+            id: (data).id,
+            name: (data).name,
+            email: (data).email,
+            phone: (data).phone || '',
+            role: (data).role === 'super_admin' ? 'admin' : (data).role,
           }
           console.log('[Auth] ✓ Cliente criado a partir de senha temporária:', persistedUser.email)
         }
@@ -425,11 +425,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     
     const newUser: User = {
-      id: (data as any).id,
-      name: (data as any).name,
-      email: (data as any).email,
-      phone: (data as any).phone || '',
-      role: (data as any).role,
+      id: (data).id,
+      name: (data).name,
+      email: (data).email,
+      phone: (data).phone || '',
+      role: (data).role,
     }
     
     console.log('[Auth] ✓ Usuário criado:', newUser.name, '- Role:', newUser.role)

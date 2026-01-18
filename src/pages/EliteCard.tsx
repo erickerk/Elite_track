@@ -102,29 +102,30 @@ export function EliteCard() {
     setIsGettingLocation(true)
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        async (position) => {
+        (position) => {
           const { latitude, longitude } = position.coords
-          try {
-            // Tentar obter endereço via API de geocodificação reversa
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`)
-            const data = await response.json()
-            if (data && data.address) {
-              const addr = data.address
-              const street = addr.road || addr.street || ''
-              const number = addr.house_number || ''
-              const neighborhood = addr.suburb || addr.neighbourhood || addr.district || ''
-              const city = addr.city || addr.town || addr.municipality || ''
-              const state = addr.state || ''
-              const fullAddress = [street, number, neighborhood, city, state].filter(Boolean).join(', ')
-              setRescueLocation(fullAddress || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`)
-            } else {
+          void (async () => {
+            try {
+              const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`)
+              const data = await response.json()
+              if (data?.address) {
+                const addr = data.address
+                const street = addr.road || addr.street || ''
+                const number = addr.house_number || ''
+                const neighborhood = addr.suburb || addr.neighbourhood || addr.district || ''
+                const city = addr.city || addr.town || addr.municipality || ''
+                const state = addr.state || ''
+                const fullAddress = [street, number, neighborhood, city, state].filter(Boolean).join(', ')
+                setRescueLocation(fullAddress || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`)
+              } else {
+                setRescueLocation(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`)
+              }
+            } catch {
               setRescueLocation(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`)
             }
-          } catch {
-            setRescueLocation(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`)
-          }
-          setIsGettingLocation(false)
-          addNotification({ type: 'success', title: 'Localização Obtida', message: 'Sua localização foi capturada com sucesso.' })
+            setIsGettingLocation(false)
+            addNotification({ type: 'success', title: 'Localização Obtida', message: 'Sua localização foi capturada com sucesso.' })
+          })()
         },
         () => {
           setIsGettingLocation(false)
@@ -234,7 +235,7 @@ export function EliteCard() {
       const pdfBlob = await generatePDF()
       const file = new File([pdfBlob], `cartao-elite-${user?.name?.replace(/\s+/g, '-').toLowerCase() || 'membro'}.pdf`, { type: 'application/pdf' })
       
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({
           files: [file],
           title: 'Cartão Elite Blindagens',
@@ -433,7 +434,7 @@ export function EliteCard() {
           {/* Card Actions - Download e Compartilhar */}
           <div className="flex gap-4 mb-8">
             <button
-              onClick={handleDownloadCard}
+              onClick={() => void handleDownloadCard()}
               className="flex-1 bg-primary/20 hover:bg-primary/30 text-primary py-4 rounded-xl font-semibold flex items-center justify-center space-x-2 transition-colors"
               title="Baixar cartão em PDF"
             >
@@ -441,7 +442,7 @@ export function EliteCard() {
               <span>Baixar PDF</span>
             </button>
             <button
-              onClick={handleShareWhatsApp}
+              onClick={() => void handleShareWhatsApp()}
               className="flex-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 py-4 rounded-xl font-semibold flex items-center justify-center space-x-2 transition-colors"
               title="Compartilhar no WhatsApp"
             >
@@ -649,7 +650,7 @@ export function EliteCard() {
                 <button onClick={() => setShowRescueModal(false)} className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-colors">
                   Cancelar
                 </button>
-                <button onClick={handleRescueRequest} className="flex-1 px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors">
+                <button onClick={() => void handleRescueRequest()} className="flex-1 px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors">
                   <i className="ri-truck-line mr-2"></i>Solicitar Guincho
                 </button>
               </div>

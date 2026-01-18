@@ -164,7 +164,7 @@ export async function generateEliteShieldPDF(project: Project): Promise<Blob> {
   
   // Gerar QR Code
   let qrCodeDataUrl = ''
-  if (project.permanentQrCode && project.permanentQrCode.startsWith('data:')) {
+  if (project.permanentQrCode?.startsWith('data:')) {
     qrCodeDataUrl = project.permanentQrCode
   } else {
     qrCodeDataUrl = await generateQRCodeDataURL(verifyUrl)
@@ -175,8 +175,8 @@ export async function generateEliteShieldPDF(project: Project): Promise<Blob> {
   const logoDataUrl = logoData.dataUrl
 
   // Calcular proporção do logo
-  let logoW = 50
-  let logoH = logoData.height > 0 ? (logoW * logoData.height) / logoData.width : 25
+  const logoW = 50
+  const logoH = logoData.height > 0 ? (logoW * logoData.height) / logoData.width : 25
 
   const isFinished = project.status === 'completed' || project.status === 'delivered'
   const linhaBlindagem = dados.blindagem.linha === 'ultralite' ? LINHAS_BLINDAGEM.ultralite : LINHAS_BLINDAGEM.safecore
@@ -328,12 +328,14 @@ export async function generateEliteShieldPDF(project: Project): Promise<Blob> {
   vy1 = addField(doc, 'Modelo', dados.veiculo.modelo, col1, vy1)
   vy1 = addField(doc, 'Ano/Modelo', dados.veiculo.anoModelo, col1, vy1)
   vy1 = addField(doc, 'Cor', dados.veiculo.cor, col1, vy1)
+  void vy1
   
   // Coluna 2
   let vy2 = addField(doc, 'Placa', dados.veiculo.placa, col2, vY)
   vy2 = addField(doc, 'Chassi', dados.veiculo.chassi ? `****${dados.veiculo.chassi.slice(-4)}` : '-', col2, vy2)
   vy2 = addField(doc, 'KM Check-in', dados.veiculo.kmCheckin || '0', col2, vy2)
   vy2 = addField(doc, 'Tipo', dados.veiculo.tipo, col2, vy2)
+  void vy2
   
   y += 58
   
@@ -493,7 +495,7 @@ export async function generateEliteShieldPDF(project: Project): Promise<Blob> {
       'Ausência de ruídos'
     ]
     
-    let testY = y + 8
+    const testY = y + 8
     const testCol1 = m + 10
     const testCol2 = pw/2 + 5
     

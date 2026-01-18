@@ -493,7 +493,7 @@ export function Delivery() {
               </div>
               <div className="flex space-x-3">
                 <button onClick={() => setShowScheduleModal(false)} className="flex-1 px-4 py-3 bg-white/10 hover:bg-white/20 rounded-xl">Cancelar</button>
-                <button onClick={handleScheduleDelivery} className="flex-1 px-4 py-3 bg-primary text-black font-semibold rounded-xl">Confirmar</button>
+                <button onClick={() => void handleScheduleDelivery()} className="flex-1 px-4 py-3 bg-primary text-black font-semibold rounded-xl">Confirmar</button>
               </div>
             </div>
           </div>

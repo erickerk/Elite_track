@@ -172,13 +172,15 @@ export function Register() {
         setStep('success')
         
         // Auto-login após 3 segundos
-        setTimeout(async () => {
-          try {
-            await login(formData.email, formData.password)
-            navigate('/dashboard')
-          } catch {
-            navigate('/login')
-          }
+        setTimeout(() => {
+          void (async () => {
+            try {
+              await login(formData.email, formData.password)
+              navigate('/dashboard')
+            } catch {
+              navigate('/login')
+            }
+          })()
         }, 3000)
       } else {
         setError('Erro ao processar cadastro. Tente novamente.')
@@ -386,7 +388,7 @@ export function Register() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          onSubmit={handleSubmit}
+          onSubmit={(e) => void handleSubmit(e)}
           className="space-y-4"
         >
           {/* Nome */}

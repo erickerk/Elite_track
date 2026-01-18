@@ -176,7 +176,7 @@ export function ScanPage() {
         ref={fileInputRef}
         type="file"
         accept="image/*"
-        onChange={handleImageUpload}
+        onChange={(e) => void handleImageUpload(e)}
         className="hidden"
         aria-label="Enviar imagem do QR Code"
       />
@@ -236,7 +236,7 @@ export function ScanPage() {
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4">
               {hasFlash && (
                 <button
-                  onClick={toggleFlash}
+                  onClick={() => void toggleFlash()}
                   className={cn(
                     "w-12 h-12 rounded-full flex items-center justify-center",
                     flashOn ? "bg-primary text-black" : "bg-white/20 text-white"
@@ -247,7 +247,7 @@ export function ScanPage() {
                 </button>
               )}
               <button
-                onClick={switchCamera}
+                onClick={() => void switchCamera()}
                 className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-white"
                 aria-label="Trocar câmera"
               >
@@ -294,7 +294,7 @@ export function ScanPage() {
             <p className="text-gray-400 text-center text-sm mb-6">{errorMessage}</p>
             <div className="flex flex-col gap-3 w-full max-w-xs">
               <button
-                onClick={startCamera}
+                onClick={() => void startCamera()}
                 className="bg-primary text-black px-8 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3"
               >
                 <Camera className="w-6 h-6" />
@@ -328,7 +328,7 @@ export function ScanPage() {
             )}
             <div className="flex flex-col gap-3 w-full max-w-xs">
               <button
-                onClick={startCamera}
+                onClick={() => void startCamera()}
                 className="bg-primary text-black px-8 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 active:scale-95 transition-transform"
               >
                 <Camera className="w-6 h-6" />

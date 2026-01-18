@@ -41,7 +41,7 @@ export function ChangePassword() {
       setTimeout(() => {
         navigate('/dashboard')
       }, 2000)
-    } catch (err) {
+    } catch {
       setError('Erro ao alterar senha. Tente novamente.')
     } finally {
       setLoading(false)
@@ -101,7 +101,7 @@ export function ChangePassword() {
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={(e) => void handleSubmit(e)} className="space-y-6">
           {/* Nova Senha */}
           <div>
             <label className="block text-sm text-gray-400 mb-2">Nova Senha</label>

@@ -63,12 +63,12 @@ interface ClientInfo {
   vehiclesCount: number
   hasAccessed: boolean
   lastAccess?: string
-  projects: Array<{
+  projects: {
     id: string
     vehicle: string
     status: string
     qrCode?: string
-  }>
+  }[]
 }
 
 const exportToExcelGeneric = (data: Record<string, unknown>[], filename: string) => {
@@ -200,8 +200,8 @@ export function AdminDashboard() {
   }, [])
 
   useEffect(() => {
-    loadExecutors()
-    loadSchedules()
+    void loadExecutors()
+    void loadSchedules()
   }, [loadExecutors, loadSchedules])
 
   // Carregar histórico de ações do executor
@@ -503,7 +503,7 @@ export function AdminDashboard() {
   const handleViewExecutorDetail = (executor: ExecutorUser) => {
     setSelectedExecutor(executor)
     setShowExecutorDetail(true)
-    loadExecutorActions(executor.id)
+    void loadExecutorActions(executor.id)
   }
 
   const navItems = [
@@ -873,7 +873,7 @@ export function AdminDashboard() {
                         <span>Histórico de Ações</span>
                       </h3>
                       <button
-                        onClick={() => loadExecutorActions(selectedExecutor.id)}
+                        onClick={() => void loadExecutorActions(selectedExecutor.id)}
                         className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
                         title="Atualizar"
                       >
@@ -937,7 +937,7 @@ export function AdminDashboard() {
                     </div>
                     <div className="flex items-center gap-3">
                       <button
-                        onClick={loadExecutors}
+                        onClick={() => void loadExecutors()}
                         className="p-3 bg-white/10 rounded-xl hover:bg-white/20 transition-colors"
                         title="Atualizar lista"
                       >
@@ -1000,7 +1000,7 @@ export function AdminDashboard() {
                                 <Key className="w-4 h-4 text-yellow-500" />
                               </button>
                               <button
-                                onClick={() => handleToggleExecutorStatus(executor)}
+                                onClick={() => void handleToggleExecutorStatus(executor)}
                                 className={cn(
                                   "px-3 py-2 rounded-lg font-medium text-xs transition-colors flex items-center space-x-1",
                                   executor.status === 'active' 
@@ -1021,7 +1021,7 @@ export function AdminDashboard() {
                                 )}
                               </button>
                               <button
-                                onClick={() => handleDeleteExecutor(executor)}
+                                onClick={() => void handleDeleteExecutor(executor)}
                                 className="p-2 bg-white/10 rounded-lg hover:bg-red-500/20 transition-colors"
                                 title="Excluir"
                               >
@@ -1254,7 +1254,7 @@ export function AdminDashboard() {
                           </div>
                         </div>
                         <button
-                          onClick={async () => {
+                          onClick={() => void (async () => {
                             // Buscar projeto real do cliente para gerar PDF dinâmico
                             const clientProject = selectedClient.projects[0]
                             if (!clientProject) {
@@ -1286,7 +1286,7 @@ export function AdminDashboard() {
                               console.error('Erro ao gerar PDF:', error)
                               addNotification({ type: 'error', title: 'Erro', message: 'Erro ao gerar o PDF do laudo.' })
                             }
-                          }}
+                          })()}
                           className="flex items-center space-x-2 px-4 py-2 bg-primary text-black rounded-lg font-medium text-sm"
                         >
                           <Download className="w-4 h-4" />
@@ -1868,7 +1868,7 @@ export function AdminDashboard() {
           </div>
           <div className="flex justify-end space-x-3 mt-6">
             <button onClick={() => setShowNewExecutorModal(false)} className="px-6 py-3 bg-white/10 rounded-xl">Cancelar</button>
-            <button onClick={handleCreateExecutor} className="px-6 py-3 bg-primary text-black rounded-xl font-semibold">Criar Executor</button>
+            <button onClick={() => void handleCreateExecutor()} className="px-6 py-3 bg-primary text-black rounded-xl font-semibold">Criar Executor</button>
           </div>
         </div>
       </Modal>
@@ -1901,7 +1901,7 @@ export function AdminDashboard() {
           </div>
           <div className="flex justify-end space-x-3 mt-6">
             <button onClick={() => { setShowResetPasswordModal(false); setSelectedExecutor(null); }} className="px-6 py-3 bg-white/10 rounded-xl">Cancelar</button>
-            <button onClick={handleResetPassword} className="px-6 py-3 bg-primary text-black rounded-xl font-semibold">Salvar Senha</button>
+            <button onClick={() => void handleResetPassword()} className="px-6 py-3 bg-primary text-black rounded-xl font-semibold">Salvar Senha</button>
           </div>
         </div>
       </Modal>

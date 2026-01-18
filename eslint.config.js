@@ -64,6 +64,9 @@ export default tseslint.config(
         project: null,
       },
     },
+    plugins: {
+      '@typescript-eslint': tseslint.plugin,
+    },
     rules: {
       '@typescript-eslint/no-var-requires': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
@@ -89,6 +92,11 @@ export default tseslint.config(
         project: ['./tsconfig.tests.json'],
         tsconfigRootDir: import.meta.dirname,
       },
+    },
+    plugins: {
+      '@typescript-eslint': tseslint.plugin,
+      'react-hooks': reactHooks,
+      'react-refresh': reactRefresh,
     },
     rules: {
       'react-hooks/rules-of-hooks': 'off',

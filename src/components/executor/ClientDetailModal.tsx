@@ -162,10 +162,10 @@ export function ClientDetailModal({
                     </div>
                     <span className={cn(
                       "px-2 py-1 rounded-full text-xs",
-                      statusConfig[project.status as keyof typeof statusConfig]?.color || 'bg-gray-500',
+                      statusConfig[project.status]?.color || 'bg-gray-500',
                       "text-white"
                     )}>
-                      {statusConfig[project.status as keyof typeof statusConfig]?.label || project.status}
+                      {statusConfig[project.status]?.label || project.status}
                     </span>
                   </div>
                 </button>
@@ -186,7 +186,7 @@ export function ClientDetailModal({
               <p className="text-xs text-gray-400">Progresso</p>
             </div>
             <div className="text-center p-3 bg-white/5 rounded-xl">
-              <p className="text-sm sm:text-base font-bold truncate">{statusConfig[client.status as keyof typeof statusConfig]?.label}</p>
+              <p className="text-sm sm:text-base font-bold truncate">{statusConfig[client.status]?.label}</p>
               <p className="text-xs text-gray-400">Status</p>
             </div>
             <div className="text-center p-3 bg-white/5 rounded-xl">

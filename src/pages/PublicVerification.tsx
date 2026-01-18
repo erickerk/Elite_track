@@ -127,7 +127,7 @@ export function PublicVerification() {
     }
 
     // Mapear fotos das etapas
-    const stepPhotosMap: { [key: string]: string[] } = {}
+    const stepPhotosMap: Record<string, string[]> = {}
     if (dbProject.step_photos) {
       dbProject.step_photos.forEach((photo: any) => {
         if (!stepPhotosMap[photo.step_id]) {
@@ -222,7 +222,7 @@ export function PublicVerification() {
       setLoading(false)
     }
 
-    searchProject()
+    void searchProject()
   }, [projectId, projects, fetchProjectFromSupabase])
 
   // Estado de Loading
@@ -306,7 +306,7 @@ export function PublicVerification() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={exportToPDF}
+              onClick={() => void exportToPDF()}
               disabled={isExporting}
               className="flex items-center gap-2 bg-[#D4AF37] text-black px-4 py-2 rounded-xl font-semibold text-sm hover:bg-[#F4D03F] transition-colors disabled:opacity-50"
               title="Baixar em PDF"
@@ -331,7 +331,7 @@ export function PublicVerification() {
       <main className="max-w-2xl mx-auto">
         <EliteShieldLaudo 
           project={project}
-          onExportPDF={exportToPDF}
+          onExportPDF={() => void exportToPDF()}
           showExportButton={false}
           compact={false}
         />

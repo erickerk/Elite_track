@@ -473,14 +473,20 @@ export function ExecutorDashboard() {
     return matchesSearch && matchesFilter
   })
 
-  // Calcular stats baseado no contexto atual (ativos vs histórico)
-  const currentProjects = showHistory ? historyProjects : activeProjects
+  // Calcular stats separados (ativos vs histórico)
   const stats = {
-    total: currentProjects.length,
-    inProgress: currentProjects.filter(p => p.status === 'in_progress').length,
-    pending: currentProjects.filter(p => p.status === 'pending').length,
-    completed: currentProjects.filter(p => p.status === 'completed').length,
-    delivered: currentProjects.filter(p => p.status === 'delivered').length,
+    totalActive: activeProjects.length,
+    inProgress: activeProjects.filter(p => p.status === 'in_progress').length,
+    pending: activeProjects.filter(p => p.status === 'pending').length,
+    completed: historyProjects.filter(p => p.status === 'completed').length,
+    delivered: historyProjects.filter(p => p.status === 'delivered').length,
+    historyTotal: historyProjects.length,
+  }
+  const statsDisplay = {
+    total: showHistory ? stats.historyTotal : stats.totalActive,
+    inProgress: showHistory ? 0 : stats.inProgress,
+    pending: showHistory ? 0 : stats.pending,
+    completed: stats.completed,
   }
 
   const isSelectedProjectInFiltered = !!selectedProject && filteredProjects.some(p => p.id === selectedProject.id)
@@ -1214,7 +1220,7 @@ ${loginUrl}
       <div className="flex-1 flex flex-col min-h-screen min-w-0 overflow-x-hidden pb-20 lg:pb-0">
         {/* Header Mobile - Compacto */}
         <header className="bg-carbon-900/95 backdrop-blur-xl border-b border-white/10 sticky top-0 z-40">
-          <div className="px-3 md:px-6 py-2 md:py-4">
+          <div className="px-3 md:px-6 py-2 md:py-4 space-y-3">
             <div className="flex items-center justify-between">
               {/* Mobile: Hamburger + Título */}
               <div className="flex items-center space-x-2 lg:hidden min-w-0 flex-1">
@@ -1246,28 +1252,6 @@ ${loginUrl}
                     </p>
                   )}
                 </div>
-
-              {/* Quick Access Menu - Mobile Friendly */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4 lg:hidden">
-                {quickMenuItems.map((item) => {
-                  const Icon = item.icon
-                  const isActive = activeTab === item.id
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => handleSetActiveTab(item.id)}
-                      className={cn(
-                        "flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border transition-all active:scale-95 app-card-surface",
-                        isActive ? "border-primary bg-primary/10" : "border-white/10 bg-white/5"
-                      )}
-                      aria-label={`Ir para ${item.label}`}
-                    >
-                      <Icon className={cn("w-5 h-5", isActive ? "text-primary" : "text-gray-400")}/>
-                      <span className="text-xs font-semibold text-white">{item.label}</span>
-                    </button>
-                  )
-                })}
-              </div>
               </div>
 
               {/* Desktop: Page Title */}
@@ -1354,6 +1338,30 @@ ${loginUrl}
                 </button>
               </div>
             </div>
+
+            {/* Quick Access Menu - Mobile Friendly */}
+            {activeTab === 'dashboard' && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4 lg:hidden">
+                {quickMenuItems.map((item) => {
+                  const Icon = item.icon
+                  const isActive = activeTab === item.id
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => handleSetActiveTab(item.id)}
+                      className={cn(
+                        "flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border transition-all active:scale-95 app-card-surface",
+                        isActive ? "border-primary bg-primary/10" : "border-white/10 bg-white/5"
+                      )}
+                      aria-label={`Ir para ${item.label}`}
+                    >
+                      <Icon className={cn("w-5 h-5", isActive ? "text-primary" : "text-gray-400")} />
+                      <span className="text-xs font-semibold text-white">{item.label}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </header>
 
@@ -1428,7 +1436,7 @@ ${loginUrl}
                     <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
                       <Users className="w-5 h-5 text-primary" />
                     </div>
-                    <span className="text-2xl font-bold">{stats.total}</span>
+                    <span className="text-2xl font-bold">{statsDisplay.total}</span>
                   </div>
                   <p className="text-xs text-gray-400 font-semibold">TOTAL</p>
                 </button>
@@ -1443,7 +1451,7 @@ ${loginUrl}
                     <div className="w-10 h-10 bg-yellow-400/20 rounded-lg flex items-center justify-center">
                       <Clock className="w-5 h-5 text-yellow-400" />
                     </div>
-                    <span className="text-2xl font-bold">{stats.inProgress}</span>
+                    <span className="text-2xl font-bold">{statsDisplay.inProgress}</span>
                   </div>
                   <p className="text-xs text-gray-400 font-semibold">ATIVOS</p>
                 </button>
@@ -1458,7 +1466,7 @@ ${loginUrl}
                     <div className="w-10 h-10 bg-orange-400/20 rounded-lg flex items-center justify-center">
                       <AlertCircle className="w-5 h-5 text-orange-400" />
                     </div>
-                    <span className="text-2xl font-bold">{stats.pending}</span>
+                    <span className="text-2xl font-bold">{statsDisplay.pending}</span>
                   </div>
                   <p className="text-xs text-gray-400 font-semibold">FILA</p>
                 </button>
@@ -1481,7 +1489,7 @@ ${loginUrl}
                     <div className="w-10 h-10 bg-green-400/20 rounded-lg flex items-center justify-center">
                       <CheckCircle className="w-5 h-5 text-green-400" />
                     </div>
-                    <span className="text-2xl font-bold">{stats.completed}</span>
+                    <span className="text-2xl font-bold">{statsDisplay.completed}</span>
                   </div>
                   <p className="text-xs text-gray-400 font-semibold">CONCLUÍDOS</p>
                 </button>
@@ -1564,13 +1572,13 @@ ${loginUrl}
                   <span className="text-sm text-gray-400 font-medium">Filtrar por status:</span>
                   <div className="flex space-x-2 overflow-x-auto pb-2 md:pb-0">
                     {(showHistory ? [
-                      { value: 'all', label: 'Todos', count: stats.total, color: 'bg-white/10' },
+                      { value: 'all', label: 'Todos', count: statsDisplay.total, color: 'bg-white/10' },
                       { value: 'completed', label: 'Concluídos', count: stats.completed, color: 'bg-green-500/20 text-green-400 border-green-500/50' },
                       { value: 'delivered', label: 'Entregues', count: stats.delivered, color: 'bg-blue-500/20 text-blue-400 border-blue-500/50' },
                     ] : [
-                      { value: 'all', label: 'Todos', count: stats.total, color: 'bg-white/10' },
-                      { value: 'pending', label: 'Pendentes', count: stats.pending, color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50' },
-                      { value: 'in_progress', label: 'Em Andamento', count: stats.inProgress, color: 'bg-primary/20 text-primary border-primary/50' },
+                      { value: 'all', label: 'Todos', count: statsDisplay.total, color: 'bg-white/10' },
+                      { value: 'pending', label: 'Pendentes', count: statsDisplay.pending, color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50' },
+                      { value: 'in_progress', label: 'Em Andamento', count: statsDisplay.inProgress, color: 'bg-primary/20 text-primary border-primary/50' },
                     ]).map((filter) => (
                       <button
                         key={filter.value}

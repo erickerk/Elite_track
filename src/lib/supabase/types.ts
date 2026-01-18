@@ -12,7 +12,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type Database = {
+export interface Database {
   public: {
     Tables: {
       users: {
@@ -446,12 +446,8 @@ export type Database = {
         }
       }
     }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      [_ in never]: never
-    }
+    Views: Record<never, never>
+    Functions: Record<never, never>
     Enums: {
       user_role: 'client' | 'executor' | 'admin'
       vip_level: 'standard' | 'gold' | 'platinum'
@@ -463,9 +459,7 @@ export type Database = {
       invite_status: 'pending' | 'used' | 'expired' | 'revoked'
       notification_type: 'info' | 'success' | 'warning' | 'alert'
     }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+    CompositeTypes: Record<never, never>
   }
 }
 

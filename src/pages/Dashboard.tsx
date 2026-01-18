@@ -38,18 +38,6 @@ export function Dashboard() {
   const [copied, setCopied] = useState(false)
   const [photoModal, setPhotoModal] = useState<{ src: string; alt: string } | null>(null)
 
-  // Validação de dados do projeto
-  if (!selectedProject) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-black">
-        <div className="text-center">
-          <p className="text-white text-lg">Nenhum projeto encontrado</p>
-          <p className="text-gray-400 text-sm mt-2">Entre em contato com a Elite Blindagens</p>
-        </div>
-      </div>
-    )
-  }
-
   // Informações de contato da empresa
   const companyInfo = {
     whatsapp: '5511913123071',
@@ -121,13 +109,13 @@ export function Dashboard() {
 
   const handleShare = () => {
     if (navigator.share) {
-      navigator.share({
+      void navigator.share({
         title: `Blindagem ${selectedProject.vehicle.brand} ${selectedProject.vehicle.model}`,
         text: `Acompanhe a blindagem do meu veículo na Elite Blindagens`,
         url: qrCodeUrl,
       })
     } else {
-      handleCopyQR()
+      void handleCopyQR()
     }
   }
 
@@ -144,13 +132,14 @@ export function Dashboard() {
     
     // Se for uma URL, extrair o ID
     if (projectId.includes('/verify/')) {
-      const match = projectId.match(/\/verify\/([^/?]+)/)
+      const match = /\/verify\/([^/?]+)/.exec(projectId)
       if (match) {
         projectId = match[1]
       }
     } else if (projectId.includes('PRJ-')) {
       // Já é um ID de projeto
-      projectId = projectId.match(/PRJ-\d{4}-\d{3}/)?.[0] || projectId
+      const prjMatch = /PRJ-\d{4}-\d{3}/.exec(projectId)
+      projectId = prjMatch?.[0] || projectId
     }
 
     // Verificar se o projeto existe
@@ -394,7 +383,7 @@ export function Dashboard() {
                   <div className="space-y-3">
                     {selectedProject.timeline.map((step) => (
                       <div key={step.id} className={cn(
-                        "flex items-start gap-3 p-3 rounded-lg border transition-all",
+                        "flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg border transition-all",
                         step.status === 'completed' ? "bg-green-500/5 border-green-500/20" :
                         step.status === 'in_progress' ? "bg-primary/5 border-primary/20" :
                         "bg-white/5 border-white/5 opacity-50"
@@ -417,21 +406,21 @@ export function Dashboard() {
                         
                         {/* Content */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-start justify-between gap-2">
                             <h3 className={cn(
-                              "text-sm font-semibold truncate",
+                              "text-sm font-semibold break-words",
                               step.status === 'in_progress' ? "text-primary" : 
                               step.status === 'completed' ? "text-green-400" : "text-gray-400"
                             )}>
                               {step.title}
                             </h3>
-                            <span className="text-[9px] text-gray-500 flex-shrink-0">
+                            <span className="text-[9px] text-gray-500 flex-shrink-0 whitespace-nowrap">
                               {step.status === 'in_progress' ? '● Ativo' : 
                                step.status === 'pending' ? '○' : 
                                step.date ? new Date(step.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : '✓'}
                             </span>
                           </div>
-                          <p className="text-[10px] text-gray-500 mt-0.5 line-clamp-1">
+                          <p className="text-[10px] text-gray-500 mt-1 break-words leading-snug">
                             {step.description}
                           </p>
                         </div>
@@ -654,7 +643,7 @@ export function Dashboard() {
               aria-label="URL do QR Code"
               title="URL do QR Code"
             />
-            <Button variant="ghost" size="sm" onClick={handleCopyQR}>
+            <Button variant="ghost" size="sm" onClick={() => void handleCopyQR()}>
               {copied ? <CheckCircle className="w-4 h-4 text-status-success" /> : <Copy className="w-4 h-4" />}
             </Button>
           </div>

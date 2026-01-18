@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '../lib/utils'
 import { useAuth } from '../contexts/AuthContext'
@@ -53,7 +53,7 @@ export function Chat() {
     }
   }, [user?.id, setUserId])
 
-  const [conversations, setConversations] = useState<{ [key: string]: Conversation }>({
+  const [conversations, setConversations] = useState<Record<string, Conversation>>({
     'today': {
       id: 'today',
       title: 'Hoje',
@@ -74,7 +74,10 @@ export function Chat() {
     }
   })
 
-  const currentMessages = conversations[activeConversation]?.messages || []
+  const currentMessages = useMemo(
+    () => conversations[activeConversation]?.messages || [],
+    [activeConversation, conversations]
+  )
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -147,7 +150,7 @@ export function Chat() {
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      handleSendMessage()
+      void handleSendMessage()
     }
   }
 
@@ -542,7 +545,7 @@ export function Chat() {
                       </div>
                     </div>
                     <button 
-                      onClick={handleSendMessage}
+                      onClick={() => void handleSendMessage()}
                       disabled={!inputValue.trim()}
                       className={cn(
                         "px-6 py-3 font-semibold rounded-2xl transition-colors whitespace-nowrap",

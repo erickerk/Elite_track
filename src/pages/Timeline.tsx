@@ -9,7 +9,7 @@ import { cn } from '../lib/utils'
 import type { TimelineStep } from '../types'
 
 // Icon mapping for timeline steps
-const stepIcons: { [key: string]: string } = {
+const stepIcons: Record<string, string> = {
   'Recebimento do Veículo': 'ri-clipboard-line',
   'Desmontagem': 'ri-tools-line',
   'Instalação dos Vidros Blindados': 'ri-window-line',
@@ -306,7 +306,7 @@ export function Timeline() {
                       key={step.id}
                       onClick={() => openStepModal(step)}
                       className={cn(
-                        "flex items-center space-x-4 p-4 rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.02]",
+                        "flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.02]",
                         step.status === 'pending' ? "opacity-50" : "",
                         step.status === 'in_progress' ? "bg-primary/10 border border-primary/30" : "bg-white/5 hover:bg-white/10"
                       )}
@@ -330,15 +330,15 @@ export function Timeline() {
                       </div>
                       
                       {/* Conteúdo */}
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <h4 className={cn(
-                          "font-semibold text-base",
+                          "font-semibold text-base break-words",
                           step.status === 'in_progress' ? "text-primary" : 
                           step.status === 'pending' ? "text-gray-400" : "text-white"
                         )}>
                           {step.title}
                         </h4>
-                        <p className="text-sm text-gray-400">{step.description}</p>
+                        <p className="text-sm text-gray-400 break-words leading-relaxed">{step.description}</p>
                         {step.status === 'in_progress' && (
                           <div className="mt-2 h-1 bg-white/10 rounded-full overflow-hidden">
                             <div className="h-full w-2/3 bg-gradient-to-r from-primary to-yellow-400 rounded-full transition-all duration-1000" />
@@ -347,16 +347,19 @@ export function Timeline() {
                       </div>
                       
                       {/* Data/Status */}
-                      <div className="text-right flex-shrink-0">
-                        <span className={cn(
-                          "text-sm font-medium",
-                          step.status === 'completed' ? "text-green-400" :
-                          step.status === 'in_progress' ? "text-primary" :
-                          "text-gray-500"
-                        )}>
-                          {step.status === 'completed' ? 'Concluído' :
-                           step.status === 'in_progress' ? 'Em andamento' : 'Aguardando'}
-                        </span>
+                      <div className="flex items-center justify-between sm:flex-col sm:items-end sm:text-right gap-2 text-left">
+                        <div className="flex items-center gap-2">
+                          <span className={cn(
+                            "text-sm font-medium",
+                            step.status === 'completed' ? "text-green-400" :
+                            step.status === 'in_progress' ? "text-primary" :
+                            "text-gray-500"
+                          )}>
+                            {step.status === 'completed' ? 'Concluído' :
+                             step.status === 'in_progress' ? 'Em andamento' : 'Aguardando'}
+                          </span>
+                          <i className="ri-arrow-right-s-line text-gray-400 text-xl sm:hidden"></i>
+                        </div>
                         <p className="text-xs text-gray-500">
                           {step.date ? new Date(step.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : 
                            step.estimatedDate ? new Date(step.estimatedDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : ''}
@@ -364,7 +367,7 @@ export function Timeline() {
                       </div>
                       
                       {/* Seta para detalhes */}
-                      <div className="flex-shrink-0">
+                      <div className="hidden sm:flex flex-shrink-0">
                         <i className="ri-arrow-right-s-line text-gray-400 text-xl"></i>
                       </div>
                     </div>
@@ -379,17 +382,17 @@ export function Timeline() {
                       <i className="ri-camera-line text-primary"></i>
                       Fotos da Etapa Atual
                     </h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                       {project.timeline.find(s => s.status === 'in_progress')!.photos.slice(0, 4).map((photo, idx) => (
                         <div 
                           key={idx}
-                          className="relative group cursor-pointer rounded-xl overflow-hidden"
+                          className="relative group cursor-pointer rounded-xl overflow-hidden aspect-square"
                           onClick={() => openPhotoModal(project.timeline.find(s => s.status === 'in_progress')!.photos, idx)}
                         >
                           <img 
                             src={photo} 
                             alt={`Foto ${idx + 1}`}
-                            className="w-full h-24 object-cover transition-transform group-hover:scale-110"
+                            className="w-full h-full object-cover transition-transform group-hover:scale-110"
                           />
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                             <i className="ri-zoom-in-line text-white text-2xl"></i>

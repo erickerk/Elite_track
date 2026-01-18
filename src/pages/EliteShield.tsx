@@ -103,7 +103,7 @@ export function EliteShield() {
           </button>
           
           <button
-            onClick={handleExportPDF}
+            onClick={() => void handleExportPDF()}
             disabled={isExporting}
             className="flex items-center gap-2 px-4 py-2 bg-[#D4AF37] hover:bg-[#F4D03F] text-black font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -125,7 +125,7 @@ export function EliteShield() {
       {/* Laudo Completo usando o componente padrão */}
       <EliteShieldLaudo 
         project={project}
-        onExportPDF={handleExportPDF}
+        onExportPDF={() => void handleExportPDF()}
         showExportButton={false}
       />
     </div>

@@ -690,7 +690,7 @@ export function LandingPage() {
             </div>
 
             <div className="lg:col-span-3 glass-effect p-8 sm:p-12 rounded-[2.5rem] sm:rounded-[3.5rem] border border-white/10 shadow-2xl relative fade-in delay-0-2s">
-              <form className="space-y-6" onSubmit={handleFormSubmit}>
+              <form className="space-y-6" onSubmit={(e) => void handleFormSubmit(e)}>
                 <div className="grid sm:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-[10px] text-gray-500 font-bold uppercase tracking-widest ml-1">Nome Completo</label>

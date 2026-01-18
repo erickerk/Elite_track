@@ -48,7 +48,7 @@ export function Achievements() {
   const [referralName, setReferralName] = useState('')
   const [referralPhone, setReferralPhone] = useState('')
   const [referralEmail, setReferralEmail] = useState('')
-  const [referrals, setReferrals] = useState<Array<{name: string, phone: string, email: string, status: string, date: string}>>([
+  const [referrals, setReferrals] = useState<{name: string, phone: string, email: string, status: string, date: string}[]>([
     { name: 'Carlos Alberto', phone: '11999998888', email: 'carlos@email.com', status: 'pending', date: '2025-12-10' },
   ])
 
@@ -94,22 +94,22 @@ export function Achievements() {
   const handleShare = (achievement: Achievement) => {
     const text = `🏆 Conquista desbloqueada no EliteTrack!\n\n${achievement.icon} ${achievement.name}\n${achievement.description}\n\n#EliteBlindagens #EliteTrack`
     if (navigator.share) {
-      navigator.share({ title: 'Conquista EliteTrack', text })
+      void navigator.share({ title: 'Conquista EliteTrack', text })
     } else {
-      navigator.clipboard.writeText(text)
+      void navigator.clipboard.writeText(text)
       addNotification({ type: 'success', title: 'Copiado!', message: 'Texto copiado para compartilhar.' })
     }
   }
 
   const handleCopyReferralCode = () => {
-    navigator.clipboard.writeText(referralCode)
+    void navigator.clipboard.writeText(referralCode)
     addNotification({ type: 'success', title: 'Código copiado!', message: 'Compartilhe com seus amigos.' })
   }
 
   const handleShareReferral = () => {
     const text = `🛡️ Indique a Elite Blindagens!\n\nUse meu código: ${referralCode}\n\nBlindagem de qualidade com garantia.\n\n📞 ${COMPANY_INFO.phoneFormatted}\n🌐 ${COMPANY_INFO.websiteDisplay}`
     if (navigator.share) {
-      navigator.share({ title: 'Indicação Elite Blindagens', text })
+      void navigator.share({ title: 'Indicação Elite Blindagens', text })
     } else {
       window.open(getWhatsAppLink(text), '_blank')
     }

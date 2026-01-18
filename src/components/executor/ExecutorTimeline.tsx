@@ -471,7 +471,7 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
         ref={fileInputRef}
         type="file"
         accept="image/jpeg,image/png,image/webp,image/heic"
-        onChange={handleFileSelect}
+        onChange={(e) => void handleFileSelect(e)}
         className="hidden"
         aria-label="Selecionar foto da galeria"
       />
@@ -482,7 +482,7 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
         type="file"
         accept="image/*"
         {...({'capture': 'environment'} as any)}
-        onChange={handleFileSelect}
+        onChange={(e) => void handleFileSelect(e)}
         className="hidden"
         aria-label="Tirar foto com câmera"
       />
@@ -537,14 +537,14 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
               <div
                 onClick={() => setExpandedStep(isExpanded ? null : step.id)}
                 className={cn(
-                  "p-4 cursor-pointer hover:bg-white/5 transition-colors",
+                  "p-3 sm:p-4 cursor-pointer hover:bg-white/5 transition-colors",
                   step.status === 'completed' && "bg-green-500/5",
                   step.status === 'in_progress' && "bg-primary/5"
                 )}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="flex flex-col items-center">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3 min-w-0 flex-1">
+                    <div className="flex flex-col items-center flex-shrink-0">
                       <div className={cn(
                         "w-12 h-12 rounded-xl flex items-center justify-center",
                         config.bg
@@ -561,8 +561,8 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
                         )} />
                       )}
                     </div>
-                    <div>
-                      <div className="flex items-center space-x-2">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="text-xs text-gray-500">Etapa {index + 1}</span>
                         <span className={cn(
                           "text-xs px-2 py-0.5 rounded-full",
@@ -573,8 +573,10 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
                           {config.label}
                         </span>
                       </div>
-                      <h4 className="font-semibold text-lg">{step.title}</h4>
-                      <p className="text-sm text-gray-400">
+                      <h4 className="font-semibold text-base sm:text-lg leading-snug break-words">
+                        {step.title}
+                      </h4>
+                      <p className="text-xs sm:text-sm text-gray-400 break-words leading-snug">
                         {step.photos.length} foto(s) • {step.date 
                           ? `Concluído em ${new Date(step.date).toLocaleDateString('pt-BR')}`
                           : step.estimatedDate 
@@ -585,9 +587,9 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
                     </div>
                   </div>
                   {isExpanded ? (
-                    <ChevronUp className="w-5 h-5 text-gray-400" />
+                    <ChevronUp className="w-5 h-5 text-gray-400 flex-shrink-0" />
                   ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-400" />
+                    <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />
                   )}
                 </div>
               </div>
@@ -625,8 +627,10 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
                         </div>
                       </div>
                     ) : (
-                      <div className="flex items-start justify-between">
-                        <p className="text-sm text-gray-300 flex-1">{step.description}</p>
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm text-gray-300 flex-1 break-words leading-relaxed">
+                          {step.description}
+                        </p>
                         {!isProjectLocked && (
                           <button
                             onClick={(e) => { e.stopPropagation(); setDescriptions({ ...descriptions, [step.id]: step.description }); setEditingDescription(step.id); }}
@@ -652,11 +656,11 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
                       <span>🔒 Conclua a etapa anterior para desbloquear</span>
                     </div>
                   ) : (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-col sm:flex-row flex-wrap gap-2">
                     {step.status === 'pending' && canStart && (
                       <button
                         onClick={(e) => { e.stopPropagation(); handleStatusChange(step, 'in_progress'); }}
-                        className="flex items-center space-x-2 bg-primary text-black px-4 py-2 rounded-xl font-semibold hover:bg-primary/90 transition-colors"
+                        className="flex items-center justify-center space-x-2 bg-primary text-black px-4 py-2 rounded-xl font-semibold hover:bg-primary/90 transition-colors w-full sm:w-auto"
                       >
                         <Play className="w-4 h-4" />
                         <span>Iniciar Etapa</span>
@@ -666,14 +670,14 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
                       <>
                         <button
                           onClick={(e) => { e.stopPropagation(); handleRequestCompletion(step); }}
-                          className="flex items-center space-x-2 bg-green-500 text-white px-4 py-2 rounded-xl font-semibold hover:bg-green-600 transition-colors"
+                          className="flex items-center justify-center space-x-2 bg-green-500 text-white px-4 py-2 rounded-xl font-semibold hover:bg-green-600 transition-colors w-full sm:w-auto"
                         >
                           <CheckCircle className="w-4 h-4" />
                           <span>Concluir Etapa</span>
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); handleStatusChange(step, 'pending'); }}
-                          className="flex items-center space-x-2 bg-white/10 text-white px-4 py-2 rounded-xl font-semibold hover:bg-white/20 transition-colors"
+                          className="flex items-center justify-center space-x-2 bg-white/10 text-white px-4 py-2 rounded-xl font-semibold hover:bg-white/20 transition-colors w-full sm:w-auto"
                         >
                           <Pause className="w-4 h-4" />
                           <span>Pausar</span>
@@ -683,7 +687,7 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
                     {step.status === 'completed' && (
                       <button
                         onClick={(e) => { e.stopPropagation(); handleStatusChange(step, 'in_progress'); }}
-                        className="flex items-center space-x-2 bg-white/10 text-white px-4 py-2 rounded-xl font-semibold hover:bg-white/20 transition-colors"
+                        className="flex items-center justify-center space-x-2 bg-white/10 text-white px-4 py-2 rounded-xl font-semibold hover:bg-white/20 transition-colors w-full sm:w-auto"
                       >
                         <Edit3 className="w-4 h-4" />
                         <span>Reabrir Etapa</span>
@@ -801,7 +805,7 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
                         </div>
                       </div>
                     ) : (
-                      <p className="text-sm text-gray-400 bg-white/5 rounded-xl p-3">
+                      <p className="text-sm text-gray-400 bg-white/5 rounded-xl p-3 break-words leading-relaxed">
                         {step.notes || 'Nenhuma observação adicionada'}
                       </p>
                     )}

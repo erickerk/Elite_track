@@ -138,11 +138,11 @@ export interface EliteShieldReport {
   supervisor_signature_url?: string
   
   // Garantias
-  warranties?: Array<{
+  warranties?: {
     component: string
     duration_months: number
     description?: string
-  }>
+  }[]
   
   // QR Code
   qr_code_url?: string

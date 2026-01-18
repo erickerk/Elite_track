@@ -18,7 +18,7 @@ export function subscribeToProjectPhotos(
   onDelete?: SubscriptionCallback
 ): SubscriptionCleanup {
   if (!isSupabaseConfigured() || !db) {
-    return () => {}
+    return () => undefined
   }
 
   const channel = db.channel(`photos-${projectId}`)
@@ -94,7 +94,7 @@ export function subscribeToChatMessages(
   onNewMessage: SubscriptionCallback
 ): SubscriptionCleanup {
   if (!isSupabaseConfigured() || !db) {
-    return () => {}
+    return () => undefined
   }
 
   const channel = db.channel(`chat-${conversationId}`)
@@ -124,7 +124,7 @@ export function subscribeToEliteShieldReport(
   onUpdate: SubscriptionCallback
 ): SubscriptionCleanup {
   if (!isSupabaseConfigured() || !db) {
-    return () => {}
+    return () => undefined
   }
 
   const channel = db.channel(`eliteshield-${projectId}`)
@@ -154,7 +154,7 @@ export function subscribeToProject(
   onUpdate: SubscriptionCallback
 ): SubscriptionCleanup {
   if (!isSupabaseConfigured() || !db) {
-    return () => {}
+    return () => undefined
   }
 
   const channel = db.channel(`project-${projectId}`)
@@ -186,7 +186,7 @@ export async function saveProjectPhoto(
   stage?: string,
   description?: string,
   takenBy?: string
-): Promise<any | null> {
+): Promise<Record<string, unknown> | null> {
   if (!isSupabaseConfigured() || !db) {
     console.warn('[RealtimeSync] Supabase não configurado')
     return null
@@ -220,7 +220,7 @@ export async function saveProjectPhoto(
 }
 
 // Buscar fotos do projeto
-export async function getProjectPhotos(projectId: string): Promise<any[]> {
+export async function getProjectPhotos(projectId: string): Promise<Record<string, unknown>[]> {
   if (!isSupabaseConfigured() || !db) {
     return []
   }
@@ -253,7 +253,7 @@ export async function saveStepPhoto(
   stage?: string,
   description?: string,
   uploadedBy?: string
-): Promise<any | null> {
+): Promise<Record<string, unknown> | null> {
   if (!isSupabaseConfigured() || !db) {
     console.warn('[RealtimeSync] Supabase não configurado')
     return null
@@ -288,7 +288,7 @@ export async function saveStepPhoto(
 }
 
 // Buscar fotos da etapa
-export async function getStepPhotos(stepId: string): Promise<any[]> {
+export async function getStepPhotos(stepId: string): Promise<Record<string, unknown>[]> {
   if (!isSupabaseConfigured() || !db) {
     return []
   }

@@ -159,7 +159,7 @@ export function ProjectManager() {
     setProject(updatedProject)
     
     // Persistir no contexto global
-    updateProject(project.id, { timeline: updatedTimeline, progress: newProgress, status: newStatus })
+    void updateProject(project.id, { timeline: updatedTimeline, progress: newProgress, status: newStatus })
     
     setShowStepModal(false)
     setStepNotes('')
@@ -230,7 +230,7 @@ export function ProjectManager() {
         setProject(updatedProject)
         
         // Persistir no contexto global
-        updateProject(project.id, { timeline: updatedTimeline })
+        void updateProject(project.id, { timeline: updatedTimeline })
         
         addNotification({
           type: 'success',
@@ -387,8 +387,8 @@ export function ProjectManager() {
                     )}
                     onClick={() => { setSelectedStep(step); setShowStepModal(true); }}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-4 min-w-0">
                         <div className={cn(
                           "w-12 h-12 rounded-xl flex items-center justify-center",
                           step.status === 'completed' ? "bg-green-500" :
@@ -403,16 +403,16 @@ export function ProjectManager() {
                             <AlertCircle className="w-6 h-6 text-gray-400" />
                           )}
                         </div>
-                        <div>
-                          <h4 className="font-semibold">{step.title}</h4>
-                          <p className="text-sm text-gray-400">
+                        <div className="min-w-0">
+                          <h4 className="font-semibold break-words">{step.title}</h4>
+                          <p className="text-sm text-gray-400 break-words">
                             {step.status === 'completed' ? `Concluído em ${step.date ? new Date(step.date).toLocaleDateString('pt-BR') : ''}` :
                              step.status === 'in_progress' ? 'Em andamento' :
                              `Previsão: ${step.estimatedDate ? new Date(step.estimatedDate).toLocaleDateString('pt-BR') : ''}`}
                           </p>
                         </div>
                       </div>
-                      <ChevronRight className="w-5 h-5 text-gray-400" />
+                      <ChevronRight className="w-5 h-5 text-gray-400 self-center" />
                     </div>
                   </div>
                 ))}
@@ -461,12 +461,12 @@ export function ProjectManager() {
                                        step.status === 'in_progress' ? 'bg-primary' : 'bg-gray-500'
                     return (
                       <div key={step.id} className="bg-white/5 rounded-2xl overflow-hidden border border-white/10">
-                        <div className="p-4 flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
+                        <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
                             <div className={cn("w-3 h-3 rounded-full", statusColor)} />
-                            <div>
-                              <h4 className="font-semibold">{step.title}</h4>
-                              <p className="text-xs text-gray-400">
+                            <div className="min-w-0">
+                              <h4 className="font-semibold break-words">{step.title}</h4>
+                              <p className="text-xs text-gray-400 break-words">
                                 {step.status === 'completed' ? 'Concluída' :
                                  step.status === 'in_progress' ? 'Em Andamento' : 'Pendente'}
                                 {' • '}{step.photos.length} foto(s)
@@ -475,7 +475,7 @@ export function ProjectManager() {
                           </div>
                           <button 
                             onClick={() => { setSelectedStep(step); setShowPhotoUpload(true); }}
-                            className="flex items-center space-x-2 bg-primary/20 text-primary px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary/30 transition-colors"
+                            className="flex items-center justify-center space-x-2 bg-primary/20 text-primary px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary/30 transition-colors w-full sm:w-auto"
                           >
                             <Camera className="w-4 h-4" />
                             <span>Adicionar</span>
@@ -483,7 +483,7 @@ export function ProjectManager() {
                         </div>
                         {step.photos.length > 0 && (
                           <div className="p-4 pt-0">
-                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                               {step.photos.map((photo, idx) => (
                                 <div key={idx} className="relative group">
                                   <div className="aspect-square rounded-xl overflow-hidden bg-carbon-900">
@@ -793,7 +793,7 @@ export function ProjectManager() {
 
           {/* Save Button */}
           <button
-            onClick={handleUploadPhotos}
+            onClick={() => void handleUploadPhotos()}
             disabled={uploadedPhotos.length === 0 || isUploading}
             className="w-full bg-primary text-black py-4 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
           >

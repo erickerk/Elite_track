@@ -24,7 +24,7 @@ const getCategoryFromStep = (stepTitle: string): string => {
   return 'processo'
 }
 
-const categoryColors: { [key: string]: { bg: string; text: string; label: string } } = {
+const categoryColors: Record<string, { bg: string; text: string; label: string }> = {
   'fotos-internas': { bg: 'bg-blue-600', text: 'text-blue-400', label: 'INTERIOR' },
   'manta': { bg: 'bg-red-600', text: 'text-red-400', label: 'MANTA' },
   'vidros': { bg: 'bg-green-600', text: 'text-green-400', label: 'VIDROS' },
@@ -98,7 +98,7 @@ export function Gallery() {
 
   // Count by category
   const categoryCounts = useMemo(() => {
-    const counts: { [key: string]: number } = {
+    const counts: Record<string, number> = {
       'fotos-internas': 0,
       'manta': 0,
       'vidros': 0,
@@ -298,7 +298,7 @@ export function Gallery() {
               {/* Gallery Grid */}
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {filteredImages.map((image) => {
-                  const categoryInfo = categoryColors[image.category] || categoryColors['processo']
+                  const categoryInfo = categoryColors[image.category] || categoryColors.processo
                   return (
                     <div 
                       key={image.id}
@@ -346,15 +346,15 @@ export function Gallery() {
                     <div className="text-xs text-gray-400">Internas</div>
                   </div>
                   <div>
-                    <div className="text-lg font-bold text-red-400">{categoryCounts['manta']}</div>
+                    <div className="text-lg font-bold text-red-400">{categoryCounts.manta}</div>
                     <div className="text-xs text-gray-400">Manta</div>
                   </div>
                   <div>
-                    <div className="text-lg font-bold text-green-400">{categoryCounts['vidros']}</div>
+                    <div className="text-lg font-bold text-green-400">{categoryCounts.vidros}</div>
                     <div className="text-xs text-gray-400">Vidros</div>
                   </div>
                   <div>
-                    <div className="text-lg font-bold text-yellow-400">{categoryCounts['processo']}</div>
+                    <div className="text-lg font-bold text-yellow-400">{categoryCounts.processo}</div>
                     <div className="text-xs text-gray-400">Processo</div>
                   </div>
                 </div>

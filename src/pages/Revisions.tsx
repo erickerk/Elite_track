@@ -517,7 +517,7 @@ export function Revisions() {
             <Button variant="outline" className="flex-1" onClick={() => setShowScheduleModal(false)}>
               Cancelar
             </Button>
-            <Button className="flex-1" onClick={handleConfirmSchedule}>
+            <Button className="flex-1" onClick={() => void handleConfirmSchedule()}>
               <Calendar className="w-4 h-4 mr-2" />
               Confirmar Agendamento
             </Button>

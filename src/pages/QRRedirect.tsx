@@ -98,7 +98,7 @@ export function QRRedirect() {
       }
     }
 
-    resolveQRCode()
+    void resolveQRCode()
   }, [code, navigate])
 
   if (status === 'loading') {

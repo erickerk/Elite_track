@@ -104,7 +104,7 @@ export function QRCodePage() {
         <Button
           variant="outline"
           className="flex-col h-auto py-4"
-          onClick={handleCopy}
+          onClick={() => void handleCopy()}
         >
           {copied ? (
             <Check className="w-5 h-5 mb-2 text-status-success" />

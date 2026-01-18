@@ -90,7 +90,7 @@ export function ClientDocuments() {
       }
     }
 
-    loadDocuments()
+    void loadDocuments()
   }, [user?.id])
 
   const filteredDocuments = selectedCategory === 'all' 
@@ -167,7 +167,27 @@ export function ClientDocuments() {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     setDragOver(false)
-    handleFileSelect(e.dataTransfer.files)
+    void handleFileSelect(e.dataTransfer.files)
+  }
+
+  const handleDownload = async (doc: Document) => {
+    try {
+      if (doc.url) {
+        const link = document.createElement('a')
+        link.href = doc.url
+        link.download = doc.name
+        link.target = '_blank'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        addNotification({ type: 'success', title: 'Download', message: 'Download iniciado com sucesso.' })
+      } else {
+        addNotification({ type: 'warning', title: 'Download', message: 'Documento não disponível para download.' })
+      }
+    } catch (error) {
+      console.error('Erro ao baixar documento:', error)
+      addNotification({ type: 'error', title: 'Erro', message: 'Não foi possível baixar o documento.' })
+    }
   }
 
   const handleDelete = async (docId: string) => {
@@ -316,33 +336,14 @@ export function ClientDocuments() {
                       </button>
                     )}
                     <button
-                      onClick={async () => {
-                        try {
-                          if (doc.url) {
-                            // Se URL já existe (signed ou blob), usa direto
-                            const link = document.createElement('a')
-                            link.href = doc.url
-                            link.download = doc.name
-                            link.target = '_blank'
-                            document.body.appendChild(link)
-                            link.click()
-                            document.body.removeChild(link)
-                            addNotification({ type: 'success', title: 'Download', message: 'Download iniciado com sucesso.' })
-                          } else {
-                            addNotification({ type: 'warning', title: 'Download', message: 'Documento não disponível para download.' })
-                          }
-                        } catch (error) {
-                          console.error('Erro ao baixar documento:', error)
-                          addNotification({ type: 'error', title: 'Erro', message: 'Não foi possível baixar o documento.' })
-                        }
-                      }}
+                      onClick={() => void handleDownload(doc)}
                       className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
                       title="Baixar"
                     >
                       <Download className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => handleDelete(doc.id)}
+                      onClick={() => void handleDelete(doc.id)}
                       className="p-2 bg-white/10 rounded-lg hover:bg-red-500/20 transition-colors"
                       title="Excluir"
                     >
@@ -398,7 +399,7 @@ export function ClientDocuments() {
               type="file"
               multiple
               accept="image/*,.pdf,.doc,.docx"
-              onChange={(e) => handleFileSelect(e.target.files)}
+              onChange={(e) => void handleFileSelect(e.target.files)}
               className="hidden"
               title="Selecionar arquivos"
             />
