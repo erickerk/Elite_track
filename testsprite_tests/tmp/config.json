@@ -1,0 +1,25 @@
+{
+  "apiKey": "sk-user-tYeUg4wBMJKToQ-JeX4RTll1q-8b0d2m6Yac_wzNkoepeeNcHUuGW1Hafz6AkSXd8YhRAe0ntCb8-J1RziWI2Vq7P04odL8aVUqzaOD2AuLAc8WN0e-Ws7sz_NLgJK_rU4U",
+  "testType": "e2e",
+  "description": "Teste de validação da aplicação Elite Track",
+  "targetUrl": "http://localhost:5176",
+  "projectPath": "C:\\Users\\admin\\Desktop\\WindSurf\\Elite_track-master\\Elite_track",
+  "testCases": [
+    {
+      "name": "Carregamento da página inicial",
+      "steps": [
+        "Acessar http://localhost:5176",
+        "Verificar se a página carrega sem erros",
+        "Verificar se o logo Elite está visível"
+      ]
+    },
+    {
+      "name": "Login de usuário",
+      "steps": [
+        "Clicar no botão de login",
+        "Preencher credenciais",
+        "Verificar redirecionamento após login"
+      ]
+    }
+  ]
+}
