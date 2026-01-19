@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { isRateLimited, recordLoginAttempt, clearRateLimit, getRateLimitInfo } from '../utils/rateLimiter'
 import '../styles/Login.css'
 
 export function Login() {
@@ -35,6 +36,14 @@ export function Login() {
   const [showRequestAccessModal, setShowRequestAccessModal] = useState(false)
   const [accessRequestData, setAccessRequestData] = useState({ name: '', email: '', phone: '', message: '' })
   const [isSendingRequest, setIsSendingRequest] = useState(false)
+  
+  // Estado para rate limiting
+  const [rateLimitInfo, setRateLimitInfo] = useState(() => getRateLimitInfo(email || 'default'))
+  
+  // Atualizar rate limit info quando email mudar
+  useEffect(() => {
+    setRateLimitInfo(getRateLimitInfo(email || 'default'))
+  }, [email])
 
   useEffect(() => {
     // Fade in animation
@@ -70,10 +79,21 @@ export function Login() {
       return
     }
 
+    // Verificar rate limiting antes de tentar login
+    const limitCheck = isRateLimited(email)
+    if (limitCheck.limited) {
+      showNotification(`Conta bloqueada por ${limitCheck.remainingTime} minutos devido a múltiplas tentativas falhas.`, 'error')
+      setRateLimitInfo(getRateLimitInfo(email))
+      return
+    }
+
     setIsLoading(true)
 
     try {
       await login(email, password)
+      
+      // Limpar rate limit após sucesso
+      clearRateLimit(email)
       
       // Salvar credenciais se "Lembrar-me" estiver marcado
       if (rememberMe) {
@@ -89,7 +109,17 @@ export function Login() {
       showNotification('Login realizado com sucesso! Redirecionando...', 'success')
       setTimeout(() => navigate('/dashboard'), 1500)
     } catch {
-      showNotification('Credenciais inválidas. Tente novamente.', 'error')
+      // Registrar tentativa falha
+      const result = recordLoginAttempt(email)
+      setRateLimitInfo(getRateLimitInfo(email))
+      
+      if (!result.success) {
+        showNotification(`Conta bloqueada por 30 minutos devido a múltiplas tentativas falhas.`, 'error')
+      } else if (result.attemptsRemaining <= 2) {
+        showNotification(`Credenciais inválidas. ${result.attemptsRemaining} tentativas restantes.`, 'error')
+      } else {
+        showNotification('Credenciais inválidas. Tente novamente.', 'error')
+      }
       setIsLoading(false)
     }
   }
@@ -216,6 +246,28 @@ export function Login() {
                 >
                   Ocultar instruções
                 </button>
+              </div>
+            )}
+
+            {/* Aviso de Rate Limiting */}
+            {rateLimitInfo.isLocked && (
+              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
+                <div className="flex items-start gap-3">
+                  <i className="ri-error-warning-line text-red-500 text-lg mt-0.5"></i>
+                  <div className="text-sm">
+                    <p className="text-red-400 font-medium">Conta temporariamente bloqueada</p>
+                    <p className="text-gray-400">Aguarde {rateLimitInfo.lockoutMinutes} minutos antes de tentar novamente.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {rateLimitInfo.attemptsUsed > 0 && !rateLimitInfo.isLocked && (
+              <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                <div className="flex items-center gap-2 text-sm">
+                  <i className="ri-alert-line text-yellow-500"></i>
+                  <span className="text-yellow-400">{rateLimitInfo.attemptsRemaining} tentativas restantes</span>
+                </div>
               </div>
             )}
 
