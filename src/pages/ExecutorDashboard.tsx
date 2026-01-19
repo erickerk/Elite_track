@@ -235,6 +235,7 @@ export function ExecutorDashboard() {
   const projects = globalProjects
   const [showLaudoModal, setShowLaudoModal] = useState(false)
   const [showNewCarModal, setShowNewCarModal] = useState(false)
+  const [isCreatingProject, setIsCreatingProject] = useState(false) // Prevenir duplo clique
   const [showShareModal, setShowShareModal] = useState(false)
   const [showTicketModal, setShowTicketModal] = useState(false)
   const [selectedTicket, setSelectedTicket] = useState<TicketWithDetails | null>(null)
@@ -493,14 +494,38 @@ export function ExecutorDashboard() {
 
   useEffect(() => {
     if (filteredProjects.length === 0) {
-      if (selectedProject) setSelectedProject(null)
+      // Não limpar selectedProject imediatamente - pode ser que o projeto só mudou de status
+      // e vai reaparecer em outro filtro. Só limpar se realmente não existir mais.
+      if (selectedProject && !projects.some(p => p.id === selectedProject.id)) {
+        setSelectedProject(null)
+      }
       return
     }
 
-    if (!selectedProject || !filteredProjects.some(p => p.id === selectedProject.id)) {
+    // Se não há projeto selecionado, selecionar o primeiro
+    if (!selectedProject) {
       setSelectedProject(filteredProjects[0])
+      return
     }
-  }, [filteredProjects, selectedProject])
+    
+    // Se o projeto selecionado não está nos filtrados MAS ainda existe nos projetos,
+    // manter a seleção (o usuário pode ter mudado o status e o projeto saiu do filtro atual)
+    if (!filteredProjects.some(p => p.id === selectedProject.id)) {
+      // Verificar se o projeto ainda existe (apenas mudou de status)
+      const projectStillExists = projects.some(p => p.id === selectedProject.id)
+      if (projectStillExists) {
+        // Manter o projeto selecionado - ele só mudou de status
+        // Atualizar com dados mais recentes
+        const updatedProject = projects.find(p => p.id === selectedProject.id)
+        if (updatedProject) {
+          setSelectedProject(updatedProject)
+        }
+      } else {
+        // Projeto foi realmente removido, selecionar outro
+        setSelectedProject(filteredProjects[0])
+      }
+    }
+  }, [filteredProjects, selectedProject, projects])
 
   // Carregar tickets do Supabase e enriquecer com dados do projeto
   useEffect(() => {
@@ -786,6 +811,12 @@ export function ExecutorDashboard() {
   }
 
   const handleCreateNewCar = async () => {
+    // Prevenir duplo clique - se já está criando, ignorar
+    if (isCreatingProject) {
+      console.log('[ExecutorDashboard] Criação já em andamento, ignorando clique duplicado')
+      return
+    }
+    
     if (!newCarData.clientName || !newCarData.brand || !newCarData.model || !newCarData.plate) {
       addNotification({
         type: 'warning',
@@ -803,6 +834,9 @@ export function ExecutorDashboard() {
       })
       return
     }
+    
+    // Bloquear botão imediatamente
+    setIsCreatingProject(true)
 
     // Etapas padrão do processo de blindagem
     const defaultTimeline = [
@@ -991,6 +1025,9 @@ export function ExecutorDashboard() {
         ? `Projeto para ${newCarData.brand} ${newCarData.model} criado e sincronizado com sucesso.`
         : `Projeto para ${newCarData.brand} ${newCarData.model} criado localmente. Sincronização pendente.`,
     })
+    
+    // Desbloquear botão após finalizar
+    setIsCreatingProject(false)
   }
 
   // Função para baixar QR Code como imagem
@@ -3705,10 +3742,23 @@ ${loginUrl}
           </div>
 
           <div className="flex justify-end space-x-3 mt-6">
-            <button onClick={() => setShowNewCarModal(false)} className="px-6 py-3 bg-white/10 rounded-xl">Cancelar</button>
-            <button onClick={() => void handleCreateNewCar()} className="px-6 py-3 bg-primary text-black rounded-xl font-semibold flex items-center space-x-2">
-              <Plus className="w-4 h-4" />
-              <span>Criar Projeto</span>
+            <button onClick={() => setShowNewCarModal(false)} disabled={isCreatingProject} className="px-6 py-3 bg-white/10 rounded-xl disabled:opacity-50">Cancelar</button>
+            <button 
+              onClick={() => void handleCreateNewCar()} 
+              disabled={isCreatingProject}
+              className="px-6 py-3 bg-primary text-black rounded-xl font-semibold flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isCreatingProject ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                  <span>Criando...</span>
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4" />
+                  <span>Criar Projeto</span>
+                </>
+              )}
             </button>
           </div>
         </div>

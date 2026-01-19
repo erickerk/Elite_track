@@ -113,6 +113,7 @@ interface AuthContextType {
   changePassword: (newPassword: string) => Promise<void>
   registerTempPassword: (email: string, password: string, projectId?: string) => void
   createUser: (userData: { name: string; email: string; phone?: string; role: 'executor' | 'client'; password: string }) => Promise<User>
+  requestPasswordReset?: (email: string) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -201,7 +202,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // 2. Fallback: usuários de desenvolvimento (apenas quando Supabase não disponível)
     const devUser = devUsers[normalizedEmail]
     if (devUser && devUser.password === password) {
-      const { password: _, ...userWithoutPassword } = devUser
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password: _pw, ...userWithoutPassword } = devUser
       setUser(userWithoutPassword)
       setRequiresPasswordChange(false)
       createSession(userWithoutPassword)
@@ -438,8 +440,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const registerTempPassword = (email: string, password: string, projectId?: string) => {
     // Usar o novo serviço que salva no Supabase (com fallback localStorage)
-    registerTempPasswordService(email, password, projectId)
+    void registerTempPasswordService(email, password, projectId)
     console.log('[Auth] Senha temporária registrada para:', email)
+  }
+  
+  // Função para solicitar reset de senha
+  const requestPasswordReset = async (email: string): Promise<void> => {
+    const normalizedEmail = email.toLowerCase().trim()
+    console.log('[Auth] Solicitando reset de senha para:', normalizedEmail)
+    
+    // Verificar se usuário existe no Supabase
+    if (isSupabaseConfigured() && supabase) {
+      const { data } = await supabase
+        .from('users_elitetrack')
+        .select('email, name')
+        .eq('email', normalizedEmail)
+        .single()
+      
+      if (!data) {
+        throw new Error('Email não encontrado')
+      }
+      
+      // Em produção, enviar email com link de reset
+      // Por enquanto, simular sucesso
+      console.log('[Auth] Reset de senha solicitado para:', normalizedEmail)
+    }
   }
 
   return (
@@ -448,11 +473,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: !!user, 
       requiresPasswordChange,
       login, 
-      logout, 
-      updateUser,
+      logout: () => void logout(), 
+      updateUser: (data) => void updateUser(data),
       changePassword,
       registerTempPassword,
       createUser,
+      requestPasswordReset,
     }}>
       {children}
     </AuthContext.Provider>

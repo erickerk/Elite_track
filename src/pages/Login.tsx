@@ -7,14 +7,34 @@ export function Login() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const projectId = searchParams.get('project')
-  const { login } = useAuth()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const { login, requestPasswordReset } = useAuth()
+  
+  // Carregar credenciais salvas do localStorage
+  const [email, setEmail] = useState(() => {
+    const saved = localStorage.getItem('elite_remembered_email')
+    return saved || ''
+  })
+  const [password, setPassword] = useState(() => {
+    const saved = localStorage.getItem('elite_remembered_password')
+    return saved || ''
+  })
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [rememberMe, setRememberMe] = useState(false)
+  const [rememberMe, setRememberMe] = useState(() => {
+    return localStorage.getItem('elite_remember_me') === 'true'
+  })
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [showFirstAccessInfo, setShowFirstAccessInfo] = useState(!!projectId)
+  
+  // Estados para modal "Esqueci a senha"
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false)
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [isSendingReset, setIsSendingReset] = useState(false)
+  
+  // Estados para modal "Solicitar Acesso"
+  const [showRequestAccessModal, setShowRequestAccessModal] = useState(false)
+  const [accessRequestData, setAccessRequestData] = useState({ name: '', email: '', phone: '', message: '' })
+  const [isSendingRequest, setIsSendingRequest] = useState(false)
 
   useEffect(() => {
     // Fade in animation
@@ -54,11 +74,78 @@ export function Login() {
 
     try {
       await login(email, password)
+      
+      // Salvar credenciais se "Lembrar-me" estiver marcado
+      if (rememberMe) {
+        localStorage.setItem('elite_remembered_email', email)
+        localStorage.setItem('elite_remembered_password', password)
+        localStorage.setItem('elite_remember_me', 'true')
+      } else {
+        localStorage.removeItem('elite_remembered_email')
+        localStorage.removeItem('elite_remembered_password')
+        localStorage.setItem('elite_remember_me', 'false')
+      }
+      
       showNotification('Login realizado com sucesso! Redirecionando...', 'success')
       setTimeout(() => navigate('/dashboard'), 1500)
     } catch {
       showNotification('Credenciais inválidas. Tente novamente.', 'error')
       setIsLoading(false)
+    }
+  }
+  
+  // Handler para "Esqueci a senha"
+  const handleForgotPassword = async () => {
+    if (!forgotEmail) {
+      showNotification('Por favor, informe seu email.', 'error')
+      return
+    }
+    
+    if (!isValidEmail(forgotEmail)) {
+      showNotification('Por favor, insira um email válido.', 'error')
+      return
+    }
+    
+    setIsSendingReset(true)
+    
+    try {
+      if (requestPasswordReset) {
+        await requestPasswordReset(forgotEmail)
+      }
+      showNotification('Instruções de recuperação enviadas para seu email!', 'success')
+      setShowForgotPasswordModal(false)
+      setForgotEmail('')
+    } catch {
+      showNotification('Erro ao enviar email. Verifique se o email está correto.', 'error')
+    } finally {
+      setIsSendingReset(false)
+    }
+  }
+  
+  // Handler para "Solicitar Acesso"
+  const handleRequestAccess = async () => {
+    if (!accessRequestData.name || !accessRequestData.email || !accessRequestData.phone) {
+      showNotification('Por favor, preencha todos os campos obrigatórios.', 'error')
+      return
+    }
+    
+    if (!isValidEmail(accessRequestData.email)) {
+      showNotification('Por favor, insira um email válido.', 'error')
+      return
+    }
+    
+    setIsSendingRequest(true)
+    
+    try {
+      // Simular envio - em produção, seria uma chamada à API
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      showNotification('Solicitação enviada com sucesso! Entraremos em contato em breve.', 'success')
+      setShowRequestAccessModal(false)
+      setAccessRequestData({ name: '', email: '', phone: '', message: '' })
+    } catch {
+      showNotification('Erro ao enviar solicitação. Tente novamente.', 'error')
+    } finally {
+      setIsSendingRequest(false)
     }
   }
 
@@ -187,7 +274,13 @@ export function Login() {
                     <span className="text-gray-300">Lembrar-me</span>
                   </label>
                 </div>
-                <a href="#" className="text-primary hover:text-primary/80 transition-colors">Esqueci minha senha</a>
+                <button 
+                  type="button" 
+                  onClick={() => setShowForgotPasswordModal(true)} 
+                  className="text-primary hover:text-primary/80 transition-colors"
+                >
+                  Esqueci minha senha
+                </button>
               </div>
 
               <button
@@ -199,7 +292,7 @@ export function Login() {
               </button>
 
               <div className="text-center pt-4 border-t border-white/10">
-                <p className="text-gray-400 text-sm">Ainda não tem uma conta? <button type="button" onClick={() => navigate('/register')} className="text-primary hover:text-primary/80 transition-colors font-medium">Solicite acesso</button></p>
+                <p className="text-gray-400 text-sm">Ainda não tem uma conta? <button type="button" onClick={() => setShowRequestAccessModal(true)} className="text-primary hover:text-primary/80 transition-colors font-medium">Solicite acesso</button></p>
               </div>
             </form>
           </div>
@@ -218,6 +311,139 @@ export function Login() {
           </div>
         </div>
       </section>
+      
+      {/* Modal Esqueci a Senha */}
+      {showForgotPasswordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+          <div className="bg-carbon-900 rounded-3xl p-6 max-w-md w-full border border-white/10">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold">Recuperar Senha</h3>
+              <button
+                onClick={() => setShowForgotPasswordModal(false)}
+                className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center hover:bg-white/20"
+                aria-label="Fechar modal"
+              >
+                <i className="ri-close-line"></i>
+              </button>
+            </div>
+            
+            <p className="text-gray-400 text-sm mb-6">
+              Digite seu email cadastrado e enviaremos as instruções para redefinir sua senha.
+            </p>
+            
+            <div className="mb-6">
+              <label className="block text-sm font-medium mb-2">Email</label>
+              <input
+                type="email"
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                placeholder="seu@email.com"
+                className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-primary"
+              />
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowForgotPasswordModal(false)}
+                className="flex-1 bg-white/10 text-white py-3 rounded-xl font-semibold hover:bg-white/20"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => void handleForgotPassword()}
+                disabled={isSendingReset}
+                className="flex-1 gradient-gold text-black py-3 rounded-xl font-semibold disabled:opacity-50"
+              >
+                {isSendingReset ? 'Enviando...' : 'Enviar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Modal Solicitar Acesso */}
+      {showRequestAccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+          <div className="bg-carbon-900 rounded-3xl p-6 max-w-md w-full border border-white/10 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold">Solicitar Acesso</h3>
+              <button
+                onClick={() => setShowRequestAccessModal(false)}
+                className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center hover:bg-white/20"
+                aria-label="Fechar modal"
+              >
+                <i className="ri-close-line"></i>
+              </button>
+            </div>
+            
+            <p className="text-gray-400 text-sm mb-6">
+              Preencha os dados abaixo e entraremos em contato para liberar seu acesso.
+            </p>
+            
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium mb-2">Nome completo *</label>
+                <input
+                  type="text"
+                  value={accessRequestData.name}
+                  onChange={(e) => setAccessRequestData({ ...accessRequestData, name: e.target.value })}
+                  placeholder="Seu nome"
+                  className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-primary"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Email *</label>
+                <input
+                  type="email"
+                  value={accessRequestData.email}
+                  onChange={(e) => setAccessRequestData({ ...accessRequestData, email: e.target.value })}
+                  placeholder="seu@email.com"
+                  className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-primary"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Telefone/WhatsApp *</label>
+                <input
+                  type="tel"
+                  value={accessRequestData.phone}
+                  onChange={(e) => setAccessRequestData({ ...accessRequestData, phone: e.target.value })}
+                  placeholder="(11) 99999-9999"
+                  className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-primary"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Mensagem (opcional)</label>
+                <textarea
+                  value={accessRequestData.message}
+                  onChange={(e) => setAccessRequestData({ ...accessRequestData, message: e.target.value })}
+                  placeholder="Conte-nos sobre seu veículo ou como podemos ajudar..."
+                  rows={3}
+                  className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-primary resize-none"
+                />
+              </div>
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowRequestAccessModal(false)}
+                className="flex-1 bg-white/10 text-white py-3 rounded-xl font-semibold hover:bg-white/20"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => void handleRequestAccess()}
+                disabled={isSendingRequest}
+                className="flex-1 gradient-gold text-black py-3 rounded-xl font-semibold disabled:opacity-50"
+              >
+                {isSendingRequest ? 'Enviando...' : 'Enviar Solicitação'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

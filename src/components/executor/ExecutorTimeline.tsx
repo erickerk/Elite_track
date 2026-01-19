@@ -266,6 +266,7 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
   // Estados para upload de fotos
   const [isUploading, setIsUploading] = useState(false)
   const [uploadingStepId, setUploadingStepId] = useState<string | null>(null)
+  const [uploadProgress, setUploadProgress] = useState<string>('') // Feedback de progresso
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
   
@@ -377,13 +378,56 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
   // Handler para abrir galeria
   const handleAddPhoto = (stepId: string) => {
     setUploadingStepId(stepId)
+    // Resetar o input para permitir selecionar o mesmo arquivo novamente
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
     fileInputRef.current?.click()
   }
   
-  // Handler para abrir câmera
-  const handleTakePhoto = (stepId: string) => {
+  // Handler para abrir câmera - usar MediaDevices API para melhor compatibilidade
+  const handleTakePhoto = async (stepId: string) => {
     setUploadingStepId(stepId)
-    cameraInputRef.current?.click()
+    
+    // Verificar se está em dispositivo móvel
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    
+    if (isMobile) {
+      // Em mobile, usar o input com capture que abre a câmera diretamente
+      if (cameraInputRef.current) {
+        cameraInputRef.current.value = ''
+        cameraInputRef.current.click()
+      }
+    } else {
+      // Em desktop, tentar usar getUserMedia para acessar a câmera
+      try {
+        // Verificar se câmera está disponível
+        const devices = await navigator.mediaDevices.enumerateDevices()
+        const hasCamera = devices.some(device => device.kind === 'videoinput')
+        
+        if (hasCamera) {
+          // Abrir input de câmera mesmo em desktop
+          if (cameraInputRef.current) {
+            cameraInputRef.current.value = ''
+            cameraInputRef.current.click()
+          }
+        } else {
+          // Sem câmera, usar galeria
+          console.log('[Timeline] Sem câmera detectada, abrindo galeria')
+          if (fileInputRef.current) {
+            fileInputRef.current.value = ''
+            fileInputRef.current.click()
+          }
+        }
+      } catch (error) {
+        console.error('[Timeline] Erro ao acessar câmera:', error)
+        // Fallback para galeria
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''
+          fileInputRef.current.click()
+        }
+      }
+    }
   }
 
   // Handler para processar arquivo selecionado e fazer upload real
@@ -394,14 +438,32 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
     const step = project.timeline.find(s => s.id === uploadingStepId)
     if (!step) return
 
+    // Validar tipo de arquivo
+    if (!file.type.startsWith('image/')) {
+      console.error('[Timeline] Arquivo não é uma imagem')
+      return
+    }
+
+    // Validar tamanho (máximo 10MB)
+    const maxSize = 10 * 1024 * 1024
+    if (file.size > maxSize) {
+      console.error('[Timeline] Arquivo muito grande')
+      return
+    }
+
     setIsUploading(true)
+    setUploadProgress('Preparando foto...')
     setShowPhotoModal(null)
 
     try {
+      setUploadProgress('Enviando para o servidor...')
+      
       // Upload para Supabase Storage
       const photoUrl = await uploadToStorage(file, 'step-photos', `step_${uploadingStepId}`)
 
       if (photoUrl) {
+        setUploadProgress('Salvando registro...')
+        
         // Salvar referência na tabela step_photos
         await saveStepPhoto(
           uploadingStepId,
@@ -417,21 +479,30 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
         onAddPhoto(uploadingStepId, selectedPhotoType)
         console.log('[Timeline] Foto enviada com sucesso:', photoUrl)
         
+        setUploadProgress('Atualizando galeria...')
+        
         // Forçar atualização imediata dos projetos para exibir a foto sem F5
         await refreshProjects()
+        
+        setUploadProgress('Foto salva com sucesso!')
       }
     } catch (error) {
       console.error('[Timeline] Erro no upload:', error)
+      setUploadProgress('Erro ao enviar foto')
     } finally {
-      setIsUploading(false)
-      setUploadingStepId(null)
-      setSelectedPhotoType('during')
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
-      }
-      if (cameraInputRef.current) {
-        cameraInputRef.current.value = ''
-      }
+      // Aguardar um momento para o usuário ver a mensagem de sucesso
+      setTimeout(() => {
+        setIsUploading(false)
+        setUploadingStepId(null)
+        setSelectedPhotoType('during')
+        setUploadProgress('')
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''
+        }
+        if (cameraInputRef.current) {
+          cameraInputRef.current.value = ''
+        }
+      }, 1000)
     }
   }
 
@@ -487,12 +558,21 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
         aria-label="Tirar foto com câmera"
       />
       
-      {/* Indicador de upload em andamento */}
+      {/* Indicador de upload em andamento - MELHORADO */}
       {isUploading && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-xl p-6 flex items-center gap-4">
-            <Loader2 className="w-8 h-8 text-primary animate-spin" />
-            <span className="text-white font-medium">Enviando foto...</span>
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-carbon-800 rounded-2xl p-8 flex flex-col items-center gap-4 border border-primary/30 max-w-sm mx-4">
+            <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center">
+              <Loader2 className="w-10 h-10 text-primary animate-spin" />
+            </div>
+            <div className="text-center">
+              <p className="text-white font-bold text-lg mb-1">Enviando Foto</p>
+              <p className="text-gray-400 text-sm">{uploadProgress || 'Aguarde...'}</p>
+            </div>
+            <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+              <div className="bg-primary h-full rounded-full animate-pulse w-3/5" />
+            </div>
+            <p className="text-xs text-gray-500">Não feche esta tela</p>
           </div>
         </div>
       )}
@@ -866,20 +946,23 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
 
                     <div className="grid grid-cols-2 gap-3">
                       <button
-                        onClick={() => handleTakePhoto(step.id)}
-                        className="bg-blue-600 text-white py-4 rounded-xl font-semibold flex items-center justify-center space-x-2 hover:bg-blue-700"
+                        onClick={() => void handleTakePhoto(step.id)}
+                        className="bg-blue-600 text-white py-4 rounded-xl font-semibold flex items-center justify-center space-x-2 hover:bg-blue-700 active:scale-95 transition-transform"
                       >
                         <Camera className="w-5 h-5" />
                         <span>Tirar Foto</span>
                       </button>
                       <button
                         onClick={() => handleAddPhoto(step.id)}
-                        className="bg-primary text-black py-4 rounded-xl font-semibold flex items-center justify-center space-x-2 hover:bg-primary/90"
+                        className="bg-primary text-black py-4 rounded-xl font-semibold flex items-center justify-center space-x-2 hover:bg-primary/90 active:scale-95 transition-transform"
                       >
                         <Upload className="w-5 h-5" />
                         <span>Galeria</span>
                       </button>
                     </div>
+                    <p className="text-xs text-gray-500 text-center mt-2">
+                      Dica: Use "Tirar Foto" para abrir a câmera ou "Galeria" para selecionar uma imagem existente
+                    </p>
                   </div>
                 </div>
               )}
