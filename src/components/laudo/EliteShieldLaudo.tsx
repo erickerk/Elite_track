@@ -17,9 +17,9 @@ import {
   gerarDadosLaudo,
   LAUDO_TEXTOS, 
   LINHAS_BLINDAGEM,
-  ESPECIFICACOES_TECNICAS,
   GARANTIAS_PADRAO,
-  TESTES_VERIFICACOES
+  TESTES_VERIFICACOES,
+  getEspecificacoesPorLinha
 } from '../../config/eliteshield-laudo-template'
 
 interface EliteShieldLaudoProps {
@@ -258,7 +258,6 @@ export function EliteShieldLaudo({
             </p>
             <div className="flex gap-4 text-sm">
               <span className="text-[#D4AF37]">Nível: {dados.blindagem.nivel}</span>
-              <span className="text-gray-400">Uso: {dados.blindagem.uso}</span>
             </div>
           </div>
         </div>
@@ -279,31 +278,40 @@ export function EliteShieldLaudo({
           "mt-4 space-y-4 transition-all",
           expandedSection === 'specs' || !compact ? 'block' : 'hidden'
         )}>
-          {/* Vidros Blindados */}
-          <div className="p-4 bg-white/5 rounded-xl border border-[#D4AF37]/20">
-            <h4 className="font-semibold text-[#D4AF37] mb-3 flex items-center gap-2">
-              <Eye className="w-4 h-4" /> Vidros Blindados
-            </h4>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <DataRow label="Fabricante" value={ESPECIFICACOES_TECNICAS.vidros.fabricante} small />
-              <DataRow label="Espessura" value={ESPECIFICACOES_TECNICAS.vidros.espessura} small />
-              <DataRow label="Tipo" value={ESPECIFICACOES_TECNICAS.vidros.camadas} small />
-              <DataRow label="Garantia" value={ESPECIFICACOES_TECNICAS.vidros.garantia} small />
-            </div>
-          </div>
+          {/* Vidros Blindados — condicional por tipo de blindagem */}
+          {(() => {
+            const specs = getEspecificacoesPorLinha(dados.blindagem.linhaNome)
+            return (
+              <>
+                <div className="p-4 bg-white/5 rounded-xl border border-[#D4AF37]/20">
+                  <h4 className="font-semibold text-[#D4AF37] mb-3 flex items-center gap-2">
+                    <Eye className="w-4 h-4" /> Vidros Blindados
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <DataRow label="Modelo" value={specs.vidros.modelo} small />
+                    <DataRow label="Fabricante" value={specs.vidros.fabricante} small />
+                    <DataRow label="Espessura" value={specs.vidros.espessura} small />
+                    <DataRow label="Peso/m²" value={specs.vidros.pesoM2} small />
+                    <DataRow label="Garantia" value={specs.vidros.garantia} small />
+                  </div>
+                </div>
 
-          {/* Materiais Opacos */}
-          <div className="p-4 bg-white/5 rounded-xl border border-[#D4AF37]/20">
-            <h4 className="font-semibold text-[#D4AF37] mb-3 flex items-center gap-2">
-              <Layers className="w-4 h-4" /> Materiais Opacos
-            </h4>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <DataRow label="Material" value={ESPECIFICACOES_TECNICAS.opacos.material} small />
-              <DataRow label="Camadas" value={ESPECIFICACOES_TECNICAS.opacos.camadas} small />
-              <DataRow label="Complemento" value={ESPECIFICACOES_TECNICAS.opacos.complemento} small />
-              <DataRow label="Fabricante" value={ESPECIFICACOES_TECNICAS.opacos.fabricante} small />
-            </div>
-          </div>
+                {/* Materiais Opacos */}
+                <div className="p-4 bg-white/5 rounded-xl border border-[#D4AF37]/20">
+                  <h4 className="font-semibold text-[#D4AF37] mb-3 flex items-center gap-2">
+                    <Layers className="w-4 h-4" /> Materiais Opacos
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <DataRow label="Material" value={specs.opacos.material} small />
+                    <DataRow label="Camadas" value={specs.opacos.camadas} small />
+                    <DataRow label="Complemento" value={specs.opacos.complemento} small />
+                    <DataRow label="Fabricante" value={specs.opacos.fabricante} small />
+                    <DataRow label="Garantia" value={specs.opacos.garantia} small />
+                  </div>
+                </div>
+              </>
+            )
+          })()}
         </div>
       </section>
 
@@ -783,19 +791,18 @@ export function EliteShieldLaudo({
           "mt-4 text-center transition-all",
           expandedSection === 'qrcode' || !compact ? 'block' : 'hidden'
         )}>
-          {/* QR Code */}
+          {/* QR Code — sempre visível, aponta para /verify/{projectId} */}
           <div className="inline-block p-4 bg-white rounded-2xl mb-4">
-            {dados.qrCode ? (
-              <img 
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(dados.qrCode)}`}
-                alt="QR Code EliteTrace"
-                className="w-48 h-48"
-              />
-            ) : (
-              <div className="w-48 h-48 flex items-center justify-center bg-gray-200">
-                <QrCode className="w-16 h-16 text-gray-400" />
-              </div>
-            )}
+            {(() => {
+              const verifyUrl = `${window.location.origin}/verify/${project.id}`
+              return (
+                <img 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(verifyUrl)}`}
+                  alt="QR Code EliteTrace"
+                  className="w-48 h-48"
+                />
+              )
+            })()}
           </div>
           
           <h4 className="text-[#D4AF37] font-bold text-lg">EliteTrace™</h4>

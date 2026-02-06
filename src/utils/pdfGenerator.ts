@@ -369,10 +369,9 @@ export async function generateEliteShieldPDF(project: Project): Promise<Blob> {
   doc.text(linhaBlindagem.selo, m + 10, y + 18)
   doc.text(linhaBlindagem.descricao, m + 10, y + 24)
   
-  // Nível e uso
+  // Nível
   doc.setTextColor(...COLORS.white)
   doc.text(`Nível: ${dados.blindagem.nivel}`, pw - m - 10, y + 15, { align: 'right' })
-  doc.text(`Uso: ${dados.blindagem.uso}`, pw - m - 10, y + 22, { align: 'right' })
   
   y += 45
   

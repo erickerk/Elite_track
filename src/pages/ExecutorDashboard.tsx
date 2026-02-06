@@ -838,7 +838,7 @@ export function ExecutorDashboard() {
     // Bloquear botão imediatamente
     setIsCreatingProject(true)
 
-    // Etapas padrão do processo de blindagem
+    // Etapas padrão do processo de blindagem (9 etapas)
     const defaultTimeline = [
       {
         id: `STEP-${Date.now()}-1`,
@@ -850,14 +850,22 @@ export function ExecutorDashboard() {
       },
       {
         id: `STEP-${Date.now()}-2`,
+        title: 'Liberação do Exército',
+        description: 'Autorização do Exército Brasileiro para execução da blindagem',
+        status: 'pending' as const,
+        photos: [],
+        estimatedDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: `STEP-${Date.now()}-3`,
         title: 'Desmontagem',
         description: 'Remoção de peças e preparação para blindagem',
         status: 'pending' as const,
         photos: [],
-        estimatedDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+        estimatedDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       },
       {
-        id: `STEP-${Date.now()}-3`,
+        id: `STEP-${Date.now()}-4`,
         title: 'Instalação de Blindagem',
         description: 'Aplicação dos materiais de proteção balística',
         status: 'pending' as const,
@@ -865,7 +873,7 @@ export function ExecutorDashboard() {
         estimatedDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
       },
       {
-        id: `STEP-${Date.now()}-4`,
+        id: `STEP-${Date.now()}-5`,
         title: 'Vidros Blindados',
         description: 'Instalação dos vidros laminados multi-camadas',
         status: 'pending' as const,
@@ -873,7 +881,7 @@ export function ExecutorDashboard() {
         estimatedDate: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString(),
       },
       {
-        id: `STEP-${Date.now()}-5`,
+        id: `STEP-${Date.now()}-6`,
         title: 'Montagem Final',
         description: 'Remontagem e ajustes finais do veículo',
         status: 'pending' as const,
@@ -881,7 +889,7 @@ export function ExecutorDashboard() {
         estimatedDate: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000).toISOString(),
       },
       {
-        id: `STEP-${Date.now()}-6`,
+        id: `STEP-${Date.now()}-7`,
         title: 'Testes e Qualidade',
         description: 'Verificação de funcionamento e controle de qualidade',
         status: 'pending' as const,
@@ -889,12 +897,20 @@ export function ExecutorDashboard() {
         estimatedDate: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000).toISOString(),
       },
       {
-        id: `STEP-${Date.now()}-7`,
+        id: `STEP-${Date.now()}-8`,
+        title: 'Liberação do Exército',
+        description: 'Vistoria e liberação final pelo Exército Brasileiro',
+        status: 'pending' as const,
+        photos: [],
+        estimatedDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: `STEP-${Date.now()}-9`,
         title: 'Entrega',
         description: 'Entrega do veículo blindado ao cliente',
         status: 'pending' as const,
         photos: [],
-        estimatedDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        estimatedDate: new Date(Date.now() + 33 * 24 * 60 * 60 * 1000).toISOString(),
       },
     ]
 
@@ -933,6 +949,8 @@ export function ExecutorDashboard() {
       processStartDate: newCarData.processStartDate 
         ? new Date(newCarData.processStartDate).toISOString() 
         : undefined,
+      blindingLine: newCarData.blindingLine === 'UltraLite Armor™' ? 'Ultra Lite Armor' : 'Safe Core',
+      protectionLevel: newCarData.protectionLevel || 'NIJ III-A',
     }
 
     let savedProject = newProject

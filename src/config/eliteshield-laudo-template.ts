@@ -302,13 +302,15 @@ export const NIVEIS_PROTECAO = {
 
 export const ETAPAS_PROCESSO = [
   { id: 1, nome: 'Check-in', icone: 'clipboard-check' },
-  { id: 2, nome: 'Desmontagem', icone: 'tools' },
-  { id: 3, nome: 'Vidros Blindados', icone: 'shield' },
-  { id: 4, nome: 'Materiais Opacos', icone: 'layers' },
-  { id: 5, nome: 'Montagem', icone: 'settings' },
-  { id: 6, nome: 'Acabamento', icone: 'brush' },
-  { id: 7, nome: 'Testes', icone: 'check-circle' },
-  { id: 8, nome: 'Liberação', icone: 'award' }
+  { id: 2, nome: 'Liberação do Exército', icone: 'file-shield' },
+  { id: 3, nome: 'Desmontagem', icone: 'tools' },
+  { id: 4, nome: 'Vidros Blindados', icone: 'shield' },
+  { id: 5, nome: 'Materiais Opacos', icone: 'layers' },
+  { id: 6, nome: 'Montagem', icone: 'settings' },
+  { id: 7, nome: 'Acabamento', icone: 'brush' },
+  { id: 8, nome: 'Testes', icone: 'check-circle' },
+  { id: 9, nome: 'Liberação do Exército', icone: 'file-shield' },
+  { id: 10, nome: 'Liberação', icone: 'award' }
 ]
 
 // ============================================================================
@@ -336,7 +338,7 @@ export const GARANTIAS_PADRAO = {
   },
   opacos: {
     nome: 'Materiais Opacos',
-    prazo: '5 anos',
+    prazo: '10 anos',
     icone: 'layers'
   },
   acabamento: {
@@ -363,6 +365,51 @@ export const ESPECIFICACOES_TECNICAS = {
     complemento: 'Tensylon',
     fabricante: 'NextOne'
   }
+}
+
+// Especificações condicionais por tipo de blindagem
+export const ESPECIFICACOES_POR_LINHA = {
+  'Safe Core': {
+    vidros: {
+      modelo: 'Millenium',
+      fabricante: 'Argus',
+      espessura: '21mm ±1mm',
+      pesoM2: '42 kg',
+      garantia: '10 anos contra delaminação',
+    },
+    opacos: {
+      material: 'Aramida',
+      camadas: '8-11 camadas',
+      complemento: 'Tensylon',
+      fabricante: 'NextOne',
+      garantia: '10 anos',
+    },
+  },
+  'Ultra Lite Armor': {
+    vidros: {
+      modelo: 'SafeMax',
+      fabricante: 'CrystalGard',
+      espessura: '-',
+      pesoM2: '30 kg',
+      garantia: '10 anos contra delaminação',
+    },
+    opacos: {
+      material: 'Aramida',
+      camadas: '8-11 camadas',
+      complemento: 'Tensylon',
+      fabricante: 'NextOne',
+      garantia: '10 anos',
+    },
+  },
+} as const
+
+export type BlindingLineKey = keyof typeof ESPECIFICACOES_POR_LINHA
+
+export function getEspecificacoesPorLinha(linha: string) {
+  if (linha === 'UltraLite Armor™' || linha === 'Ultra Lite Armor') {
+    return ESPECIFICACOES_POR_LINHA['Ultra Lite Armor']
+  }
+  return ESPECIFICACOES_POR_LINHA['Safe Core']
 }
 
 // ============================================================================
@@ -409,8 +456,8 @@ export interface DadosLaudo {
   // Dados da Blindagem
   blindagem: {
     linha: 'ultralite' | 'safecore'
+    linhaNome: string
     nivel: 'NIJ II' | 'NIJ III-A' | 'NIJ III'
-    uso: 'Civil' | 'Executivo' | 'Especial'
   }
   
   // Datas (IMPORTANTE: sincronizadas com Supabase)
@@ -473,9 +520,9 @@ export function gerarDadosLaudo(project: any): DadosLaudo {
       estado: project.user?.state
     },
     blindagem: {
-      linha: project.blindingLine === 'UltraLite Armor™' ? 'ultralite' : 'safecore',
+      linha: (project.blindingLine === 'UltraLite Armor™' || project.blindingLine === 'Ultra Lite Armor') ? 'ultralite' : 'safecore',
+      linhaNome: project.blindingLine || 'Safe Core',
       nivel: project.protectionLevel || 'NIJ III-A',
-      uso: project.usageType || 'Executivo'
     },
     datas: {
       recebimento: project.vehicleReceivedDate || project.startDate || '',

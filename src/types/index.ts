@@ -155,6 +155,8 @@ export interface Project {
   inviteToken?: string // Token de convite para cadastro
   inviteExpiresAt?: string // Data de expiração do convite
   executorId?: string // ID do executor responsável pelo projeto
+  blindingLine?: 'Safe Core' | 'Ultra Lite Armor' // Tipo de blindagem selecionado
+  protectionLevel?: string // Nível de proteção (NIJ III-A, etc.)
   blindingSpecs?: BlindingSpecs
   deliveryChecklist?: DeliveryChecklist[]
   deliverySchedule?: DeliverySchedule

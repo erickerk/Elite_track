@@ -11,15 +11,21 @@ import type { TimelineStep } from '../types'
 // Icon mapping for timeline steps
 const stepIcons: Record<string, string> = {
   'Recebimento do Veículo': 'ri-clipboard-line',
+  'Liberação do Exército': 'ri-file-shield-line',
   'Desmontagem': 'ri-tools-line',
+  'Instalação de Blindagem': 'ri-shield-line',
   'Instalação dos Vidros Blindados': 'ri-window-line',
+  'Vidros Blindados': 'ri-window-line',
   'Instalação da Manta Opaca': 'ri-shield-line',
+  'Montagem Final': 'ri-settings-3-line',
   'Remontagem': 'ri-settings-3-line',
   'Acabamento': 'ri-brush-line',
+  'Testes e Qualidade': 'ri-test-tube-line',
   'Vistoria': 'ri-search-eye-line',
   'Laudo EliteShield': 'ri-file-shield-line',
   'Testes': 'ri-test-tube-line',
   'Higienização': 'ri-bubble-chart-line',
+  'Entrega': 'ri-car-line',
   'Pronto para Entrega': 'ri-car-line',
 }
 
