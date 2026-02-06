@@ -442,3 +442,4 @@ export function ClientDocuments() {
     </div>
   )
 }
+export default ClientDocuments

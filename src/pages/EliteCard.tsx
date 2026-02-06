@@ -774,3 +774,4 @@ export function EliteCard() {
       </div>
   )
 }
+export default EliteCard

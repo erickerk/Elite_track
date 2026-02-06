@@ -527,3 +527,4 @@ export function Revisions() {
     </div>
   )
 }
+export default Revisions

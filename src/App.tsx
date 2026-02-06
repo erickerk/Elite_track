@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, lazy, Suspense } from 'react'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { NotificationProvider } from './contexts/NotificationContext'
@@ -12,13 +12,45 @@ import { InviteProvider } from './contexts/InviteContext'
 import { EliteShieldProvider } from './contexts/EliteShieldContext'
 import { Layout, ExecutorLayout, AdminLayout } from './components/layout'
 import { ErrorBoundary } from './components/ui'
-import { 
-  Dashboard, Timeline, Gallery, Chat, Profile, Login, QRCodePage,
-  ExecutorDashboard, AdminDashboard, PublicVerification, EliteShield, Revisions,
-  LandingPage, EliteCard, Delivery, ProjectManager, SplashScreen,
-  Quotes, ClientDocuments, Achievements, Register, InviteManagement, ChangePassword,
-  QRRedirect, ScanPage
-} from './pages'
+
+// Lazy loading — cada página é carregada sob demanda
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const Timeline = lazy(() => import('./pages/Timeline'))
+const Gallery = lazy(() => import('./pages/Gallery'))
+const Chat = lazy(() => import('./pages/Chat'))
+const Profile = lazy(() => import('./pages/Profile'))
+const Login = lazy(() => import('./pages/Login'))
+const QRCodePage = lazy(() => import('./pages/QRCode'))
+const ExecutorDashboard = lazy(() => import('./pages/ExecutorDashboard'))
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
+const PublicVerification = lazy(() => import('./pages/PublicVerification'))
+const EliteShield = lazy(() => import('./pages/EliteShield'))
+const Revisions = lazy(() => import('./pages/Revisions'))
+const LandingPage = lazy(() => import('./pages/LandingPage'))
+const EliteCard = lazy(() => import('./pages/EliteCard'))
+const Delivery = lazy(() => import('./pages/Delivery'))
+const ProjectManager = lazy(() => import('./pages/ProjectManager'))
+const SplashScreen = lazy(() => import('./pages/SplashScreen'))
+const Quotes = lazy(() => import('./pages/Quotes'))
+const ClientDocuments = lazy(() => import('./pages/ClientDocuments'))
+const Achievements = lazy(() => import('./pages/Achievements'))
+const Register = lazy(() => import('./pages/Register'))
+const InviteManagement = lazy(() => import('./pages/InviteManagement'))
+const ChangePassword = lazy(() => import('./pages/ChangePassword'))
+const QRRedirect = lazy(() => import('./pages/QRRedirect'))
+const ScanPage = lazy(() => import('./pages/ScanPage'))
+
+function PageLoader() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0a0a0a' }}>
+      <div style={{ textAlign: 'center', color: '#d4af37' }}>
+        <div style={{ width: 40, height: 40, border: '3px solid #d4af37', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
+        <p style={{ fontSize: 14, opacity: 0.7 }}>Carregando...</p>
+      </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+    </div>
+  )
+}
 
 // Limpar cache ao iniciar aplicação
 const clearAppCache = async () => {
@@ -119,6 +151,7 @@ function RoleBasedProfile() {
 
 function AppRoutes() {
   return (
+    <Suspense fallback={<PageLoader />}>
     <Routes>
       <Route path="/splash" element={<SplashScreen />} />
       <Route
@@ -287,6 +320,7 @@ function AppRoutes() {
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </Suspense>
   )
 }
 

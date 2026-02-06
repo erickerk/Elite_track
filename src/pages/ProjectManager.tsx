@@ -1009,3 +1009,4 @@ export function ProjectManager() {
     </div>
   )
 }
+export default ProjectManager

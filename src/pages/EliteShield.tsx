@@ -131,3 +131,4 @@ export function EliteShield() {
     </div>
   )
 }
+export default EliteShield

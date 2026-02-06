@@ -339,3 +339,4 @@ export function PublicVerification() {
     </div>
   )
 }
+export default PublicVerification

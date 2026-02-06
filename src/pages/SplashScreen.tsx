@@ -92,3 +92,4 @@ export function SplashScreen() {
     </AnimatePresence>
   )
 }
+export default SplashScreen

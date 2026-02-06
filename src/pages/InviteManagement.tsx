@@ -22,3 +22,4 @@ export function InviteManagement() {
     </AdminLayout>
   )
 }
+export default InviteManagement

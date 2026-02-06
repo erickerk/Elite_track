@@ -194,3 +194,4 @@ export function ChangePassword() {
     </div>
   )
 }
+export default ChangePassword

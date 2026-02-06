@@ -1,0 +1,33 @@
+name: Backup Supabase (Semanal)
+
+on:
+  schedule:
+    - cron: '0 3 * * 0' # Domingo às 03:00 UTC
+  workflow_dispatch: # Permite execução manual
+
+jobs:
+  backup:
+    name: Database Backup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get install -y postgresql-client
+
+      - name: Run backup
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          TIMESTAMP=$(date +%Y-%m-%d_%H-%M)
+          FILENAME="elitetrack-backup-${TIMESTAMP}.sql"
+          pg_dump "${SUPABASE_DB_URL}" --no-owner --no-privileges -f "${FILENAME}"
+          echo "Backup gerado: ${FILENAME}"
+          echo "BACKUP_FILE=${FILENAME}" >> $GITHUB_ENV
+
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_id }}
+          path: ${{ env.BACKUP_FILE }}
+          retention-days: 30

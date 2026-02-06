@@ -16,6 +16,15 @@ logs
 *.log
 npm-debug.log*
 
+# Build artifacts
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+
+# Test results & reports
+playwright-report/
+test-results/
+
 # Editor
 .vscode/*
 !.vscode/extensions.json
@@ -26,11 +35,15 @@ npm-debug.log*
 Thumbs.db
 nul
 
+# Python cache
+__pycache__/
+
 # Segurança - arquivos sensíveis
 *.pem
 *.key
 secrets/
 credentials/
+backups/
 
 # Scripts de migração com possíveis secrets
 migrate*.mjs

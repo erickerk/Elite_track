@@ -142,3 +142,4 @@ export function QRRedirect() {
 
   return null
 }
+export default QRRedirect

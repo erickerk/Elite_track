@@ -2,8 +2,10 @@
   "name": "EliteTrack - Elite Blindagens",
   "short_name": "EliteTrack",
   "description": "Sistema de Transparência e Acompanhamento de Blindagem Veicular",
-  "start_url": "/",
+  "start_url": "/dashboard",
+  "id": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#0a0a0a",
   "theme_color": "#d4af37",
   "orientation": "portrait-primary",
@@ -21,9 +23,38 @@
       "purpose": "maskable any"
     }
   ],
-  "categories": ["business", "productivity"],
+  "screenshots": [
+    {
+      "src": "/icons/icon-192x192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "form_factor": "narrow",
+      "label": "Dashboard do EliteTrack"
+    }
+  ],
+  "categories": ["business", "productivity", "utilities"],
   "lang": "pt-BR",
   "dir": "ltr",
   "scope": "/",
-  "prefer_related_applications": false
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Painel",
+      "description": "Acessar painel principal",
+      "url": "/dashboard",
+      "icons": [{ "src": "/elite-logo.svg", "sizes": "any" }]
+    },
+    {
+      "name": "Chat",
+      "short_name": "Chat",
+      "description": "Mensagens",
+      "url": "/chat",
+      "icons": [{ "src": "/elite-logo.svg", "sizes": "any" }]
+    }
+  ],
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  }
 }
