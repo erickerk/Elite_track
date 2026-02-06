@@ -1,8 +1,8 @@
 import jsPDF from 'jspdf'
-import QRCode from 'qrcode'
 import type { Project } from '../types'
-import { gerarDadosLaudo, LAUDO_TEXTOS, GARANTIAS_PADRAO, ESPECIFICACOES_TECNICAS, LINHAS_BLINDAGEM } from '../config/eliteshield-laudo-template'
-import { COMPANY_INFO, PRODUCTION_URL } from '../constants/companyInfo'
+import { gerarDadosLaudo, LAUDO_TEXTOS, GARANTIAS_PADRAO, getEspecificacoesPorLinha, LINHAS_BLINDAGEM } from '../config/eliteshield-laudo-template'
+import { COMPANY_INFO } from '../constants/companyInfo'
+import { getVerifyUrl, generateQrDataUrl } from './qrUtils'
 
 // Logo Elite da pasta public
 const LOGO_ELITE_URL = '/logo-elite.png'
@@ -21,19 +21,6 @@ const COLORS = {
   yellow: [234, 179, 8] as [number, number, number],
 }
 
-// Função para gerar QR Code como Data URL
-async function generateQRCodeDataURL(text: string): Promise<string> {
-  try {
-    return await QRCode.toDataURL(text, {
-      width: 200,
-      margin: 1,
-      color: { dark: '#D4AF37', light: '#1a1a1a' }
-    })
-  } catch (err) {
-    console.error('Erro ao gerar QR Code:', err)
-    return ''
-  }
-}
 
 // Função para carregar imagem como Data URL com proporções corretas
 async function loadImageAsDataURL(src: string): Promise<{ dataUrl: string; width: number; height: number }> {
@@ -157,17 +144,21 @@ export async function generateEliteShieldPDF(project: Project): Promise<Blob> {
   const ph = doc.internal.pageSize.getHeight()
   const m = 15
   let y = m
-  const totalPages = 9
+  const hasPhotos = project.timeline?.some(step => step.photos && step.photos.length > 0)
+  const totalPages = hasPhotos ? 9 : 8
 
-  // URL de verificação permanente
-  const verifyUrl = `${PRODUCTION_URL}/verify/${project.id}`
+  // URL de verificação permanente (domínio de produção para PDF)
+  const verifyUrl = getVerifyUrl(project.id, true)
   
+  // Specs condicionais por tipo de blindagem
+  const specsCondicionais = getEspecificacoesPorLinha(project.blindingLine || 'Safe Core')
+
   // Gerar QR Code
   let qrCodeDataUrl = ''
   if (project.permanentQrCode?.startsWith('data:')) {
     qrCodeDataUrl = project.permanentQrCode
   } else {
-    qrCodeDataUrl = await generateQRCodeDataURL(verifyUrl)
+    qrCodeDataUrl = await generateQrDataUrl(project.id)
   }
   
   // Carregar logo com proporções corretas
@@ -388,10 +379,10 @@ export async function generateEliteShieldPDF(project: Project): Promise<Blob> {
   let specY = y + 14
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(8)
-  specY = addField(doc, 'Fabricante', ESPECIFICACOES_TECNICAS.vidros.fabricante, m + 5, specY, 30)
-  specY = addField(doc, 'Espessura', ESPECIFICACOES_TECNICAS.vidros.espessura, m + 5, specY, 30)
-  specY = addField(doc, 'Tipo', ESPECIFICACOES_TECNICAS.vidros.camadas, m + 5, specY, 30)
-  addField(doc, 'Garantia', ESPECIFICACOES_TECNICAS.vidros.garantia, m + 5, specY, 30)
+  specY = addField(doc, 'Fabricante', specsCondicionais.vidros.fabricante, m + 5, specY, 30)
+  specY = addField(doc, 'Espessura', specsCondicionais.vidros.espessura, m + 5, specY, 30)
+  specY = addField(doc, 'Peso/m²', specsCondicionais.vidros.pesoM2, m + 5, specY, 30)
+  addField(doc, 'Garantia', specsCondicionais.vidros.garantia, m + 5, specY, 30)
   
   // Card Opacos
   const opacosX = pw/2 + 2.5
@@ -403,10 +394,10 @@ export async function generateEliteShieldPDF(project: Project): Promise<Blob> {
   
   specY = y + 14
   doc.setFontSize(8)
-  specY = addField(doc, 'Material', ESPECIFICACOES_TECNICAS.opacos.material, opacosX + 5, specY, 30)
-  specY = addField(doc, 'Camadas', ESPECIFICACOES_TECNICAS.opacos.camadas, opacosX + 5, specY, 30)
-  specY = addField(doc, 'Complemento', ESPECIFICACOES_TECNICAS.opacos.complemento, opacosX + 5, specY, 30)
-  addField(doc, 'Fabricante', ESPECIFICACOES_TECNICAS.opacos.fabricante, opacosX + 5, specY, 30)
+  specY = addField(doc, 'Material', specsCondicionais.opacos.material, opacosX + 5, specY, 30)
+  specY = addField(doc, 'Camadas', specsCondicionais.opacos.camadas, opacosX + 5, specY, 30)
+  specY = addField(doc, 'Complemento', specsCondicionais.opacos.complemento, opacosX + 5, specY, 30)
+  addField(doc, 'Fabricante', specsCondicionais.opacos.fabricante, opacosX + 5, specY, 30)
   
   addPageFooter(doc)
 
@@ -893,8 +884,6 @@ export async function generateEliteShieldPDF(project: Project): Promise<Blob> {
   // ========================================
   // PÁGINA 9: REGISTRO FOTOGRÁFICO (se houver fotos)
   // ========================================
-  const hasPhotos = project.timeline?.some(step => step.photos && step.photos.length > 0)
-  
   if (hasPhotos) {
     doc.addPage()
     doc.setFillColor(...COLORS.black)

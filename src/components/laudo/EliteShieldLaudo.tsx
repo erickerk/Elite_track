@@ -21,6 +21,7 @@ import {
   TESTES_VERIFICACOES,
   getEspecificacoesPorLinha
 } from '../../config/eliteshield-laudo-template'
+import { getQrImageUrl } from '../../utils/qrUtils'
 
 interface EliteShieldLaudoProps {
   project: Project
@@ -793,16 +794,11 @@ export function EliteShieldLaudo({
         )}>
           {/* QR Code — sempre visível, aponta para /verify/{projectId} */}
           <div className="inline-block p-4 bg-white rounded-2xl mb-4">
-            {(() => {
-              const verifyUrl = `${window.location.origin}/verify/${project.id}`
-              return (
-                <img 
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(verifyUrl)}`}
-                  alt="QR Code EliteTrace"
-                  className="w-48 h-48"
-                />
-              )
-            })()}
+            <img 
+              src={getQrImageUrl(project.id)}
+              alt="QR Code EliteTrace"
+              className="w-32 h-32 sm:w-48 sm:h-48"
+            />
           </div>
           
           <h4 className="text-[#D4AF37] font-bold text-lg">EliteTrace™</h4>

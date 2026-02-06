@@ -80,7 +80,9 @@ test.describe('Laudo Público — Safe Core (test123)', () => {
     // O QR Code deve conter a URL de verificação codificada
     const decodedSrc = decodeURIComponent(src || '')
     expect(decodedSrc).toContain('/verify/')
-    expect(decodedSrc).toContain('localhost:5173')
+    // Aceita tanto localhost (dev) quanto domínio de produção
+    const hasValidDomain = decodedSrc.includes('localhost') || decodedSrc.includes('eliteblindagens.com.br')
+    expect(hasValidDomain).toBe(true)
   })
 
   test('Garantias Ativas mostra Vidros 10 anos e Opacos 10 anos', async ({ page }) => {
