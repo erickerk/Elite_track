@@ -193,7 +193,9 @@ export function Timeline() {
                     <div className="text-2xl font-bold">
                       {new Date(project.estimatedDelivery).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
                     </div>
-                    <div className="text-sm text-gray-400">{daysRemaining} dias restantes</div>
+                    <div className="text-sm text-gray-400">
+                      {project.status === 'completed' || project.status === 'delivered' ? 'Blindagem concluída' : `${daysRemaining} dias restantes`}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -365,8 +367,14 @@ export function Timeline() {
                   <div className="w-12 h-12 mx-auto mb-3 bg-primary/10 rounded-xl flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                     <i className="ri-calendar-check-line text-2xl text-primary"></i>
                   </div>
-                  <div className="text-3xl md:text-4xl font-bold text-white">{daysRemaining} <span className="text-lg text-gray-500">dias</span></div>
-                  <div className="text-sm text-gray-400 mt-1">Para Conclusão</div>
+                  <div className="text-3xl md:text-4xl font-bold text-white">
+                    {project.status === 'completed' || project.status === 'delivered'
+                      ? <><i className="ri-checkbox-circle-fill text-green-400"></i></>
+                      : <>{daysRemaining} <span className="text-lg text-gray-500">dias</span></>}
+                  </div>
+                  <div className="text-sm text-gray-400 mt-1">
+                    {project.status === 'completed' || project.status === 'delivered' ? 'Finalizado' : 'Para Conclusão'}
+                  </div>
                 </div>
               </div>
 

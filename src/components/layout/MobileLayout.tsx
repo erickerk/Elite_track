@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Menu, X, Home, Clock, Image, MessageCircle, User, LogOut, 
   Bell, Settings, CreditCard, QrCode, Shield,
-  Calendar, Trophy, FolderOpen, Calculator, ChevronRight
+  Calendar, Trophy, FolderOpen, Calculator, ChevronRight, BookOpen
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { useTheme } from '../../contexts/ThemeContext'
@@ -259,6 +259,24 @@ export function MobileLayout({ children }: MobileLayoutProps) {
                   })}
                 </div>
               ))}
+              {/* Manual Digital — link externo PDF */}
+              <div className="mb-2">
+                <p className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Manual</p>
+                <a
+                  href="https://rlaxbloitiknjikrpbim.supabase.co/storage/v1/object/public/apresentacoes/Manual-Digital-de-Seguranca-e-Garantia.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(
+                    'w-full flex items-center gap-3 px-4 py-3 transition-colors',
+                    isDark ? 'text-gray-300 hover:bg-white/5' : 'text-gray-700 hover:bg-gray-100'
+                  )}
+                  onClick={() => setIsDrawerOpen(false)}
+                >
+                  <BookOpen className="w-5 h-5 text-[#D4AF37]" />
+                  <span className="font-medium">Manual Digital</span>
+                  <ChevronRight className="w-4 h-4 ml-auto text-gray-500" />
+                </a>
+              </div>
             </nav>
 
             {/* Footer do Drawer - Logout */}

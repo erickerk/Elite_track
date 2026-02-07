@@ -8,6 +8,11 @@ export default {
   theme: {
     extend: {
       colors: {
+        primary: {
+          DEFAULT: '#D4AF37',
+          dark: '#B8860B',
+          bright: '#FFD700',
+        },
         gold: {
           DEFAULT: '#D4AF37',
           dark: '#B8860B',

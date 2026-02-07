@@ -295,30 +295,72 @@ export function Dashboard() {
             <div className="grid lg:grid-cols-3 gap-8">
               {/* Main Content */}
               <div className="lg:col-span-2 space-y-8">
-                {/* Progress Overview - Compacto */}
-                <div className="glass-effect app-card-surface p-4 sm:p-6 rounded-xl sm:rounded-2xl fade-in visible border border-white/5">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h2 className="text-base sm:text-xl font-bold">Processo de blindagem</h2>
-                      <p className="text-[10px] sm:text-xs text-gray-500">Status</p>
-                    </div>
-                    <div className="text-primary text-xl sm:text-3xl font-bold tabular-nums">{displayProgress}%</div>
-                  </div>
-                  <div className="relative">
-                    <ProgressBar progress={displayProgress} />
-                  </div>
-                  <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 mt-4">
-                    <div className="flex items-center gap-3">
-                      <Calendar className="w-5 h-5 text-primary flex-shrink-0" />
+                {/* Progress Overview - Compacto / Concluído */}
+                {selectedProject.status === 'completed' || selectedProject.status === 'delivered' ? (
+                  <div className="glass-effect app-card-surface p-4 sm:p-6 rounded-xl sm:rounded-2xl fade-in visible border border-green-500/30 bg-gradient-to-br from-green-500/5 to-transparent">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-12 h-12 rounded-2xl bg-green-500/20 flex items-center justify-center">
+                        <CheckCircle className="w-6 h-6 text-green-400" />
+                      </div>
                       <div>
-                        <div className="text-[9px] text-primary/70 uppercase font-bold">Entrega Prevista</div>
-                        <div className="text-sm font-bold text-white">
-                          {new Date(selectedProject.estimatedDelivery).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' })}
+                        <h2 className="text-base sm:text-xl font-bold text-green-400">Blindagem Concluída</h2>
+                        <p className="text-[10px] sm:text-xs text-gray-400">Veículo blindado e entregue</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                        <p className="text-[9px] text-gray-500 uppercase font-bold mb-1">Concluído em</p>
+                        <p className="text-sm font-bold text-white">
+                          {selectedProject.completedDate 
+                            ? new Date(selectedProject.completedDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+                            : new Date(selectedProject.estimatedDelivery).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </p>
+                      </div>
+                      <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                        <p className="text-[9px] text-gray-500 uppercase font-bold mb-1">Duração total</p>
+                        <p className="text-sm font-bold text-white">
+                          {(() => {
+                            const start = new Date(selectedProject.startDate)
+                            const end = selectedProject.completedDate ? new Date(selectedProject.completedDate) : new Date(selectedProject.estimatedDelivery)
+                            const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+                            return `${days} dias`
+                          })()}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => navigate('/laudo')}
+                      className="w-full bg-primary hover:bg-primary/90 text-black py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <i className="ri-file-shield-2-line"></i>
+                      Ver Laudo EliteShield™
+                    </button>
+                  </div>
+                ) : (
+                  <div className="glass-effect app-card-surface p-4 sm:p-6 rounded-xl sm:rounded-2xl fade-in visible border border-white/5">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h2 className="text-base sm:text-xl font-bold">Processo de blindagem</h2>
+                        <p className="text-[10px] sm:text-xs text-gray-500">Status</p>
+                      </div>
+                      <div className="text-primary text-xl sm:text-3xl font-bold tabular-nums">{displayProgress}%</div>
+                    </div>
+                    <div className="relative">
+                      <ProgressBar progress={displayProgress} />
+                    </div>
+                    <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 mt-4">
+                      <div className="flex items-center gap-3">
+                        <Calendar className="w-5 h-5 text-primary flex-shrink-0" />
+                        <div>
+                          <div className="text-[9px] text-primary/70 uppercase font-bold">Entrega Prevista</div>
+                          <div className="text-sm font-bold text-white">
+                            {new Date(selectedProject.estimatedDelivery).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' })}
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 {/* Timeline - Compacto Mobile */}
                 <div className="glass-effect app-card-surface p-4 sm:p-6 rounded-xl sm:rounded-2xl fade-in visible border border-white/5 overflow-hidden">
