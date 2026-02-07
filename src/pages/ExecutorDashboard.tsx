@@ -301,7 +301,6 @@ export function ExecutorDashboard() {
     // Projeto - Blindagem
     blindingLine: 'UltraLite Armor™',
     protectionLevel: 'NIJ III-A',
-    usageType: 'Executivo',
     // Vidros
     glassManufacturer: 'SafeMax',
     glassThickness: '21',
@@ -833,7 +832,6 @@ export function ExecutorDashboard() {
       estimatedDeliveryDate: wizardData.estimatedDeliveryDate,
       blindingLine: wizardData.blindingLine,
       protectionLevel: wizardData.protectionLevel,
-      usageType: wizardData.usageType,
       glassManufacturer: wizardData.glassManufacturer,
       glassThickness: wizardData.glassThickness,
       glassWarrantyYears: wizardData.glassWarrantyYears,
@@ -1066,7 +1064,7 @@ export function ExecutorDashboard() {
       clientName: '', clientEmail: '', clientPhone: '', clientCpfCnpj: '', clientAddress: '',
       brand: '', model: '', version: '', year: '', plate: '', color: '', chassis: '', kmCheckin: '', vehicleType: 'SUV',
       vehicleReceivedDate: new Date().toISOString().split('T')[0], processStartDate: '', estimatedDeliveryDate: '',
-      blindingLine: 'UltraLite Armor™', protectionLevel: 'NIJ III-A', usageType: 'Executivo',
+      blindingLine: 'UltraLite Armor™', protectionLevel: 'NIJ III-A',
       glassManufacturer: 'SafeMax', glassThickness: '21', glassWarrantyYears: '10',
       aramidLayers: '9', opaqueManufacturer: 'NextOne',
       technicalResponsible: '', supervisorName: '',
@@ -3563,19 +3561,6 @@ ${loginUrl}
                   >
                     <option value="NIJ III-A">NIJ III-A</option>
                     <option value="NIJ III">NIJ III</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-400 mb-2">Uso</label>
-                  <select
-                    title="Uso"
-                    aria-label="Selecionar tipo de uso" 
-                    value={newCarData.usageType}
-                    onChange={(e) => setNewCarData({...newCarData, usageType: e.target.value})}
-                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
-                  >
-                    <option value="Executivo">Executivo</option>
-                    <option value="Civil">Civil</option>
                   </select>
                 </div>
                 <div>

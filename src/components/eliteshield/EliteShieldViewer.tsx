@@ -351,10 +351,6 @@ function ScreenBlindagem({ report }: { report: any }) {
           <span className="text-gray-400">Nível:</span>
           <span className="font-medium">{report.protection_level || 'NIJ III-A'}</span>
         </div>
-        <div className="flex justify-between">
-          <span className="text-gray-400">Uso:</span>
-          <span className="font-medium">{report.usage_type || 'Executivo'}</span>
-        </div>
       </div>
     </div>
   )

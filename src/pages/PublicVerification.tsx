@@ -171,6 +171,10 @@ export function PublicVerification() {
       vehicleReceivedDate: dbProject.vehicle_received_date,
       processStartDate: dbProject.process_start_date,
       completedDate: dbProject.completed_date,
+      blindingLine: dbProject.blinding_line,
+      protectionLevel: dbProject.protection_level,
+      executorId: dbProject.executor_id,
+      blindingSpecs: dbProject.blinding_specs ? (typeof dbProject.blinding_specs === 'string' ? JSON.parse(dbProject.blinding_specs) : dbProject.blinding_specs) : undefined,
     }
   }
 

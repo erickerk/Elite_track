@@ -108,7 +108,7 @@ export function MobileLayout({ children }: MobileLayoutProps) {
     <div className={cn('min-h-screen flex flex-col', isDark ? 'bg-black' : 'bg-gray-50')}>
       {/* Header fixo */}
       <header className={cn(
-        'fixed top-0 left-0 right-0 z-50 h-14',
+        'fixed top-0 left-0 right-0 z-50 h-16',
         'flex items-center justify-between px-4',
         'backdrop-blur-xl border-b',
         isDark ? 'bg-black/90 border-white/10' : 'bg-white/90 border-gray-200'
@@ -126,7 +126,7 @@ export function MobileLayout({ children }: MobileLayoutProps) {
         <img 
           src="/logo-elite.png" 
           alt="Elite Blindagens" 
-          className="h-10 w-auto object-contain cursor-pointer"
+          className="h-12 w-auto object-contain cursor-pointer"
           onClick={() => navigate('/dashboard')}
         />
 
@@ -279,7 +279,7 @@ export function MobileLayout({ children }: MobileLayoutProps) {
       </AnimatePresence>
 
       {/* Conteúdo principal */}
-      <main className="flex-1 pt-14 pb-20">
+      <main className="flex-1 pt-16 pb-20">
         {children}
       </main>
 

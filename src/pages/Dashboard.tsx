@@ -12,7 +12,7 @@ import { useChat } from '../contexts/ChatContext'
 import { useProjects } from '../contexts/ProjectContext'
 import { cn } from '../lib/utils'
 import { useTheme } from '../contexts/ThemeContext'
-import { getAppBaseUrl } from '../constants/companyInfo'
+import { getVerifyUrl, getQrImageUrl } from '../utils/qrUtils'
 import type { Project } from '../types'
 
 export function Dashboard() {
@@ -98,7 +98,9 @@ export function Dashboard() {
   const timelineProgress = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : selectedProject.progress
   const displayProgress = typeof selectedProject.progress === 'number' ? selectedProject.progress : timelineProgress
 
-  const qrCodeUrl = `${getAppBaseUrl()}/verify/${selectedProject.id}`
+  const qrCodeUrl = getVerifyUrl(selectedProject.id)
+  const qrImageSmall = getQrImageUrl(selectedProject.id, { size: 120 })
+  const qrImageLarge = getQrImageUrl(selectedProject.id, { size: 200 })
 
   const handleCopyQR = async () => {
     await navigator.clipboard.writeText(qrCodeUrl)
@@ -495,7 +497,7 @@ export function Dashboard() {
                     
                     <div className="p-3 bg-white rounded-2xl mb-4 shadow-[0_0_20px_rgba(255,255,255,0.1)]">
                       <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(qrCodeUrl)}&color=D4AF37`}
+                        src={qrImageSmall}
                         alt="QR Code"
                         className="w-24 h-24 sm:w-32 sm:h-32"
                       />
@@ -510,23 +512,24 @@ export function Dashboard() {
                   </div>
                 </div>
 
-                {/* Elite Rescue Card */}
-                <div className="glass-effect app-card-surface p-6 rounded-3xl fade-in visible border border-red-500/20">
+                {/* Elite Concierge Card */}
+                <div className="glass-effect app-card-surface p-6 rounded-3xl fade-in visible border border-primary/20">
                   <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-12 h-12 bg-red-500/20 rounded-2xl flex items-center justify-center">
-                      <i className="ri-truck-line text-red-500 text-lg"></i>
+                    <div className="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center">
+                      <i className="ri-car-washing-line text-primary text-lg"></i>
                     </div>
                     <div>
-                      <h3 className="font-semibold">Elite Rescue</h3>
-                      <p className="text-gray-400 text-xs">Guincho 24/7</p>
+                      <h3 className="font-semibold">Elite Concierge</h3>
+                      <p className="text-gray-400 text-xs">Retira e Leva</p>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-400 mb-4">Assistência emergencial exclusiva para membros Elite.</p>
+                  <p className="text-sm text-gray-400 mb-2">Buscamos, blindamos e devolvemos seu carro em total segurança.</p>
+                  <p className="text-xs text-gray-500 mb-4">*São Paulo e região</p>
                   <button 
                     onClick={() => navigate('/elite-card')}
-                    className="w-full bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 py-3 rounded-lg transition-colors text-sm whitespace-nowrap flex items-center justify-center"
+                    className="w-full bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 py-3 rounded-lg transition-colors text-sm whitespace-nowrap flex items-center justify-center"
                   >
-                    <i className="ri-phone-line mr-2"></i>0800-ELITE-SOS
+                    <i className="ri-car-washing-line mr-2"></i>Solicitar Concierge
                   </button>
                 </div>
               </div>
@@ -545,7 +548,7 @@ export function Dashboard() {
         <div className="text-center space-y-4">
           <div className="p-4 bg-white rounded-2xl inline-block mx-auto">
             <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrCodeUrl)}&color=D4AF37`}
+              src={qrImageLarge}
               alt="QR Code"
               className="w-48 h-48"
             />

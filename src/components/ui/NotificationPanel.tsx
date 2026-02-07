@@ -76,7 +76,7 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
       />
       
       {/* Panel */}
-      <div className="fixed top-16 right-4 w-96 max-h-[70vh] bg-carbon-900 border border-white/10 rounded-2xl shadow-2xl z-[100] overflow-hidden">
+      <div className="fixed top-14 right-2 left-2 sm:left-auto sm:right-4 sm:w-96 max-h-[70vh] bg-carbon-900 border border-white/10 rounded-2xl shadow-2xl z-[100] overflow-hidden">
         {/* Header */}
         <div className="p-4 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center space-x-2">

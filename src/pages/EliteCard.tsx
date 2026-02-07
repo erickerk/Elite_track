@@ -83,16 +83,16 @@ export function EliteCard() {
           .insert(rescueData)
         
         if (error) {
-          console.error('[EliteRescue] Erro ao salvar:', error)
+          console.error('[EliteConcierge] Erro ao salvar:', error)
         } else {
-          console.log('[EliteRescue] Solicitação salva no Supabase')
+          console.log('[EliteConcierge] Solicitação salva no Supabase')
         }
       } catch (err) {
-        console.error('[EliteRescue] Erro:', err)
+        console.error('[EliteConcierge] Erro:', err)
       }
     }
     
-    addNotification({ type: 'success', title: 'Elite Rescue Acionado!', message: `Guincho a caminho! Previsão de chegada: 30-45 minutos. Localização: ${rescueLocation}` })
+    addNotification({ type: 'success', title: 'Solicitação Enviada!', message: `Sua solicitação foi registrada com sucesso. Entraremos em contato em breve. Localização: ${rescueLocation}` })
     setShowRescueModal(false)
     setRescueLocation('')
     setRescueNotes('')
@@ -279,11 +279,11 @@ export function EliteCard() {
   }
 
   const rescueTypes = [
-    { id: 'mechanical', label: 'Pane Mecânica', icon: 'ri-tools-line' },
-    { id: 'accident', label: 'Acidente', icon: 'ri-car-crash-line' },
-    { id: 'flat', label: 'Pneu Furado', icon: 'ri-donut-chart-line' },
-    { id: 'battery', label: 'Bateria', icon: 'ri-battery-low-line' },
-    { id: 'locked', label: 'Chave Trancada', icon: 'ri-key-line' },
+    { id: 'mechanical', label: 'Revisão Programada', icon: 'ri-tools-line' },
+    { id: 'accident', label: 'Manutenção Corretiva', icon: 'ri-car-line' },
+    { id: 'flat', label: 'Retira e Leva', icon: 'ri-truck-line' },
+    { id: 'battery', label: 'Verificação Técnica', icon: 'ri-shield-check-line' },
+    { id: 'locked', label: 'Outro Serviço', icon: 'ri-customer-service-line' },
   ]
 
   return (
@@ -399,30 +399,31 @@ export function EliteCard() {
             </button>
           </div>
 
-          {/* Botão de Emergência */}
+          {/* Botão Concierge */}
           <button
             onClick={handleEmergencyRescue}
-            className="w-full bg-red-500 hover:bg-red-600 text-white py-5 rounded-2xl font-bold text-lg flex items-center justify-center space-x-3 mb-8 transition-colors shadow-lg shadow-red-500/30"
-            title="Solicitar guincho de emergência"
+            className="w-full bg-gradient-to-r from-primary/80 to-primary hover:from-primary hover:to-primary/90 text-black py-5 rounded-2xl font-bold text-lg flex items-center justify-center space-x-3 mb-8 transition-colors shadow-lg shadow-primary/30"
+            title="Solicitar Elite Concierge Veicular"
           >
-            <i className="ri-alarm-warning-line text-2xl animate-pulse"></i>
-            <span>GUINCHO DE EMERGÊNCIA</span>
+            <i className="ri-car-washing-line text-2xl"></i>
+            <span>ELITE CONCIERGE VEICULAR</span>
           </button>
+          <p className="text-center text-xs text-gray-500 -mt-6 mb-8">Buscamos, blindamos e devolvemos seu carro em total segurança. *São Paulo e região</p>
 
           {/* Quick Actions */}
           <div className="grid grid-cols-2 gap-4 mb-8">
-            {/* Elite Rescue */}
+            {/* Elite Concierge */}
             <button
               onClick={() => setShowRescueModal(true)}
-              className="glass-effect cinematic-blur rounded-2xl p-6 text-left hover:border-red-500/50 transition-all group"
-              title="Solicitar Elite Rescue"
+              className="glass-effect cinematic-blur rounded-2xl p-6 text-left hover:border-primary/50 transition-all group"
+              title="Solicitar Elite Concierge Veicular"
             >
-              <div className="w-14 h-14 bg-red-500/20 rounded-2xl flex items-center justify-center mb-4 rescue-pulse">
-                <i className="ri-truck-line text-red-500 text-2xl"></i>
+              <div className="w-14 h-14 bg-primary/20 rounded-2xl flex items-center justify-center mb-4">
+                <i className="ri-car-washing-line text-primary text-2xl"></i>
               </div>
-              <h3 className="text-xl font-bold mb-1 group-hover:text-red-400 transition-colors">Elite Rescue</h3>
-              <p className="text-gray-400 text-sm">Guincho 24/7</p>
-              <p className="text-red-400 text-xs mt-2 font-semibold">{eliteCard?.rescuePhone || '(11) 9.1312-3071'}</p>
+              <h3 className="text-xl font-bold mb-1 group-hover:text-primary transition-colors">Elite Concierge</h3>
+              <p className="text-gray-400 text-sm">Retira e Leva</p>
+              <p className="text-primary text-xs mt-2 font-semibold">{eliteCard?.rescuePhone || '(11) 9.1312-3071'}</p>
             </button>
 
             {/* Abrir Ticket */}
@@ -510,18 +511,18 @@ export function EliteCard() {
         </div>
       </main>
 
-      {/* Elite Rescue Modal */}
+      {/* Elite Concierge Modal */}
       {showRescueModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
           <div className="glass-effect cinematic-blur rounded-3xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-red-500/20 rounded-2xl flex items-center justify-center">
-                  <i className="ri-truck-line text-red-500 text-xl"></i>
+                <div className="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center">
+                  <i className="ri-car-washing-line text-primary text-xl"></i>
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold">Elite Rescue</h2>
-                  <p className="text-gray-400 text-sm">Solicitar guincho 24/7</p>
+                  <h2 className="text-xl font-bold">Elite Concierge Veicular</h2>
+                  <p className="text-gray-400 text-sm">Buscamos e devolvemos seu veículo</p>
                 </div>
               </div>
               <button onClick={() => setShowRescueModal(false)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center" title="Fechar modal">
@@ -539,10 +540,10 @@ export function EliteCard() {
                       onClick={() => setRescueType(type.id as typeof rescueType)}
                       className={cn(
                         "p-3 rounded-xl border transition-all flex items-center space-x-2",
-                        rescueType === type.id ? "border-red-500 bg-red-500/20" : "border-white/10 bg-white/5 hover:border-white/30"
+                        rescueType === type.id ? "border-primary bg-primary/20" : "border-white/10 bg-white/5 hover:border-white/30"
                       )}
                     >
-                      <i className={`${type.icon} text-lg ${rescueType === type.id ? 'text-red-400' : 'text-gray-400'}`}></i>
+                      <i className={`${type.icon} text-lg ${rescueType === type.id ? 'text-primary' : 'text-gray-400'}`}></i>
                       <span className={cn("text-sm", rescueType === type.id ? 'text-white' : 'text-gray-400')}>{type.label}</span>
                     </button>
                   ))}
@@ -557,13 +558,13 @@ export function EliteCard() {
                     value={rescueLocation}
                     onChange={(e) => setRescueLocation(e.target.value)}
                     placeholder="Ex: Av. Paulista, 1000 - São Paulo"
-                    className="flex-1 bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50"
+                    className="flex-1 bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-primary/50"
                     title="Localização"
                   />
                   <button
                     onClick={handleGetCurrentLocation}
                     disabled={isGettingLocation}
-                    className="px-4 py-3 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-xl flex items-center space-x-2 transition-colors disabled:opacity-50"
+                    className="px-4 py-3 bg-primary/20 hover:bg-primary/30 text-primary rounded-xl flex items-center space-x-2 transition-colors disabled:opacity-50"
                     title="Usar minha localização atual"
                   >
                     <i className={`ri-map-pin-line ${isGettingLocation ? 'animate-pulse' : ''}`}></i>
@@ -579,27 +580,28 @@ export function EliteCard() {
                   onChange={(e) => setRescueNotes(e.target.value)}
                   placeholder="Descreva a situação..."
                   rows={3}
-                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50 resize-none"
+                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-primary/50 resize-none"
                   title="Observações adicionais"
                 />
               </div>
 
-              <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
+              <div className="p-4 bg-primary/10 border border-primary/30 rounded-xl">
                 <div className="flex items-center space-x-3">
-                  <i className="ri-phone-line text-red-400 text-xl"></i>
+                  <i className="ri-phone-line text-primary text-xl"></i>
                   <div>
-                    <p className="font-semibold text-red-400">Emergência?</p>
-                    <p className="text-sm text-gray-400">WhatsApp: <a href="https://wa.me/5511913123071" target="_blank" rel="noopener noreferrer" className="text-red-400 font-bold hover:underline">{eliteCard?.rescuePhone || '(11) 9.1312-3071'}</a></p>
+                    <p className="font-semibold text-primary">Fale Conosco</p>
+                    <p className="text-sm text-gray-400">WhatsApp: <a href="https://wa.me/5511913123071" target="_blank" rel="noopener noreferrer" className="text-primary font-bold hover:underline">{eliteCard?.rescuePhone || '(11) 9.1312-3071'}</a></p>
                   </div>
                 </div>
+                <p className="text-xs text-gray-500 mt-2">*Serviço disponível para São Paulo e região</p>
               </div>
 
               <div className="flex space-x-3 pt-2">
                 <button onClick={() => setShowRescueModal(false)} className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-colors">
                   Cancelar
                 </button>
-                <button onClick={() => void handleRescueRequest()} className="flex-1 px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors">
-                  <i className="ri-truck-line mr-2"></i>Solicitar Guincho
+                <button onClick={() => void handleRescueRequest()} className="flex-1 px-6 py-3 bg-primary hover:bg-primary/90 text-black font-semibold rounded-xl transition-colors">
+                  <i className="ri-car-washing-line mr-2"></i>Solicitar Serviço
                 </button>
               </div>
             </div>

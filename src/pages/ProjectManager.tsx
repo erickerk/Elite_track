@@ -57,7 +57,7 @@ export function ProjectManager() {
     issueDate: new Date().toISOString().split('T')[0],
     expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000 * 5).toISOString().split('T')[0],
     memberSince: new Date().toISOString().split('T')[0],
-    benefits: ['Guincho 24h', 'Suporte Premium', 'Revisões Gratuitas', 'Desconto em Manutenção'],
+    benefits: ['Elite Concierge Veicular', 'Suporte Premium', 'Revisões Gratuitas', 'Desconto em Manutenção'],
     rescuePhone: '0800-ELITE-SOS',
     supportPhone: '0800-ELITE-HELP',
   })
@@ -977,7 +977,7 @@ export function ProjectManager() {
             </div>
           </div>
           <div>
-            <label htmlFor="telefone-rescue" className="block text-sm text-gray-400 mb-2">Telefone Elite Rescue</label>
+            <label htmlFor="telefone-rescue" className="block text-sm text-gray-400 mb-2">Telefone Elite Concierge</label>
             <input
               id="telefone-rescue"
               type="text"

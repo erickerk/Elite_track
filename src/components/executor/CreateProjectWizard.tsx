@@ -36,7 +36,6 @@ export interface NewProjectData {
   // Projeto - Blindagem
   blindingLine: string
   protectionLevel: string
-  usageType: string
   // Vidros
   glassManufacturer: string
   glassThickness: string
@@ -81,7 +80,6 @@ export function CreateProjectWizard({ onClose, onCreate, vehiclePhoto, onPhotoCh
     estimatedDeliveryDate: '',
     blindingLine: 'UltraLite Armor™',
     protectionLevel: 'NIJ III-A',
-    usageType: 'Executivo',
     glassManufacturer: 'SafeMax',
     glassThickness: '21',
     glassWarrantyYears: '10',
