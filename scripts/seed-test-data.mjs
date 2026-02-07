@@ -1,162 +1,264 @@
 #!/usr/bin/env node
 
+/**
+ * Seed de dados de teste — Elite Track
+ * 
+ * Limpa dados antigos de teste e gera nova massa completa:
+ * - Admin, Executor, Cliente
+ * - Veículo com blindagem
+ * - Projeto com 9 etapas (timeline Sprint 2)
+ * - Fotos nas etapas concluídas
+ * - Notificações de exemplo
+ */
+
 import { createClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = 'https://rlaxbloitiknjikrpbim.supabase.co'
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJsYXhibG9pdGlrbmppa3JwYmltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDM2MjQwMDAsImV4cCI6MTg2MTM5MjAwMH0.X-qN_-qN_-qN_-qN_-qN_-qN_-qN_-qN_-qN_-qN_-qN_'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJsYXhibG9pdGlrbmppa3JwYmltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MzQwNzcsImV4cCI6MjA4MjQxMDA3N30.pq550K7XirbU8QnKSNOaIvs9WD-wi6cLQbS0GlH_9o8'
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-async function seedTestData() {
-  console.log('🌱 Iniciando seed de dados de teste...\n')
+const TEST_EMAILS = ['erick@teste.com', 'joao@teste.com']
+const ADMIN_EMAIL = 'juniorrodrigues1011@gmail.com'
 
-  try {
-    // 1. Criar usuário executor João
-    console.log('📝 Criando executor João...')
-    const { data: joaoUser, error: joaoError } = await supabase
-      .from('users')
-      .upsert({
-        email: 'joao@teste.com',
-        name: 'João Silva',
-        role: 'executor',
-        phone: '11999999001'
-      }, { onConflict: 'email' })
-      .select()
-      .single()
+async function cleanOldTestData() {
+  console.log('🧹 Limpando dados de teste antigos...\n')
 
-    if (joaoError && joaoError.code !== '23505') throw joaoError
-    console.log('✅ Executor João criado/atualizado')
+  // Buscar users de teste (exceto admin)
+  const { data: testUsers } = await supabase
+    .from('users')
+    .select('id')
+    .in('email', TEST_EMAILS)
 
-    // 2. Criar cliente Erick
-    console.log('\n📝 Criando cliente Erick...')
-    const { data: erickUser, error: erickError } = await supabase
-      .from('users')
-      .upsert({
-        email: 'erick@teste.com',
-        name: 'Erick Kerkoski',
-        role: 'client',
-        phone: '11999999002'
-      }, { onConflict: 'email' })
-      .select()
-      .single()
+  if (testUsers && testUsers.length > 0) {
+    const userIds = testUsers.map(u => u.id)
 
-    if (erickError && erickError.code !== '23505') throw erickError
-    console.log('✅ Cliente Erick criado/atualizado')
-
-    // 3. Criar veículo do Erick
-    console.log('\n📝 Criando veículo do Erick...')
-    const { data: vehicle, error: vehicleError } = await supabase
-      .from('vehicles')
-      .upsert({
-        plate: 'ABC-1D23',
-        brand: 'BMW',
-        model: 'X5',
-        year: 2023,
-        color: 'Preto',
-        blinding_level: 'NIJ III-A'
-      }, { onConflict: 'plate' })
-      .select()
-      .single()
-
-    if (vehicleError && vehicleError.code !== '23505') throw vehicleError
-    console.log('✅ Veículo criado/atualizado')
-
-    // 4. Criar projeto vinculado ao João e Erick
-    console.log('\n📝 Criando projeto...')
-    const { data: project, error: projectError } = await supabase
+    // Buscar projetos desses users
+    const { data: projects } = await supabase
       .from('projects')
+      .select('id, vehicle_id')
+      .in('user_id', userIds)
+
+    if (projects && projects.length > 0) {
+      const projectIds = projects.map(p => p.id)
+      const vehicleIds = [...new Set(projects.map(p => p.vehicle_id).filter(Boolean))]
+
+      // Buscar steps dos projetos
+      const { data: steps } = await supabase
+        .from('timeline_steps')
+        .select('id')
+        .in('project_id', projectIds)
+
+      if (steps && steps.length > 0) {
+        const stepIds = steps.map(s => s.id)
+        await supabase.from('step_photos').delete().in('step_id', stepIds)
+        console.log('  - step_photos deletadas')
+      }
+
+      await supabase.from('timeline_steps').delete().in('project_id', projectIds)
+      console.log('  - timeline_steps deletadas')
+
+      await supabase.from('blinding_specs').delete().in('project_id', projectIds)
+      console.log('  - blinding_specs deletadas')
+
+      await supabase.from('notifications').delete().in('user_id', userIds)
+      console.log('  - notifications deletadas')
+
+      await supabase.from('projects').delete().in('id', projectIds)
+      console.log('  - projects deletados')
+
+      if (vehicleIds.length > 0) {
+        await supabase.from('vehicle_images').delete().in('vehicle_id', vehicleIds)
+        await supabase.from('vehicles').delete().in('id', vehicleIds)
+        console.log('  - vehicles deletados')
+      }
+    }
+
+    // Deletar users de teste (manter admin)
+    await supabase.from('users').delete().in('email', TEST_EMAILS)
+    console.log('  - test users deletados')
+  }
+
+  console.log('✅ Limpeza concluida\n')
+}
+
+async function seedTestData() {
+  console.log('🌱 Gerando nova massa de teste...\n')
+
+  // 1. Executor
+  console.log('👷 Criando executor...')
+  const { data: executor, error: exErr } = await supabase
+    .from('users')
+    .upsert({
+      name: 'Joao Executor',
+      email: 'joao@teste.com',
+      phone: '11999990001',
+      role: 'executor',
+      password_hash: 'teste123',
+      requires_password_change: false
+    }, { onConflict: 'email' })
+    .select()
+    .single()
+  if (exErr) throw exErr
+  console.log(`  ✅ Executor: ${executor.id}`)
+
+  // 2. Cliente
+  console.log('👤 Criando cliente...')
+  const { data: client, error: clErr } = await supabase
+    .from('users')
+    .upsert({
+      name: 'Erick Kerkoski',
+      email: 'erick@teste.com',
+      phone: '11999990002',
+      role: 'client',
+      password_hash: 'teste123',
+      requires_password_change: false
+    }, { onConflict: 'email' })
+    .select()
+    .single()
+  if (clErr) throw clErr
+  console.log(`  ✅ Cliente: ${client.id}`)
+
+  // 3. Veiculo
+  console.log('🚗 Criando veiculo...')
+  const { data: vehicle, error: vhErr } = await supabase
+    .from('vehicles')
+    .upsert({
+      brand: 'BMW',
+      model: 'X5 xDrive40i',
+      year: 2024,
+      color: 'Preto Safira',
+      plate: 'ELT-2E25',
+      blinding_level: 'NIJ III-A'
+    }, { onConflict: 'plate' })
+    .select()
+    .single()
+  if (vhErr) throw vhErr
+  console.log(`  ✅ Veiculo: ${vehicle.id}`)
+
+  // 4. Imagem do veiculo
+  await supabase.from('vehicle_images').insert({
+    vehicle_id: vehicle.id,
+    image_url: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&h=600&fit=crop',
+    is_primary: true
+  })
+
+  // 5. Projeto in_progress (65%)
+  console.log('📋 Criando projeto...')
+  const startDate = new Date()
+  startDate.setDate(startDate.getDate() - 20)
+  const estDelivery = new Date()
+  estDelivery.setDate(estDelivery.getDate() + 15)
+
+  const { data: project, error: prjErr } = await supabase
+    .from('projects')
+    .insert({
+      user_id: client.id,
+      vehicle_id: vehicle.id,
+      executor_id: executor.id,
+      status: 'in_progress',
+      progress: 55,
+      start_date: startDate.toISOString(),
+      estimated_delivery: estDelivery.toISOString(),
+      vehicle_received_date: startDate.toISOString(),
+      process_start_date: new Date(startDate.getTime() + 3 * 86400000).toISOString(),
+      qr_code: `QR-${Date.now()}`
+    })
+    .select()
+    .single()
+  if (prjErr) throw prjErr
+  console.log(`  ✅ Projeto: ${project.id}`)
+
+  // 6. Timeline 9 etapas (Sprint 2)
+  console.log('📅 Criando timeline (9 etapas)...')
+  const timelineSteps = [
+    { title: 'Recebimento do Veiculo', description: 'Inspecao inicial e documentacao', status: 'completed', sort_order: 0 },
+    { title: 'Liberacao do Exercito', description: 'Autorizacao do Exercito Brasileiro para blindagem', status: 'completed', sort_order: 1 },
+    { title: 'Desmontagem', description: 'Remocao de pecas e preparacao', status: 'completed', sort_order: 2 },
+    { title: 'Instalacao de Blindagem', description: 'Aplicacao dos materiais balisticos', status: 'completed', sort_order: 3 },
+    { title: 'Vidros Blindados', description: 'Instalacao dos vidros laminados multi-camadas', status: 'in_progress', sort_order: 4 },
+    { title: 'Montagem Final', description: 'Remontagem e ajustes finais', status: 'pending', sort_order: 5 },
+    { title: 'Testes e Qualidade', description: 'Verificacao de funcionamento e qualidade', status: 'pending', sort_order: 6 },
+    { title: 'Liberacao do Exercito', description: 'Vistoria e liberacao final pelo Exercito', status: 'pending', sort_order: 7 },
+    { title: 'Entrega', description: 'Entrega do veiculo blindado ao cliente', status: 'pending', sort_order: 8 },
+  ]
+
+  for (const step of timelineSteps) {
+    const dayOffset = step.sort_order * 4
+    const stepDate = step.status !== 'pending' 
+      ? new Date(startDate.getTime() + dayOffset * 86400000).toISOString() 
+      : null
+
+    const { data: stepData, error: stErr } = await supabase
+      .from('timeline_steps')
       .insert({
-        user_id: erickUser?.id || (await supabase.from('users').select('id').eq('email', 'erick@teste.com').single()).data.id,
-        vehicle_id: vehicle?.id || (await supabase.from('vehicles').select('id').eq('plate', 'ABC-1D23').single()).data.id,
-        executor_id: joaoUser?.id || (await supabase.from('users').select('id').eq('email', 'joao@teste.com').single()).data.id,
-        status: 'in_progress',
-        progress: 65,
-        start_date: '2025-01-01',
-        estimated_delivery: '2025-02-15',
-        qr_code: 'QR-ERICK-2025-001'
+        project_id: project.id,
+        title: step.title,
+        description: step.description,
+        status: step.status,
+        sort_order: step.sort_order,
+        date: stepDate,
+        estimated_date: new Date(startDate.getTime() + dayOffset * 86400000).toISOString(),
+        technician: step.status === 'completed' ? 'Joao Executor' : null
       })
       .select()
       .single()
+    if (stErr) throw stErr
 
-    if (projectError) {
-      // Se já existe, buscar e atualizar executor_id
-      const { data: existing } = await supabase
-        .from('projects')
-        .select('id')
-        .eq('qr_code', 'QR-ERICK-2025-001')
-        .single()
-
-      if (existing) {
-        await supabase
-          .from('projects')
-          .update({
-            executor_id: joaoUser?.id || (await supabase.from('users').select('id').eq('email', 'joao@teste.com').single()).data.id
-          })
-          .eq('id', existing.id)
-        console.log('✅ Projeto existente atualizado com executor_id')
-      }
-    } else {
-      console.log('✅ Projeto criado com sucesso')
-
-      // 5. Criar timeline steps com fotos
-      console.log('\n📝 Criando timeline...')
-      const steps = [
-        { title: 'Check-in', status: 'completed', sort_order: 0 },
-        { title: 'Desmontagem', status: 'completed', sort_order: 1 },
-        { title: 'Aplicação de Aramida', status: 'in_progress', sort_order: 2 },
-        { title: 'Instalação de Vidros', status: 'pending', sort_order: 3 },
-        { title: 'Acabamento', status: 'pending', sort_order: 4 },
-      ]
-
-      for (const step of steps) {
-        const { data: stepData, error: stepError } = await supabase
-          .from('timeline_steps')
-          .insert({
-            project_id: project.id,
-            ...step,
-            description: `Etapa: ${step.title}`
-          })
-          .select()
-          .single()
-
-        if (stepError) throw stepError
-
-        // Adicionar 2 fotos para etapas concluídas
-        if (step.status === 'completed') {
-          await supabase.from('step_photos').insert([
-            {
-              step_id: stepData.id,
-              photo_url: `https://placehold.co/600x400/1a1a1a/FFD700?text=${encodeURIComponent(step.title)}+1`,
-              photo_type: 'before'
-            },
-            {
-              step_id: stepData.id,
-              photo_url: `https://placehold.co/600x400/1a1a1a/FFD700?text=${encodeURIComponent(step.title)}+2`,
-              photo_type: 'after'
-            }
-          ])
-        }
-      }
-
-      console.log('✅ Timeline criada com fotos')
+    // Fotos para etapas completas
+    if (step.status === 'completed') {
+      await supabase.from('step_photos').insert([
+        { step_id: stepData.id, photo_url: `https://placehold.co/800x600/1a1a1a/D4AF37?text=${encodeURIComponent(step.title)}` },
+        { step_id: stepData.id, photo_url: `https://placehold.co/800x600/0a0a0a/FFD700?text=${encodeURIComponent(step.title)}+2` }
+      ])
     }
+  }
+  console.log('  ✅ 9 etapas criadas com fotos')
 
-    console.log('\n🎉 Seed concluído com sucesso!')
-    console.log('\n📊 Dados criados:')
-    console.log('  - Executor: joao@teste.com / teste123')
-    console.log('  - Cliente: erick@teste.com / teste123')
-    console.log('  - Veículo: BMW X5 (ABC-1D23)')
-    console.log('  - Projeto vinculado ao João com 5 etapas')
-    console.log('\n💡 Próximos passos:')
-    console.log('  1. Fazer login como joao@teste.com')
-    console.log('  2. Verificar se cliente Erick aparece')
-    console.log('  3. Testar filtro "Todos" vs "Meus"')
-    console.log('  4. Verificar fotos na timeline\n')
+  // 7. Blinding specs
+  console.log('🛡️  Criando specs de blindagem...')
+  await supabase.from('blinding_specs').insert({
+    project_id: project.id,
+    level: 'NIJ III-A',
+    certification: 'Ultra Lite Armor',
+    glass_type: 'SafeMax CrystalGard',
+    glass_thickness: '21mm',
+    warranty: '10 anos',
+    technical_responsible: 'Joao Executor'
+  })
+  console.log('  ✅ Specs criadas')
 
+  // 8. Notificacoes de exemplo
+  console.log('🔔 Criando notificacoes...')
+  await supabase.from('notifications').insert([
+    { user_id: client.id, title: 'Etapa concluida', message: 'A desmontagem do seu veiculo foi concluida com sucesso.', type: 'success', read: true, project_id: project.id },
+    { user_id: client.id, title: 'Blindagem em andamento', message: 'Os vidros blindados estao sendo instalados no seu BMW X5.', type: 'info', read: false, project_id: project.id },
+    { user_id: client.id, title: 'Foto adicionada', message: 'Novas fotos da etapa de instalacao foram adicionadas.', type: 'info', read: false, project_id: project.id },
+  ])
+  console.log('  ✅ 3 notificacoes criadas')
+
+  console.log('\n========================================')
+  console.log('🎉 SEED CONCLUIDO COM SUCESSO!')
+  console.log('========================================')
+  console.log('\n📊 Dados de teste:')
+  console.log(`  Admin:    ${ADMIN_EMAIL} / 2025!Adm`)
+  console.log('  Executor: joao@teste.com / teste123')
+  console.log('  Cliente:  erick@teste.com / teste123')
+  console.log(`  Veiculo:  BMW X5 xDrive40i (ELT-2E25)`)
+  console.log(`  Projeto:  ${project.id} (55%, in_progress)`)
+  console.log('  Timeline: 9 etapas (4 completed, 1 in_progress, 4 pending)')
+  console.log('  Linha:    Ultra Lite Armor / NIJ III-A')
+  console.log('  Fotos:    8 fotos nas etapas concluidas\n')
+}
+
+async function main() {
+  try {
+    await cleanOldTestData()
+    await seedTestData()
   } catch (error) {
-    console.error('\n❌ Erro ao criar dados:', error)
+    console.error('\n❌ ERRO:', error.message || error)
     process.exit(1)
   }
 }
 
-seedTestData()
+main()
