@@ -46,21 +46,35 @@ async function requestNotificationPermission(): Promise<boolean> {
   return false
 }
 
-// Enviar notificação push nativa
-function sendPushNotification(title: string, body: string, icon?: string) {
-  if ('Notification' in window && Notification.permission === 'granted') {
-    const notification = new Notification(title, {
-      body,
-      icon: icon || '/icons/icon-192x192.png',
-      badge: '/icons/icon-72x72.png',
-      tag: 'elitetrack-notification',
-      requireInteraction: true,
-    })
+// Enviar notificação push nativa (via ServiceWorker quando disponível, fallback para new Notification)
+async function sendPushNotification(title: string, body: string, icon?: string) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return
 
-    notification.onclick = () => {
-      window.focus()
-      notification.close()
+  const options: NotificationOptions = {
+    body,
+    icon: icon || '/icons/icon-192x192.png',
+    badge: '/elite-logo.svg',
+    tag: `elitetrack-${Date.now()}`,
+    requireInteraction: true,
+    data: { url: '/dashboard' },
+  }
+
+  // Usar ServiceWorker.showNotification se disponível (funciona com tab em background)
+  if ('serviceWorker' in navigator) {
+    try {
+      const reg = await navigator.serviceWorker.ready
+      await reg.showNotification(title, options)
+      return
+    } catch (err) {
+      console.warn('[Push] SW showNotification falhou, usando fallback:', err)
     }
+  }
+
+  // Fallback: new Notification (só funciona com tab em foco)
+  const notification = new Notification(title, options)
+  notification.onclick = () => {
+    window.focus()
+    notification.close()
   }
 }
 
@@ -71,14 +85,20 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   const unreadCount = notifications.filter(n => !n.read).length
 
-  // Verificar status de permissão de push
+  // Verificar status de permissão de push e solicitar no primeiro login
   useEffect(() => {
     if ('Notification' in window) {
       setPushPermissionStatus(Notification.permission)
+      // Solicitar permissão automaticamente no primeiro login do cliente
+      if (user?.id && Notification.permission === 'default') {
+        void requestNotificationPermission().then(() => {
+          setPushPermissionStatus(Notification.permission)
+        })
+      }
     } else {
       setPushPermissionStatus('unsupported')
     }
-  }, [])
+  }, [user?.id])
 
   // Carregar notificações do Supabase quando o usuário logar
   useEffect(() => {
@@ -101,7 +121,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    loadNotifications()
+    void loadNotifications()
   }, [user?.id])
 
   // Escutar novas notificações em tempo real do Supabase
@@ -133,13 +153,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           setNotifications(prev => [notification, ...prev])
           
           // Enviar push notification nativa
-          sendPushNotification(notification.title, notification.message)
+          void sendPushNotification(notification.title, notification.message)
         }
       )
       .subscribe()
 
     return () => {
-      if (supabase) supabase.removeChannel(channel)
+      if (supabase) void supabase.removeChannel(channel)
     }
   }, [user?.id])
 

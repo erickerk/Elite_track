@@ -560,6 +560,20 @@ export function ExecutorDashboard() {
 
       // Encontrar índice da etapa atual
       const currentStepIndex = currentProject.timeline.findIndex(s => s.id === stepId)
+
+      // VALIDAÇÃO: etapa só pode ser concluída se a anterior estiver concluída
+      if (updates.status === 'completed' && currentStepIndex > 0) {
+        const previousStep = currentProject.timeline[currentStepIndex - 1]
+        if (previousStep.status !== 'completed') {
+          console.warn(`[ExecutorDashboard] ⚠️ Etapa "${currentProject.timeline[currentStepIndex].title}" não pode ser concluída: etapa anterior "${previousStep.title}" ainda não foi concluída.`)
+          addNotification({
+            type: 'warning',
+            title: 'Ordem das Etapas',
+            message: `Conclua "${previousStep.title}" antes de concluir "${currentProject.timeline[currentStepIndex].title}".`,
+          })
+          return currentProject
+        }
+      }
       
       // Atualizar a timeline do projeto com lógica de sincronização
       const updatedTimeline = currentProject.timeline.map((step, index) => {
