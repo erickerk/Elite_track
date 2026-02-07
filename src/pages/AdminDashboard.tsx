@@ -16,6 +16,7 @@ import { useLeads } from '../contexts/LeadsContext'
 import { cn } from '../lib/utils'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { generateEliteShieldPDF } from '../utils/pdfGenerator'
+import { generateArchitectureDoc } from '../utils/architectureDocGenerator'
 
 interface ExecutorUser {
   id: string
@@ -1782,6 +1783,23 @@ export function AdminDashboard() {
                     </label>
                   </div>
                 </div>
+              </div>
+
+              <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                <h3 className="text-lg font-semibold mb-4">Documentação Técnica</h3>
+                <p className="text-sm text-gray-400 mb-4">
+                  Baixe o manual completo explicando a arquitetura, custos e infraestrutura do Elite Track.
+                </p>
+                <button
+                  onClick={() => {
+                    void generateArchitectureDoc()
+                    addNotification({ type: 'success', title: 'Documento gerado', message: 'Manual de arquitetura baixado com sucesso!' })
+                  }}
+                  className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-primary text-black rounded-xl font-semibold hover:bg-primary/90 transition-colors"
+                >
+                  <Download className="w-5 h-5" />
+                  <span>Baixar Manual de Arquitetura (.docx)</span>
+                </button>
               </div>
 
               <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
