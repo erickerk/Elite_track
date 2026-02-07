@@ -357,7 +357,8 @@ export const eliteShieldService = {
         { step_number: 5, step_name: 'Montagem' },
         { step_number: 6, step_name: 'Acabamento' },
         { step_number: 7, step_name: 'Testes' },
-        { step_number: 8, step_name: 'Liberação' }
+        { step_number: 8, step_name: 'Liberação do Exército' },
+        { step_number: 9, step_name: 'Liberação' }
       ]
       
       await db

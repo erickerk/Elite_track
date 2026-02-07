@@ -114,6 +114,7 @@ test.describe('Timeline — Etapas do processo', () => {
     // Verificar que etapas fundamentais existem
     await expect(page.locator('text=Recebimento do Veículo').first()).toBeVisible()
     await expect(page.locator('text=Desmontagem').first()).toBeVisible()
+    await expect(page.locator('text=Liberação do Exército').first()).toBeVisible()
     await expect(page.locator('text=Entrega').first()).toBeVisible()
   })
 })
