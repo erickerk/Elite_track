@@ -2,7 +2,6 @@ import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { useNotifications } from '../contexts/NotificationContext'
 import { useProjects } from '../contexts/ProjectContext'
 import { cn } from '../lib/utils'
 
@@ -35,7 +34,6 @@ const categoryColors: Record<string, { bg: string; text: string; label: string }
 export function Gallery() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { unreadCount } = useNotifications()
   const { projects: allProjects } = useProjects()
 
   const userProjects = allProjects.filter(p => p.user.id === user?.id || p.user.email === user?.email)
@@ -142,58 +140,7 @@ export function Gallery() {
 
   return (
     <div className="bg-black text-white font-['Inter'] overflow-x-hidden min-h-screen">
-      {/* Header */}
-      <header className="glass-effect border-b border-white/10 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button 
-                onClick={() => navigate(-1)} 
-                className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center transition-colors"
-                title="Voltar"
-              >
-                <i className="ri-arrow-left-line text-white"></i>
-              </button>
-              <img src="/logo-elite.png" alt="Elite Blindagens" className="h-8 w-auto cursor-pointer" onClick={() => navigate('/dashboard')} />
-            </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/profile')}
-                className="md:hidden w-10 h-10 bg-red-500/20 hover:bg-red-500/30 rounded-full flex items-center justify-center transition-colors"
-                title="Perfil e Sair"
-              >
-                <i className="ri-logout-box-line text-red-400"></i>
-              </button>
-              <button className="flex items-center space-x-2" title="Notificações">
-                <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
-                  <i className="ri-notification-3-line text-primary text-sm"></i>
-                </div>
-                {unreadCount > 0 && (
-                  <span className="bg-primary text-black text-xs px-2 py-1 rounded-full font-semibold">{unreadCount}</span>
-                )}
-              </button>
-              <div className="flex items-center space-x-3">
-                <div className="text-right hidden sm:block">
-                  <div className="text-sm font-medium">{user?.name}</div>
-                  <div className="text-xs text-gray-400">{project.vehicle.brand} {project.vehicle.model}</div>
-                </div>
-                <div 
-                  className="w-10 h-10 bg-gradient-to-br from-primary to-primary/60 rounded-full flex items-center justify-center cursor-pointer"
-                  onClick={() => navigate('/profile')}
-                >
-                  {user?.avatar ? (
-                    <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
-                  ) : (
-                    <i className="ri-user-line text-black text-sm"></i>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
+      {/* Main Content — Header fornecido pelo MobileLayout via Layout wrapper */}
       <main className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black">
         {/* Navigation Tabs */}
         <section className="py-4">

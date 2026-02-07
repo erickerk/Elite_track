@@ -9,7 +9,7 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase/client'
 export function Delivery() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { unreadCount, addNotification } = useNotifications()
+  const { addNotification } = useNotifications()
 
   const { projects: allProjects } = useProjects()
   const userProjects = allProjects.filter(p => p.user.id === user?.id || p.user.email === user?.email)
@@ -82,48 +82,7 @@ export function Delivery() {
 
   return (
     <div className="bg-black text-white font-['Inter'] overflow-x-hidden min-h-screen">
-
-      {/* Header */}
-      <header className="glass-effect border-b border-white/10 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              <button 
-                onClick={() => navigate(-1)} 
-                className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center transition-colors"
-                title="Voltar"
-              >
-                <i className="ri-arrow-left-line text-white"></i>
-              </button>
-              <div className="font-['Pacifico'] text-2xl text-primary luxury-glow cursor-pointer" onClick={() => navigate('/dashboard')}>EliteTrack™</div>
-              <nav className="hidden md:flex items-center space-x-6">
-                <span onClick={() => navigate('/dashboard')} className="text-white/60 hover:text-white transition-colors text-sm font-medium cursor-pointer">Dashboard</span>
-                <span onClick={() => navigate('/timeline')} className="text-white/60 hover:text-white transition-colors text-sm font-medium cursor-pointer">Timeline</span>
-                <span onClick={() => navigate('/gallery')} className="text-white/60 hover:text-white transition-colors text-sm font-medium cursor-pointer">Galeria</span>
-                <span className="text-primary font-semibold text-sm">Entrega</span>
-              </nav>
-            </div>
-            <div className="flex items-center space-x-6">
-              <button className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
-                  <i className="ri-notification-3-line text-primary text-sm"></i>
-                </div>
-                {unreadCount > 0 && <span className="bg-primary text-black text-xs px-2 py-1 rounded-full font-semibold">{unreadCount}</span>}
-              </button>
-              <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigate('/profile')}>
-                <div className="text-right">
-                  <div className="text-sm font-medium">{user?.name}</div>
-                  <div className="text-xs text-gray-400">{project.vehicle.brand} {project.vehicle.model}</div>
-                </div>
-                <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary/60 rounded-full flex items-center justify-center">
-                  {user?.avatar ? <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" /> : <i className="ri-user-line text-black text-sm"></i>}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
+      {/* Header fornecido pelo MobileLayout via Layout wrapper */}
       <main className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black py-8">
         <div className="max-w-6xl mx-auto px-6">
           {/* Page Title */}
