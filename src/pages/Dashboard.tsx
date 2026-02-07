@@ -166,12 +166,13 @@ export function Dashboard() {
     window.open(`https://wa.me/${companyInfo.whatsapp}?text=${message}`, '_blank')
   }
 
-  // Calculate days
+  // Calculate days (cálculos preservados — remoção apenas visual das caixinhas)
   const startDate = new Date(selectedProject.startDate)
   const estimatedDate = new Date(selectedProject.estimatedDelivery)
   const today = new Date()
   const daysElapsed = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
   const daysRemaining = Math.max(0, Math.floor((estimatedDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)))
+  void daysElapsed; void daysRemaining
 
   return (
     <div className="bg-black text-white font-['Inter'] overflow-x-hidden min-h-screen">
@@ -339,23 +340,13 @@ export function Dashboard() {
                 <div className="glass-effect app-card-surface p-4 sm:p-6 rounded-xl sm:rounded-2xl fade-in visible border border-white/5">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h2 className="text-base sm:text-xl font-bold">Progresso</h2>
-                      <p className="text-[10px] sm:text-xs text-gray-500">Status da blindagem</p>
+                      <h2 className="text-base sm:text-xl font-bold">Processo de blindagem</h2>
+                      <p className="text-[10px] sm:text-xs text-gray-500">Status</p>
                     </div>
                     <div className="text-primary text-xl sm:text-3xl font-bold tabular-nums">{displayProgress}%</div>
                   </div>
                   <div className="relative">
-                    <ProgressBar progress={displayProgress} className="mb-4" />
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-white/5 p-3 rounded-lg border border-white/5 text-center">
-                        <div className="text-lg font-bold text-primary">{daysElapsed}</div>
-                        <div className="text-[9px] text-gray-500 uppercase">Dias</div>
-                      </div>
-                      <div className="bg-white/5 p-3 rounded-lg border border-white/5 text-center">
-                        <div className="text-lg font-bold text-white">{daysRemaining}</div>
-                        <div className="text-[9px] text-gray-500 uppercase">Restantes</div>
-                      </div>
-                    </div>
+                    <ProgressBar progress={displayProgress} />
                   </div>
                   <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 mt-4">
                     <div className="flex items-center gap-3">

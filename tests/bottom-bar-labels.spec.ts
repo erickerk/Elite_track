@@ -70,15 +70,15 @@ test.describe('Bottom Bar — Labels Cliente (Mobile)', () => {
   })
 
   test('navegação funcional no mobile', async ({ page }) => {
-    const nav = page.locator('nav').last()
-
-    await nav.locator('text=Etapas').click()
+    await page.locator('nav').last().locator('text=Etapas').click()
     await expect(page).toHaveURL(/\/timeline/)
+    await page.waitForLoadState('domcontentloaded')
 
-    await nav.locator('text=Galeria').click()
+    await page.locator('nav').last().locator('text=Galeria').click()
     await expect(page).toHaveURL(/\/gallery/)
+    await page.waitForLoadState('domcontentloaded')
 
-    await nav.locator('text=Painel').click()
+    await page.locator('nav').last().locator('text=Painel').click()
     await expect(page).toHaveURL(/\/dashboard/)
   })
 })
