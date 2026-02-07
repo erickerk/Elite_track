@@ -42,12 +42,11 @@ const ScanPage = lazy(() => import('./pages/ScanPage'))
 
 function PageLoader() {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0a0a0a' }}>
-      <div style={{ textAlign: 'center', color: '#d4af37' }}>
-        <div style={{ width: 40, height: 40, border: '3px solid #d4af37', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
-        <p style={{ fontSize: 14, opacity: 0.7 }}>Carregando...</p>
+    <div className="page-loader">
+      <div className="page-loader-content">
+        <div className="page-loader-spinner" />
+        <p className="page-loader-text">Carregando...</p>
       </div>
-      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   )
 }

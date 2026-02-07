@@ -18,6 +18,35 @@
   }
 }
 
+/* PageLoader — Suspense fallback */
+.page-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: #0a0a0a;
+}
+
+.page-loader-content {
+  text-align: center;
+  color: #d4af37;
+}
+
+.page-loader-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #d4af37;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 16px;
+}
+
+.page-loader-text {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
 @layer base {
   * {
     @apply border-carbon-700;
