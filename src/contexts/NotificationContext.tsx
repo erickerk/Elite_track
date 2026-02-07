@@ -17,9 +17,9 @@ export interface Notification {
 interface NotificationContextType {
   notifications: Notification[]
   unreadCount: number
-  addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => void
-  markAsRead: (id: string) => void
-  markAllAsRead: () => void
+  addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => Promise<void> | void
+  markAsRead: (id: string) => Promise<void> | void
+  markAllAsRead: () => Promise<void> | void
   clearNotifications: () => void
   requestPushPermission: () => Promise<boolean>
   pushPermissionStatus: NotificationPermission | 'unsupported'
@@ -54,7 +54,7 @@ async function sendPushNotification(title: string, body: string, icon?: string) 
     body,
     icon: icon || '/icons/icon-192x192.png',
     badge: '/elite-logo.svg',
-    tag: `elitetrack-${Date.now()}`,
+    tag: 'elitetrack-notification',
     requireInteraction: true,
     data: { url: '/dashboard' },
   }
@@ -204,7 +204,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     }
     
     // Enviar push notification nativa
-    sendPushNotification(newNotification.title, newNotification.message)
+    void sendPushNotification(newNotification.title, newNotification.message)
   }, [user?.id])
 
   const markAsRead = useCallback(async (id: string) => {

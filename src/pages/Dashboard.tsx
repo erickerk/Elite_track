@@ -93,8 +93,6 @@ export function Dashboard() {
     )
   }
 
-  const currentStep = selectedProject.timeline.find(step => step.status === 'in_progress')
-  void currentStep
   const totalSteps = selectedProject.timeline?.length || 0
   const completedSteps = selectedProject.timeline.filter(step => step.status === 'completed').length
   const timelineProgress = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : selectedProject.progress
@@ -166,14 +164,6 @@ export function Dashboard() {
     const message = encodeURIComponent(`Olá ${companyInfo.name}! Gostaria de informações sobre minha blindagem.`)
     window.open(`https://wa.me/${companyInfo.whatsapp}?text=${message}`, '_blank')
   }
-
-  // Calculate days (cálculos preservados — remoção apenas visual das caixinhas)
-  const startDate = new Date(selectedProject.startDate)
-  const estimatedDate = new Date(selectedProject.estimatedDelivery)
-  const today = new Date()
-  const daysElapsed = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
-  const daysRemaining = Math.max(0, Math.floor((estimatedDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)))
-  void daysElapsed; void daysRemaining
 
   return (
     <div className="bg-black text-white font-['Inter'] overflow-x-hidden min-h-screen">
@@ -339,9 +329,15 @@ export function Dashboard() {
                   </div>
                   
                   <div className="space-y-3">
-                    {selectedProject.timeline.map((step) => (
+                    {selectedProject.timeline.map((step, index) => {
+                      // Detectar inconsistência de dados legados: etapa completed com predecessora não-completed
+                      const hasPendingPredecessor = step.status === 'completed' && index > 0 &&
+                        selectedProject.timeline.slice(0, index).some(prev => prev.status !== 'completed')
+                      
+                      return (
                       <div key={step.id} className={cn(
                         "flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg border transition-all",
+                        hasPendingPredecessor ? "bg-amber-500/5 border-amber-500/20" :
                         step.status === 'completed' ? "bg-green-500/5 border-green-500/20" :
                         step.status === 'in_progress' ? "bg-primary/5 border-primary/20" :
                         "bg-white/5 border-white/5 opacity-50"
@@ -383,7 +379,8 @@ export function Dashboard() {
                           </p>
                         </div>
                       </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
 
