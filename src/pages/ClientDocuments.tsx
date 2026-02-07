@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { 
   Upload, FileText, Image, File, Trash2, Download, Eye,
-  CheckCircle, Clock, AlertCircle, Plus, X, Shield
+  CheckCircle, Clock, AlertCircle, Plus, X
 } from 'lucide-react'
 import { Modal } from '../components/ui/Modal'
 import { useAuth } from '../contexts/AuthContext'
@@ -40,7 +39,6 @@ const statusConfig = {
 }
 
 export function ClientDocuments() {
-  const navigate = useNavigate()
   const { user } = useAuth()
   const { addNotification } = useNotifications()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -223,28 +221,6 @@ export function ClientDocuments() {
 
   return (
     <div className="min-h-screen bg-black text-white font-['Inter']">
-      {/* Header */}
-      <header className="bg-carbon-900/80 backdrop-blur-xl border-b border-white/10 sticky top-0 z-40">
-        <div className="max-w-4xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button 
-                onClick={() => navigate(-1)} 
-                className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center transition-colors"
-                title="Voltar"
-              >
-                <i className="ri-arrow-left-line text-white"></i>
-              </button>
-              <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigate('/dashboard')}>
-                <Shield className="w-6 h-6 text-primary" />
-                <span className="font-['Pacifico'] text-xl text-primary">EliteTrack™</span>
-              </div>
-            </div>
-            <h1 className="text-lg font-semibold">Meus Documentos</h1>
-          </div>
-        </div>
-      </header>
-
       <main className="max-w-4xl mx-auto px-6 py-8">
         {/* Actions Bar */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
