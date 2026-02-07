@@ -60,9 +60,9 @@ export function MobileLayout({ children }: MobileLayoutProps) {
 
   // Itens do menu principal (bottom nav)
   const mainNavItems: NavItem[] = [
-    { to: '/dashboard', icon: Home, label: 'Início' },
-    { to: '/timeline', icon: Clock, label: 'Timeline' },
-    { to: '/gallery', icon: Image, label: 'Fotos' },
+    { to: '/dashboard', icon: Home, label: 'Painel' },
+    { to: '/timeline', icon: Clock, label: 'Etapas' },
+    { to: '/gallery', icon: Image, label: 'Galeria' },
     { to: '/chat', icon: MessageCircle, label: 'Chat' },
   ]
 
@@ -71,9 +71,9 @@ export function MobileLayout({ children }: MobileLayoutProps) {
     {
       section: 'Principal',
       items: [
-        { to: '/dashboard', icon: Home, label: 'Início' },
-        { to: '/timeline', icon: Clock, label: 'Acompanhamento' },
-        { to: '/gallery', icon: Image, label: 'Galeria de Fotos' },
+        { to: '/dashboard', icon: Home, label: 'Painel' },
+        { to: '/timeline', icon: Clock, label: 'Etapas' },
+        { to: '/gallery', icon: Image, label: 'Galeria' },
       ]
     },
     {

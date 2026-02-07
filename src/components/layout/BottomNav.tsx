@@ -5,8 +5,8 @@ import { cn } from '../../lib/utils'
 import { useTheme } from '../../contexts/ThemeContext'
 
 const navItems = [
-  { to: '/dashboard', icon: Home, label: 'Início' },
-  { to: '/timeline', icon: Clock, label: 'Timeline' },
+  { to: '/dashboard', icon: Home, label: 'Painel' },
+  { to: '/timeline', icon: Clock, label: 'Etapas' },
   { to: '/gallery', icon: Image, label: 'Galeria' },
   { to: '/chat', icon: MessageCircle, label: 'Suporte' },
   { to: '/profile', icon: User, label: 'Perfil' },
