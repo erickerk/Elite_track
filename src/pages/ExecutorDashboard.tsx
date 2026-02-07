@@ -26,6 +26,7 @@ import { useQuotes } from '../contexts/QuoteContext'
 import { cn } from '../lib/utils'
 import type { Project, SupportTicket } from '../types'
 import { supportTicketStorage } from '../services/storage'
+import { createNotification as createPersistentNotification } from '../services/notificationService'
 import { EliteShieldLaudo } from '../components/laudo/EliteShieldLaudo'
 import { generateEliteShieldPDF } from '../utils/pdfGenerator'
 
@@ -613,7 +614,7 @@ export function ExecutorDashboard() {
       updateGlobalProject(updatedProject.id, updatedProject).then(() => {
         console.log(`[ExecutorDashboard] ✅ Projeto ${updatedProject.id} sincronizado com Supabase`)
         
-        // Notificação de sucesso
+        // Notificação de sucesso (para o executor)
         const stepName = updatedTimeline.find(s => s.id === stepId)?.title || 'Etapa'
         addNotification({
           type: newProgress === 100 ? 'success' : 'success',
@@ -626,6 +627,28 @@ export function ExecutorDashboard() {
           projectId: currentProject.id,
           stepId,
         })
+
+        // Notificar o CLIENTE via Supabase (realtime subscription captura automaticamente)
+        const clientUserId = currentProject.user?.id
+        if (clientUserId) {
+          const plate = currentProject.vehicle?.plate || ''
+          const clientTitle = newProgress === 100
+            ? 'Projeto Concluído!'
+            : updates.status === 'completed' ? 'Etapa Concluída' : 'Etapa Atualizada'
+          const clientMessage = newProgress === 100
+            ? `Todas as etapas do veículo ${plate} foram concluídas! Seu veículo está pronto.`
+            : updates.status === 'completed'
+              ? `"${stepName}" foi concluída no veículo ${plate}. Progresso: ${newProgress}%`
+              : `Etapa "${stepName}" atualizada no veículo ${plate}. Progresso: ${newProgress}%`
+
+          createPersistentNotification(clientUserId, {
+            type: newProgress === 100 ? 'success' : 'info',
+            title: clientTitle,
+            message: clientMessage,
+          }).catch(err => {
+            console.error('[ExecutorDashboard] Erro ao notificar cliente:', err)
+          })
+        }
       }).catch((err) => {
         console.error(`[ExecutorDashboard] ❌ Erro ao sincronizar projeto:`, err)
         addNotification({

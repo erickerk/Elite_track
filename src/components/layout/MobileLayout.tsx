@@ -10,6 +10,7 @@ import { cn } from '../../lib/utils'
 import { useTheme } from '../../contexts/ThemeContext'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNotifications } from '../../contexts/NotificationContext'
+import { NotificationPanel } from '../ui/NotificationPanel'
 
 interface MobileLayoutProps {
   children: ReactNode
@@ -24,6 +25,7 @@ interface NavItem {
 
 export function MobileLayout({ children }: MobileLayoutProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [showNotifications, setShowNotifications] = useState(false)
   const { theme } = useTheme()
   const { user, logout } = useAuth()
   const { unreadCount } = useNotifications()
@@ -129,18 +131,24 @@ export function MobileLayout({ children }: MobileLayoutProps) {
         />
 
         {/* Notificações */}
-        <button
-          onClick={() => navigate('/notifications')}
-          className="relative w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors"
-          aria-label="Notificações"
-        >
-          <Bell className="w-5 h-5 text-[#D4AF37]" />
-          {unreadCount > 0 && (
-            <span className="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold">
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </span>
-          )}
-        </button>
+        <div className="relative">
+          <button
+            onClick={() => setShowNotifications(!showNotifications)}
+            className="relative w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors"
+            aria-label="Notificações"
+          >
+            <Bell className="w-5 h-5 text-[#D4AF37]" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+          <NotificationPanel
+            isOpen={showNotifications}
+            onClose={() => setShowNotifications(false)}
+          />
+        </div>
       </header>
 
       {/* Drawer Overlay */}
