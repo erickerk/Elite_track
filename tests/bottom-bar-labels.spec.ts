@@ -69,16 +69,20 @@ test.describe('Bottom Bar — Labels Cliente (Mobile)', () => {
     await expect(nav.locator('text=Timeline')).not.toBeVisible()
   })
 
-  test('navegação funcional no mobile', async ({ page }) => {
-    await page.locator('nav').last().locator('text=Etapas').click()
+  test('navegar para Etapas funciona no mobile', async ({ page }) => {
+    await page.locator('nav button', { hasText: 'Etapas' }).click()
     await expect(page).toHaveURL(/\/timeline/)
-    await page.waitForLoadState('domcontentloaded')
+  })
 
-    await page.locator('nav').last().locator('text=Galeria').click()
+  test('navegar para Galeria funciona no mobile', async ({ page }) => {
+    await page.locator('nav button', { hasText: 'Galeria' }).click()
     await expect(page).toHaveURL(/\/gallery/)
-    await page.waitForLoadState('domcontentloaded')
+  })
 
-    await page.locator('nav').last().locator('text=Painel').click()
+  test('navegar para Painel funciona no mobile', async ({ page }) => {
+    await page.locator('nav button', { hasText: 'Etapas' }).click()
+    await expect(page).toHaveURL(/\/timeline/)
+    await page.locator('nav button', { hasText: 'Painel' }).click()
     await expect(page).toHaveURL(/\/dashboard/)
   })
 })

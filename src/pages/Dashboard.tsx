@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
-  ChevronDown, Share2, Copy, CheckCircle, Plus, QrCode, Link2, MessageCircle, Calendar, Clock, Shield
+  ChevronDown, Share2, Copy, CheckCircle, Plus, QrCode, Link2, MessageCircle, Calendar, Clock
 } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
@@ -94,6 +94,7 @@ export function Dashboard() {
   }
 
   const currentStep = selectedProject.timeline.find(step => step.status === 'in_progress')
+  void currentStep
   const totalSteps = selectedProject.timeline?.length || 0
   const completedSteps = selectedProject.timeline.filter(step => step.status === 'completed').length
   const timelineProgress = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : selectedProject.progress
@@ -176,40 +177,6 @@ export function Dashboard() {
 
   return (
     <div className="bg-black text-white font-['Inter'] overflow-x-hidden min-h-screen">
-      {/* Header */}
-      <header className="glass-effect border-b border-white/10 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4 app-mobile-shell">
-          <div className="flex items-center justify-between">
-            <img src="/logo-elite.png" alt="Elite Blindagens" className="h-10 w-auto object-contain cursor-pointer" onClick={() => navigate('/dashboard')} />
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/profile')}
-                className="md:hidden w-10 h-10 bg-red-500/20 hover:bg-red-500/30 rounded-full flex items-center justify-center transition-colors"
-                title="Perfil e Sair"
-              >
-                <i className="ri-logout-box-line text-red-400"></i>
-              </button>
-              <div className="flex items-center space-x-3">
-                <div className="text-right hidden sm:block">
-                  <div className="text-sm font-medium">{user?.name}</div>
-                  <div className="text-xs text-gray-400">{selectedProject.vehicle.brand} {selectedProject.vehicle.model}</div>
-                </div>
-                <div 
-                  className="w-10 h-10 bg-gradient-to-br from-primary to-primary/60 rounded-full flex items-center justify-center cursor-pointer"
-                  onClick={() => navigate('/profile')}
-                >
-                  {user?.avatar ? (
-                    <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
-                  ) : (
-                    <i className="ri-user-line text-black text-sm"></i>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
       {/* Main Content */}
       <main className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black">
         {/* Vehicle Selector for multiple vehicles */}
@@ -368,7 +335,7 @@ export function Dashboard() {
                       <h2 className="text-base sm:text-xl font-bold text-white app-mobile-title">Timeline</h2>
                       <p className="text-[10px] sm:text-xs text-gray-500">Etapas da blindagem</p>
                     </div>
-                    <Clock className="w-5 h-5 text-gray-500" />
+                    <Clock className="w-5 h-5 text-primary/70" />
                   </div>
                   
                   <div className="space-y-3">
@@ -460,36 +427,6 @@ export function Dashboard() {
 
               {/* Sidebar / Quick Actions Container */}
               <div className="space-y-6">
-                {/* Status Card - Mobile: Horizontal Layout */}
-                <div className="glass-effect app-card-surface p-5 sm:p-6 rounded-2xl sm:rounded-3xl fade-in visible border border-white/5">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/20 rounded-xl flex items-center justify-center border border-primary/20">
-                      <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm sm:text-base font-bold text-white tracking-tight">Status do Veículo</h3>
-                      <p className="text-[10px] sm:text-xs text-primary font-bold uppercase tracking-widest mt-0.5">
-                        {selectedProject.status === 'completed' ? 'Blindagem Concluída' : 
-                         selectedProject.status === 'in_progress' ? 'Em Execução' : 'Aguardando Início'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 py-3 border-y border-white/5">
-                    <div className="text-center">
-                      <p className="text-[9px] text-gray-500 uppercase font-bold tracking-tighter">Nível</p>
-                      <p className="text-xs font-bold text-white mt-1">{selectedProject.vehicle.blindingLevel}</p>
-                    </div>
-                    <div className="text-center border-x border-white/5 px-2">
-                      <p className="text-[9px] text-gray-500 uppercase font-bold tracking-tighter">Placa</p>
-                      <p className="text-xs font-bold text-white mt-1">{selectedProject.vehicle.plate}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-[9px] text-gray-500 uppercase font-bold tracking-tighter">Etapa</p>
-                      <p className="text-xs font-bold text-white mt-1 truncate">{currentStep?.title || 'Fim'}</p>
-                    </div>
-                  </div>
-                </div>
-
                 {/* Quick Actions - Mobile: Optimized Grid */}
                 <div className="glass-effect app-card-surface p-5 sm:p-6 rounded-2xl sm:rounded-3xl fade-in visible border border-white/5">
                   <div className="flex items-center justify-between mb-5">

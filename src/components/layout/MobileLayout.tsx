@@ -124,7 +124,7 @@ export function MobileLayout({ children }: MobileLayoutProps) {
         <img 
           src="/logo-elite.png" 
           alt="Elite Blindagens" 
-          className="h-8 w-auto object-contain cursor-pointer"
+          className="h-10 w-auto object-contain cursor-pointer"
           onClick={() => navigate('/dashboard')}
         />
 
