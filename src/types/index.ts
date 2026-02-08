@@ -155,9 +155,24 @@ export interface Project {
   inviteToken?: string // Token de convite para cadastro
   inviteExpiresAt?: string // Data de expiração do convite
   executorId?: string // ID do executor responsável pelo projeto
-  blindingLine?: 'Safe Core' | 'Ultra Lite Armor' // Tipo de blindagem selecionado
+  blindingLine?: string // Tipo de blindagem selecionado (ex: 'Safe Core', 'Ultra Lite Armor', 'UltraLite Armor™')
   protectionLevel?: string // Nível de proteção (NIJ III-A, etc.)
   blindingSpecs?: BlindingSpecs
+  laudoData?: {
+    level?: string
+    certification?: string
+    certificationNumber?: string
+    glassType?: string
+    glassThickness?: string
+    warranty?: string
+    technicalResponsible?: string
+    technicalResponsibleRole?: string
+    supervisorName?: string
+    deliveryDate?: string
+    startDate?: string
+    completionDate?: string
+    warrantyExpiration?: string
+  }
   deliveryChecklist?: DeliveryChecklist[]
   deliverySchedule?: DeliverySchedule
   deliveryMedia?: DeliveryMedia

@@ -85,6 +85,9 @@ function dbProjectToProject(
     inviteToken: (dbProject.invite_token as string | null) ?? undefined,
     inviteExpiresAt: (dbProject.invite_expires_at as string | null) ?? undefined,
     executorId: (dbProject.executor_id as string | null) ?? undefined,
+    blindingLine: (dbProject.blinding_line as string | null) ?? undefined,
+    protectionLevel: (dbProject.protection_level as string | null) ?? undefined,
+    laudoData: dbProject.laudo_data ? (dbProject.laudo_data as Project['laudoData']) : undefined,
   }
 }
 

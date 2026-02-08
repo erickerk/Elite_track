@@ -745,13 +745,30 @@ export function ExecutorDashboard() {
         return
       }
 
-      // Atualizar projetos localmente
-      await refreshProjects()
+      // Optimistic update: atualizar selectedProject com laudoData imediatamente
+      const updatedLaudoData = {
+        level: laudoData.level,
+        certification: laudoData.certification,
+        certificationNumber: laudoData.certificationNumber,
+        glassType: laudoData.glassType,
+        glassThickness: laudoData.glassThickness,
+        warranty: laudoData.warranty,
+        technicalResponsible: laudoData.technicalResponsible,
+        technicalResponsibleRole: laudoData.technicalResponsibleRole,
+        deliveryDate: laudoData.deliveryDate,
+        startDate: laudoData.startDate,
+        completionDate: laudoData.completionDate,
+        warrantyExpiration: laudoData.warrantyExpiration,
+      }
+      setSelectedProject({ ...selectedProject, laudoData: updatedLaudoData })
+
+      // Sync em background para propagar para todas as telas
+      refreshProjects().catch(err => console.error('[Laudo] Erro no refresh:', err))
 
       addNotification({
         type: 'success',
         title: 'Laudo Salvo',
-        message: 'As informações do laudo foram salvas no banco de dados.',
+        message: 'As informações do laudo foram salvas e sincronizadas.',
         projectId: selectedProject.id,
       })
       setShowLaudoModal(false)
