@@ -227,7 +227,7 @@ export function ExecutorDashboard() {
   const [showMobileDrawer, setShowMobileDrawer] = useState(false)
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [filterStatus, setFilterStatus] = useState<string>('pending')
+  const [filterStatus, setFilterStatus] = useState<string>('all')
   // Filtro "Minhas Atividades" vs "Todas" - SEMPRE mostra todos por padrão para garantir visibilidade
   const [viewMode, setViewMode] = useState<'mine' | 'all'>('all')
   // Mostrar histórico (projetos concluídos) separadamente
@@ -1516,7 +1516,7 @@ ${loginUrl}
               {/* Stats - Grid 2x2 Mobile, 4 cols Desktop */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
                 <button 
-                  onClick={() => { setShowHistory(false); setFilterStatus('all'); }}
+                  onClick={() => { setShowHistory(false); setViewMode('all'); setFilterStatus('all'); }}
                   className={cn(
                     "app-card-surface rounded-xl p-3 border transition-all active:scale-95",
                     filterStatus === 'all' && !showHistory ? "border-primary ring-2 ring-primary/30 bg-primary/10" : "border-white/10"
@@ -1531,7 +1531,7 @@ ${loginUrl}
                   <p className="text-xs text-gray-400 font-semibold">TOTAL</p>
                 </button>
                 <button 
-                  onClick={() => { setShowHistory(false); setFilterStatus('in_progress'); }}
+                  onClick={() => { setShowHistory(false); setViewMode('all'); setFilterStatus('in_progress'); }}
                   className={cn(
                     "app-card-surface rounded-xl p-3 border transition-all active:scale-95",
                     filterStatus === 'in_progress' && !showHistory ? "border-yellow-400 ring-2 ring-yellow-400/30 bg-yellow-400/10" : "border-white/10"
@@ -1546,7 +1546,7 @@ ${loginUrl}
                   <p className="text-xs text-gray-400 font-semibold">ATIVOS</p>
                 </button>
                 <button 
-                  onClick={() => { setShowHistory(false); setFilterStatus('pending'); }}
+                  onClick={() => { setShowHistory(false); setViewMode('all'); setFilterStatus('pending'); }}
                   className={cn(
                     "app-card-surface rounded-xl p-3 border transition-all active:scale-95",
                     filterStatus === 'pending' && !showHistory ? "border-orange-400 ring-2 ring-orange-400/30 bg-orange-400/10" : "border-white/10"
@@ -1564,7 +1564,7 @@ ${loginUrl}
                   onClick={() => { 
                     if (showHistory) {
                       setShowHistory(false);
-                      setFilterStatus('pending');
+                      setFilterStatus('all');
                     } else {
                       setShowHistory(true);
                       setFilterStatus('all');
@@ -1613,7 +1613,7 @@ ${loginUrl}
                 <div className="flex items-center gap-2">
                   <div className="flex-1 flex items-center bg-white/5 rounded-xl p-1">
                     <button
-                      onClick={() => { setViewMode('mine'); setShowHistory(false); setFilterStatus('pending'); }}
+                      onClick={() => { setViewMode('mine'); setShowHistory(false); setFilterStatus('all'); }}
                       className={cn(
                         "flex-1 px-3 py-2.5 rounded-lg text-xs md:text-sm font-medium transition-all active:scale-95",
                         viewMode === 'mine' && !showHistory
@@ -1624,7 +1624,7 @@ ${loginUrl}
                       Meus
                     </button>
                     <button
-                      onClick={() => { setViewMode('all'); setShowHistory(false); setFilterStatus('pending'); }}
+                      onClick={() => { setViewMode('all'); setShowHistory(false); setFilterStatus('all'); }}
                       className={cn(
                         "flex-1 px-3 py-2.5 rounded-lg text-xs md:text-sm font-medium transition-all active:scale-95",
                         viewMode === 'all' && !showHistory
@@ -1636,11 +1636,11 @@ ${loginUrl}
                     </button>
                   </div>
                   {/* Botão Limpar Filtros - sempre visível quando há filtro ativo */}
-                  {(showHistory || filterStatus !== 'pending' || searchTerm) && (
+                  {(showHistory || filterStatus !== 'all' || searchTerm) && (
                     <button
                       onClick={() => { 
                         setShowHistory(false); 
-                        setFilterStatus('pending'); 
+                        setFilterStatus('all'); 
                         setSearchTerm('');
                         setFocusedProjectId(null);
                       }}
