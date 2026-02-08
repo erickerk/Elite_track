@@ -23,9 +23,15 @@ export function LandingPage() {
   const [consultaInput, setConsultaInput] = useState('')
   
   const handleConsulta = () => {
-    if (consultaInput.trim()) {
+    const input = consultaInput.trim()
+    if (input) {
       setShowConsultaModal(false)
-      navigate(`/verify/${consultaInput.trim()}`)
+      // Se for URL completa, extrair apenas o ID do projeto
+      let projectId = input
+      if (input.toLowerCase().includes('/verify/')) {
+        projectId = input.split(/\/verify\//i)[1]?.split('?')[0] || input
+      }
+      navigate(`/verify/${projectId}`)
       setConsultaInput('')
     }
   }
@@ -811,10 +817,10 @@ export function LandingPage() {
                 <input
                   type="text"
                   value={consultaInput}
-                  onChange={(e) => setConsultaInput(e.target.value.toUpperCase())}
+                  onChange={(e) => setConsultaInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleConsulta()}
-                  placeholder="PRJ-2025-003 ou ABC-1234"
-                  className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-primary focus:outline-none transition-colors text-center font-mono uppercase"
+                  placeholder="PRJ-2025-003 ou cole a URL completa"
+                  className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-primary focus:outline-none transition-colors text-center font-mono"
                   autoFocus
                 />
               </div>

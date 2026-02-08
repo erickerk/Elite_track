@@ -24,6 +24,7 @@ const QRCodePage = lazy(() => import('./pages/QRCode'))
 const ExecutorDashboard = lazy(() => import('./pages/ExecutorDashboard'))
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
 const PublicVerification = lazy(() => import('./pages/PublicVerification'))
+const PublicVerificationSecure = lazy(() => import('./pages/PublicVerificationSecure'))
 const EliteShield = lazy(() => import('./pages/EliteShield'))
 const Revisions = lazy(() => import('./pages/Revisions'))
 const LandingPage = lazy(() => import('./pages/LandingPage'))
@@ -279,7 +280,17 @@ function AppRoutes() {
           </PrivateRoute>
         }
       />
-      <Route path="/verify/:projectId" element={<PublicVerification />} />
+      {/* Rota pública SEGURA com whitelist de dados */}
+      <Route path="/verify/:projectId" element={<PublicVerificationSecure />} />
+      {/* Laudo completo (apenas para autenticados - manter compatibilidade) */}
+      <Route 
+        path="/laudo-completo/:projectId" 
+        element={
+          <PrivateRoute>
+            <PublicVerification />
+          </PrivateRoute>
+        } 
+      />
       <Route path="/qr/:code" element={<QRRedirect />} />
       <Route path="/scan" element={<ScanPage />} />
       <Route path="/register/:token" element={<Register />} />
