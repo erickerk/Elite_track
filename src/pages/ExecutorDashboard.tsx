@@ -308,9 +308,9 @@ export function ExecutorDashboard() {
     // Opacos
     aramidLayers: '9',
     opaqueManufacturer: 'NextOne',
-    // Responsáveis
-    technicalResponsible: '',
-    supervisorName: '',
+    // Responsáveis (auto-preenchidos com dados do executor logado)
+    technicalResponsible: user?.name ? `${user.name} | Engenheiro de Blindagem` : '',
+    supervisorName: user?.name ? `${user.name} | Supervisor Técnico` : '',
   })
   
   // Estados para aba Clientes
@@ -856,7 +856,25 @@ export function ExecutorDashboard() {
       addNotification({
         type: 'warning',
         title: 'Campos Obrigatórios',
-        message: 'Preencha todos os campos obrigatórios.',
+        message: 'Preencha Nome do Cliente, Marca, Modelo e Placa.',
+      })
+      return
+    }
+
+    if (!newCarData.clientCpfCnpj) {
+      addNotification({
+        type: 'warning',
+        title: 'Campo Obrigatório',
+        message: 'CPF/CNPJ do cliente é obrigatório.',
+      })
+      return
+    }
+
+    if (!newCarData.clientAddress) {
+      addNotification({
+        type: 'warning',
+        title: 'Campo Obrigatório',
+        message: 'Endereço do cliente é obrigatório.',
       })
       return
     }
@@ -1067,7 +1085,7 @@ export function ExecutorDashboard() {
       blindingLine: 'UltraLite Armor™', protectionLevel: 'NIJ III-A',
       glassManufacturer: 'SafeMax', glassThickness: '21', glassWarrantyYears: '10',
       aramidLayers: '9', opaqueManufacturer: 'NextOne',
-      technicalResponsible: '', supervisorName: '',
+      technicalResponsible: user?.name ? `${user.name} | Engenheiro de Blindagem` : '', supervisorName: user?.name ? `${user.name} | Supervisor Técnico` : '',
     })
     setVehiclePhoto(null)
     
@@ -3396,7 +3414,7 @@ ${loginUrl}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">CPF/CNPJ</label>
+                  <label className="block text-sm text-gray-400 mb-2">CPF/CNPJ <span className="text-red-400">*</span></label>
                   <input 
                     type="text" 
                     value={newCarData.clientCpfCnpj}
@@ -3407,7 +3425,7 @@ ${loginUrl}
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm text-gray-400 mb-2">Endereço</label>
+                  <label className="block text-sm text-gray-400 mb-2">Endereço <span className="text-red-400">*</span></label>
                   <input 
                     type="text" 
                     value={newCarData.clientAddress}
@@ -3633,26 +3651,28 @@ ${loginUrl}
               </h3>
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Responsável Técnico</label>
+                  <label className="block text-sm text-gray-400 mb-2">Responsável Técnico <span className="text-primary text-xs">(auto)</span></label>
                   <input 
                     type="text" 
                     value={newCarData.technicalResponsible}
                     onChange={(e) => setNewCarData({...newCarData, technicalResponsible: e.target.value})}
-                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                    className="w-full bg-white/5 border border-primary/30 rounded-xl px-4 py-3 text-white/90"
                     title="Nome do responsável técnico"
                     placeholder="Nome | Cargo"
                   />
+                  <p className="text-[10px] text-gray-500 mt-1">Preenchido automaticamente. Edite se necessário.</p>
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Supervisor Técnico</label>
+                  <label className="block text-sm text-gray-400 mb-2">Supervisor Técnico <span className="text-primary text-xs">(auto)</span></label>
                   <input 
                     type="text" 
                     value={newCarData.supervisorName}
                     onChange={(e) => setNewCarData({...newCarData, supervisorName: e.target.value})}
-                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                    className="w-full bg-white/5 border border-primary/30 rounded-xl px-4 py-3 text-white/90"
                     title="Nome do supervisor técnico"
                     placeholder="Nome | Cargo"
                   />
+                  <p className="text-[10px] text-gray-500 mt-1">Preenchido automaticamente. Edite se necessário.</p>
                 </div>
               </div>
             </div>
