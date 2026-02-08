@@ -435,6 +435,9 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
     const file = e.target.files?.[0]
     if (!file || !uploadingStepId) return
 
+    // Anti-duplicidade: se já está fazendo upload, ignorar
+    if (isUploading) return
+
     const step = project.timeline.find(s => s.id === uploadingStepId)
     if (!step) return
 
@@ -479,12 +482,18 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
         onAddPhoto(uploadingStepId, selectedPhotoType)
         console.log('[Timeline] Foto enviada com sucesso:', photoUrl)
         
-        setUploadProgress('Atualizando galeria...')
-        
-        // Forçar atualização imediata dos projetos para exibir a foto sem F5
-        await refreshProjects()
+        // Optimistic UI: Mostrar foto IMEDIATAMENTE no UI sem esperar refresh
+        const currentPhotos = step.photos || []
+        if (!currentPhotos.includes(photoUrl)) {
+          onUpdateStep(uploadingStepId, { 
+            photos: [...currentPhotos, photoUrl] 
+          })
+        }
         
         setUploadProgress('Foto salva com sucesso!')
+        
+        // Sync em background para garantir consistência
+        refreshProjects().catch(err => console.error('[Timeline] Erro no refresh:', err))
       }
     } catch (error) {
       console.error('[Timeline] Erro no upload:', error)
@@ -947,17 +956,19 @@ export function ExecutorTimeline({ project, onUpdateStep, onAddPhoto, onUpdatePr
                     <div className="grid grid-cols-2 gap-3">
                       <button
                         onClick={() => void handleTakePhoto(step.id)}
-                        className="bg-blue-600 text-white py-4 rounded-xl font-semibold flex items-center justify-center space-x-2 hover:bg-blue-700 active:scale-95 transition-transform"
+                        disabled={isUploading}
+                        className="bg-blue-600 text-white py-4 rounded-xl font-semibold flex items-center justify-center space-x-2 hover:bg-blue-700 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Camera className="w-5 h-5" />
-                        <span>Tirar Foto</span>
+                        <span>{isUploading ? 'Enviando...' : 'Tirar Foto'}</span>
                       </button>
                       <button
                         onClick={() => handleAddPhoto(step.id)}
-                        className="bg-primary text-black py-4 rounded-xl font-semibold flex items-center justify-center space-x-2 hover:bg-primary/90 active:scale-95 transition-transform"
+                        disabled={isUploading}
+                        className="bg-primary text-black py-4 rounded-xl font-semibold flex items-center justify-center space-x-2 hover:bg-primary/90 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Upload className="w-5 h-5" />
-                        <span>Galeria</span>
+                        <span>{isUploading ? 'Enviando...' : 'Galeria'}</span>
                       </button>
                     </div>
                     <p className="text-xs text-gray-500 text-center mt-2">
