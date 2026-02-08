@@ -20,13 +20,22 @@ export function QRRedirect() {
   useEffect(() => {
     async function resolveQRCode() {
       if (!code) {
+        console.log('[QRRedirect] ❌ Código não fornecido')
         setStatus('not_found')
         setErrorMessage('Código QR não fornecido')
         return
       }
 
+      console.log('[QRRedirect] 📍 Resolvendo código:', code)
+      console.log('[QRRedirect] 🔍 Verificando se é UUID:', {
+        hasHyphen: code.includes('-'),
+        length: code.length,
+        isUUID: code.includes('-') && code.length > 20
+      })
+
       // Se for um UUID ou ID de projeto, redirecionar direto para /verify
       if (code.includes('-') && code.length > 20) {
+        console.log('[QRRedirect] ✅ UUID detectado - redirecionando para /verify/' + code)
         navigate(`/verify/${code}`, { replace: true })
         return
       }

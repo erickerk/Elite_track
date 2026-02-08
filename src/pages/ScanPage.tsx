@@ -27,9 +27,10 @@ export function ScanPage() {
   const [scannedCode, setScannedCode] = useState<string | null>(null)
 
   const extractCode = (data: string): string => {
-    if (data.includes('/verify/')) return data.split('/verify/')[1]?.split('?')[0] || data
-    if (data.includes('/card/')) return data.split('/card/')[1]?.split('?')[0] || data
-    if (data.includes('/qr/')) return data.split('/qr/')[1]?.split('?')[0] || data
+    const lower = data.toLowerCase()
+    if (lower.includes('/verify/')) return data.split(/\/verify\//i)[1]?.split('?')[0] || data
+    if (lower.includes('/card/')) return data.split(/\/card\//i)[1]?.split('?')[0] || data
+    if (lower.includes('/qr/')) return data.split(/\/qr\//i)[1]?.split('?')[0] || data
     return data
   }
 
@@ -151,7 +152,9 @@ export function ScanPage() {
 
   const handleManualSearch = () => {
     if (manualInput.trim()) {
-      navigate(`/qr/${manualInput.trim()}`)
+      // Extrair código se for uma URL completa
+      const extractedCode = extractCode(manualInput.trim())
+      navigate(`/qr/${extractedCode}`)
     }
   }
 
@@ -355,10 +358,10 @@ export function ScanPage() {
           <input
             type="text"
             value={manualInput}
-            onChange={(e) => setManualInput(e.target.value.toUpperCase())}
+            onChange={(e) => setManualInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleManualSearch()}
-            placeholder="ABC-1D23 ou PRJ-2025-001"
-            className="w-full bg-white/5 border border-white/10 rounded-xl pl-4 pr-14 py-3.5 text-white placeholder-gray-500 text-center font-mono uppercase"
+            placeholder="ABC-1D23 ou cole a URL completa"
+            className="w-full bg-white/5 border border-white/10 rounded-xl pl-4 pr-14 py-3.5 text-white placeholder-gray-500 text-center font-mono"
           />
           <button
             onClick={handleManualSearch}
