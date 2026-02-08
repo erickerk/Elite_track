@@ -2,9 +2,22 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
+import { copyFileSync } from 'fs'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      name: 'spa-fallback',
+      closeBundle() {
+        // Vercel serves 200.html for unmatched routes (SPA fallback)
+        copyFileSync(
+          resolve(__dirname, 'dist/index.html'),
+          resolve(__dirname, 'dist/200.html')
+        )
+      }
+    }
+  ],
   resolve: {
     alias: {
       '@': '/src',
