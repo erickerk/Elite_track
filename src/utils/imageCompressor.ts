@@ -8,13 +8,25 @@ export interface CompressionOptions {
   maxHeight?: number
   quality?: number
   outputFormat?: 'jpeg' | 'webp' | 'png'
+  useWebP?: boolean // Auto-detecta suporte WebP se true
 }
+
+// Detectar suporte a WebP no browser
+const supportsWebP = (() => {
+  const canvas = document.createElement('canvas')
+  if (canvas.getContext?.('2d')) {
+    // Verificar se toDataURL retorna WebP
+    return canvas.toDataURL('image/webp').startsWith('data:image/webp')
+  }
+  return false
+})()
 
 const DEFAULT_OPTIONS: CompressionOptions = {
   maxWidth: 1280,
   maxHeight: 1280,
   quality: 0.7,
-  outputFormat: 'jpeg'
+  outputFormat: 'jpeg',
+  useWebP: true // Usar WebP se browser suportar
 }
 
 /**
@@ -30,6 +42,11 @@ export async function compressImage(
   options: CompressionOptions = {}
 ): Promise<File> {
   const opts = { ...DEFAULT_OPTIONS, ...options }
+
+  // Auto-detectar WebP se useWebP=true
+  if (opts.useWebP && supportsWebP && opts.outputFormat === 'jpeg') {
+    opts.outputFormat = 'webp'
+  }
 
   // Se não for imagem, retorna o arquivo original
   if (!file.type.startsWith('image/')) {

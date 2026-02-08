@@ -85,7 +85,7 @@ export async function uploadToStorage(
     const { data, error } = await (supabase as any).storage
       .from(bucket)
       .upload(filePath, file, {
-        cacheControl: '3600',
+        cacheControl: '31536000', // 1 ano - fotos nunca mudam
         upsert: false,
       })
 

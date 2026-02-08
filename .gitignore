@@ -44,6 +44,7 @@ __pycache__/
 secrets/
 credentials/
 backups/
+*.backup
 
 # Scripts de migração com possíveis secrets
 migrate*.mjs
