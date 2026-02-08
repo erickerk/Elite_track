@@ -432,6 +432,25 @@ export function ExecutorDashboard() {
     }
   }
 
+  // Gerar QR Code dinâmico para o projeto selecionado (funciona para projetos existentes)
+  useEffect(() => {
+    if (!selectedProject) {
+      setProjectQrCodeUrl(null)
+      return
+    }
+    const verifyUrl = `${getAppBaseUrl()}/verify/${selectedProject.id}`
+    QRCode.toDataURL(verifyUrl, {
+      width: 400,
+      margin: 3,
+      color: { dark: '#D4AF37', light: '#FFFFFF' },
+      errorCorrectionLevel: 'H'
+    }).then((url: string) => {
+      setProjectQrCodeUrl(url)
+    }).catch((err: Error) => {
+      console.error('[Card] Erro ao gerar QR Code do projeto:', err)
+    })
+  }, [selectedProject?.id])
+
   const allProjects = projects
   
   // Função para gerar senha temporária simples (4 dígitos)
