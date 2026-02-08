@@ -326,6 +326,8 @@ export function ExecutorDashboard() {
   // Estados para filtros da Agenda
   const [scheduleFilterType, setScheduleFilterType] = useState<string>('all')
   const [scheduleFilterStatus, setScheduleFilterStatus] = useState<string>('all')
+  const [scheduleFilterDate, setScheduleFilterDate] = useState<string>('') // Filtro por dia específico
+  const [scheduleAttendance, setScheduleAttendance] = useState<Record<string, 'present' | 'absent' | null>>({})
   
   // Estados para filtros de Orçamentos
   const [quoteFilterStatus, setQuoteFilterStatus] = useState<string>('all')
@@ -2202,13 +2204,32 @@ ${loginUrl}
                     <option value="confirmed">Confirmados</option>
                     <option value="pending">Pendentes</option>
                   </select>
+                  {/* Filtro por Data */}
+                  <input
+                    type="date"
+                    title="Filtrar por data específica"
+                    aria-label="Filtrar por data específica"
+                    value={scheduleFilterDate}
+                    onChange={(e) => setScheduleFilterDate(e.target.value)}
+                    className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white"
+                  />
+                  {/* Limpar filtros */}
+                  {(scheduleFilterType !== 'all' || scheduleFilterStatus !== 'all' || scheduleFilterDate) && (
+                    <button
+                      onClick={() => { setScheduleFilterType('all'); setScheduleFilterStatus('all'); setScheduleFilterDate(''); }}
+                      className="px-3 py-2 bg-white/10 text-gray-300 rounded-xl text-sm hover:bg-white/20 transition-colors"
+                    >
+                      Limpar
+                    </button>
+                  )}
                   {/* Download Excel */}
                   <button
                     onClick={() => {
                       const scheduledRevisions = calculateScheduledRevisions(projects)
                       const filteredRevisions = scheduledRevisions.filter(r => 
                         (scheduleFilterType === 'all' || r.type === scheduleFilterType) &&
-                        (scheduleFilterStatus === 'all' || r.status === scheduleFilterStatus)
+                        (scheduleFilterStatus === 'all' || r.status === scheduleFilterStatus) &&
+                        (!scheduleFilterDate || r.date === scheduleFilterDate)
                       )
                       exportToExcel(
                         filteredRevisions.map(r => ({
@@ -2240,7 +2261,8 @@ ${loginUrl}
                   </button>
                   <span className="text-sm text-gray-400">{calculateScheduledRevisions(projects).filter(r => 
                     (scheduleFilterType === 'all' || r.type === scheduleFilterType) &&
-                    (scheduleFilterStatus === 'all' || r.status === scheduleFilterStatus)
+                    (scheduleFilterStatus === 'all' || r.status === scheduleFilterStatus) &&
+                    (!scheduleFilterDate || r.date === scheduleFilterDate)
                   ).length} agendamentos</span>
                 </div>
               </div>
@@ -2367,16 +2389,33 @@ ${loginUrl}
 
               {/* Schedule List */}
               <div className="glass-effect rounded-2xl overflow-hidden">
-                <div className="p-4 border-b border-white/10">
+                <div className="p-4 border-b border-white/10 flex items-center justify-between">
                   <h3 className="font-semibold">Próximos Agendamentos</h3>
+                  {scheduleFilterDate && (
+                    <span className="text-xs text-primary font-semibold">
+                      Filtrando: {new Date(scheduleFilterDate + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
+                    </span>
+                  )}
                 </div>
                 <div className="divide-y divide-white/10">
-                  {calculateScheduledRevisions(projects).map((revision) => (
-                    <div key={revision.id} className="p-4 hover:bg-white/5 transition-colors">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
+                  {calculateScheduledRevisions(projects)
+                    .filter(r => 
+                      (scheduleFilterType === 'all' || r.type === scheduleFilterType) &&
+                      (scheduleFilterStatus === 'all' || r.status === scheduleFilterStatus) &&
+                      (!scheduleFilterDate || r.date === scheduleFilterDate)
+                    )
+                    .map((revision) => {
+                    const attendance = scheduleAttendance[revision.id] || null
+                    return (
+                    <div key={revision.id} className={cn(
+                      "p-4 hover:bg-white/5 transition-colors",
+                      attendance === 'present' && "bg-green-500/5 border-l-4 border-l-green-500",
+                      attendance === 'absent' && "bg-red-500/5 border-l-4 border-l-red-500"
+                    )}>
+                      <div className="flex items-center justify-between flex-wrap gap-3">
+                        <div className="flex items-center space-x-4 min-w-0">
                           <div className={cn(
-                            "w-12 h-12 rounded-xl flex items-center justify-center",
+                            "w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0",
                             revision.type === 'revisao' ? "bg-blue-500/20" : "bg-primary/20"
                           )}>
                             {revision.type === 'revisao' ? (
@@ -2385,18 +2424,18 @@ ${loginUrl}
                               <Car className="w-6 h-6 text-primary" />
                             )}
                           </div>
-                          <div>
+                          <div className="min-w-0">
                             <div className="font-semibold">{revision.clientName}</div>
                             <div className="text-sm text-gray-400">{revision.vehicle}</div>
                           </div>
                         </div>
                         <div className="text-right">
                           <div className="font-medium">
-                            {new Date(revision.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                            {new Date(revision.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
                           </div>
                           <div className="text-sm text-gray-400">{revision.time}</div>
                         </div>
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className={cn(
                             "px-3 py-1 rounded-full text-xs font-medium",
                             revision.status === 'confirmed' 
@@ -2414,9 +2453,52 @@ ${loginUrl}
                             {revision.type === 'revisao' ? 'Revisão' : 'Entrega'}
                           </span>
                         </div>
+                        {/* Presença (foi/não foi) */}
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => setScheduleAttendance(prev => ({ ...prev, [revision.id]: prev[revision.id] === 'present' ? null : 'present' }))}
+                            className={cn(
+                              "px-2 py-1 rounded-lg text-xs font-semibold transition-all",
+                              attendance === 'present' 
+                                ? "bg-green-500 text-white" 
+                                : "bg-white/10 text-gray-400 hover:bg-green-500/20 hover:text-green-400"
+                            )}
+                            title="Marcar como presente"
+                          >
+                            ✓ Foi
+                          </button>
+                          <button
+                            onClick={() => setScheduleAttendance(prev => ({ ...prev, [revision.id]: prev[revision.id] === 'absent' ? null : 'absent' }))}
+                            className={cn(
+                              "px-2 py-1 rounded-lg text-xs font-semibold transition-all",
+                              attendance === 'absent' 
+                                ? "bg-red-500 text-white" 
+                                : "bg-white/10 text-gray-400 hover:bg-red-500/20 hover:text-red-400"
+                            )}
+                            title="Marcar como ausente"
+                          >
+                            ✗ Não
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  ))}
+                    )
+                  })}
+                  {calculateScheduledRevisions(projects).filter(r => 
+                    (scheduleFilterType === 'all' || r.type === scheduleFilterType) &&
+                    (scheduleFilterStatus === 'all' || r.status === scheduleFilterStatus) &&
+                    (!scheduleFilterDate || r.date === scheduleFilterDate)
+                  ).length === 0 && (
+                    <div className="p-8 text-center text-gray-500">
+                      <Calendar className="w-10 h-10 mx-auto mb-3 opacity-50" />
+                      <p className="text-sm font-medium">Nenhum agendamento encontrado</p>
+                      <p className="text-xs mt-1">
+                        {scheduleFilterDate 
+                          ? `Nenhum agendamento para ${new Date(scheduleFilterDate + 'T12:00:00').toLocaleDateString('pt-BR')}` 
+                          : 'Ajuste os filtros para ver resultados'}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
