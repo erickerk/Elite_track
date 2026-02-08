@@ -243,6 +243,11 @@ export function ExecutorDashboard() {
   const [ticketResponse, setTicketResponse] = useState('')
   const [ticketNewStatus, setTicketNewStatus] = useState<string>('open')
   const [tickets, setTickets] = useState<TicketWithDetails[]>([])
+  const [serviceRequests, setServiceRequests] = useState<{
+    id: string; clientName: string; vehicle: string; type: string;
+    description: string; location: string; status: string; priority: string;
+    preferredDate: string; createdAt: string; projectId: string;
+  }[]>([])
   const [ticketFilterStatus, setTicketFilterStatus] = useState<string>('all')
   const [ticketFilterMonth, setTicketFilterMonth] = useState<string>('all')
   const [ticketFilterClient, setTicketFilterClient] = useState<string>('all')
@@ -570,6 +575,46 @@ export function ExecutorDashboard() {
     }
     void loadTickets()
   }, [projects])
+
+  // Carregar solicitações de serviço (concierge/rescue) do Supabase
+  useEffect(() => {
+    const loadServiceRequests = async () => {
+      if (!supabase) return
+      try {
+        // Tentar carregar de rescue_requests (tabela usada pelo EliteCard)
+        const { data, error } = await (supabase as any)
+          .from('rescue_requests')
+          .select('*')
+          .order('created_at', { ascending: false })
+
+        if (error) {
+          console.log('[ExecutorDashboard] Tabela rescue_requests não disponível:', error.message)
+          return
+        }
+
+        if (data && data.length > 0) {
+          const mapped = data.map((r: any) => ({
+            id: r.id,
+            clientName: r.client_name || 'Cliente',
+            vehicle: r.vehicle || '',
+            type: r.rescue_type || r.service_type || 'outro',
+            description: r.notes || r.description || '',
+            location: r.location || '',
+            status: r.status || 'pending',
+            priority: r.priority || 'medium',
+            preferredDate: r.preferred_date || r.scheduled_date || '',
+            createdAt: r.created_at || '',
+            projectId: r.project_id || '',
+          }))
+          setServiceRequests(mapped)
+          console.log(`[ExecutorDashboard] ${mapped.length} solicitações de serviço carregadas`)
+        }
+      } catch (error) {
+        console.error('[ExecutorDashboard] Erro ao carregar solicitações:', error)
+      }
+    }
+    void loadServiceRequests()
+  }, [])
 
   const handleUpdateStep = (stepId: string, updates: Record<string, unknown>) => {
     // Usar função de atualização para garantir estado mais recente
@@ -2374,6 +2419,79 @@ ${loginUrl}
                   ))}
                 </div>
               </div>
+
+              {/* Solicitações de Serviço (Concierge) */}
+              {serviceRequests.length > 0 && (
+                <div className="glass-effect rounded-2xl overflow-hidden">
+                  <div className="p-4 border-b border-white/10 flex items-center justify-between">
+                    <h3 className="font-semibold">Solicitações de Serviço</h3>
+                    <span className="px-3 py-1 bg-primary/20 text-primary rounded-full text-xs font-semibold">
+                      {serviceRequests.filter(r => r.status === 'pending').length} pendentes
+                    </span>
+                  </div>
+                  <div className="divide-y divide-white/10">
+                    {serviceRequests.map((req) => {
+                      const typeLabels: Record<string, string> = {
+                        'revisao_programada': 'Revisão Programada',
+                        'manutencao_corretiva': 'Manutenção Corretiva',
+                        'retira_leva': 'Retira e Leva',
+                        'verificacao_tecnica': 'Verificação Técnica',
+                        'lavagem_detailing': 'Lavagem/Detailing',
+                        'outro': 'Outro Serviço',
+                      }
+                      const priorityColors: Record<string, string> = {
+                        'urgent': 'bg-red-500/20 text-red-400',
+                        'high': 'bg-orange-500/20 text-orange-400',
+                        'medium': 'bg-yellow-500/20 text-yellow-400',
+                        'low': 'bg-gray-500/20 text-gray-400',
+                      }
+                      const statusColors: Record<string, string> = {
+                        'pending': 'bg-yellow-500/20 text-yellow-400',
+                        'approved': 'bg-blue-500/20 text-blue-400',
+                        'scheduled': 'bg-primary/20 text-primary',
+                        'in_progress': 'bg-purple-500/20 text-purple-400',
+                        'completed': 'bg-green-500/20 text-green-400',
+                        'cancelled': 'bg-red-500/20 text-red-400',
+                      }
+                      return (
+                        <div key={req.id} className="p-4 hover:bg-white/5 transition-colors">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-3 min-w-0">
+                              <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <Settings className="w-5 h-5 text-primary" />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="font-semibold text-sm">{req.clientName}</div>
+                                <div className="text-xs text-gray-400">{req.vehicle}</div>
+                                <div className="text-xs text-gray-500 mt-1">{typeLabels[req.type] || req.type}</div>
+                                {req.description && (
+                                  <p className="text-xs text-gray-400 mt-1 line-clamp-2">{req.description}</p>
+                                )}
+                                {req.location && (
+                                  <p className="text-[10px] text-gray-500 mt-1">📍 {req.location}</p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                              <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-semibold", statusColors[req.status] || 'bg-gray-500/20 text-gray-400')}>
+                                {req.status === 'pending' ? 'Pendente' : req.status === 'approved' ? 'Aprovado' : req.status === 'scheduled' ? 'Agendado' : req.status === 'in_progress' ? 'Em Execução' : req.status === 'completed' ? 'Concluído' : 'Cancelado'}
+                              </span>
+                              <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-semibold", priorityColors[req.priority] || 'bg-gray-500/20 text-gray-400')}>
+                                {req.priority === 'urgent' ? '🔴 Urgente' : req.priority === 'high' ? '🟠 Alta' : req.priority === 'medium' ? '🟡 Média' : '⚪ Baixa'}
+                              </span>
+                              {req.createdAt && (
+                                <span className="text-[10px] text-gray-500">
+                                  {new Date(req.createdAt).toLocaleDateString('pt-BR')}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -4101,7 +4219,15 @@ ${loginUrl}
               </button>
               <button 
                 onClick={() => {
+                  // Atualizar localmente
                   setTickets(prev => prev.map(t => t.id === selectedTicket.id ? {...t, status: ticketNewStatus as SupportTicket['status']} : t))
+                  
+                  // Persistir no Supabase
+                  supportTicketStorage.updateTicket(selectedTicket.id, { 
+                    status: ticketNewStatus as SupportTicket['status'],
+                    ...(ticketResponse ? { description: `${selectedTicket.description || ''}\n\n--- Resposta Operador ---\n${ticketResponse}` } : {})
+                  }).catch(err => console.error('[Ticket] Erro ao persistir status:', err))
+                  
                   addNotification({ 
                     type: 'success', 
                     title: 'Ticket Atualizado', 
