@@ -35,7 +35,7 @@ export function EliteCard() {
   const { addNotification } = useNotifications()
   const { projects: allProjects } = useProjects()
 
-  const userProjects = allProjects.filter(p => p.user.id === user?.id || p.user.email === user?.email)
+  const userProjects = allProjects.filter(p => p.user?.id === user?.id || p.user?.email === user?.email)
   const completedProjects = userProjects.filter(p => p.status === 'completed' && p.eliteCard)
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
     
@@ -286,6 +286,17 @@ export function EliteCard() {
     { id: 'battery', label: 'Verificação Técnica', icon: 'ri-shield-check-line' },
     { id: 'locked', label: 'Outro Serviço', icon: 'ri-customer-service-line' },
   ]
+
+  if (!project) {
+    return (
+      <div className="bg-black text-white font-['Inter'] min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-gray-400">Carregando seu Elite Card...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="bg-black text-white font-['Inter'] overflow-x-hidden min-h-screen">

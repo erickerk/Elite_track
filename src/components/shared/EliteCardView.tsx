@@ -11,6 +11,7 @@ interface EliteCardViewProps {
 }
 
 export function EliteCardView({ project, clientName, className, showQrCode = true, compact = false }: EliteCardViewProps) {
+  if (!project) return null
   const eliteCard = project.eliteCard
   const cardNumber = eliteCard?.cardNumber || `ELITE-${project.id.slice(-8).toUpperCase()}`
   const expiryDate = eliteCard?.expiryDate
@@ -60,11 +61,11 @@ export function EliteCardView({ project, clientName, className, showQrCode = tru
         <div className="flex justify-between items-center mb-4">
           <div>
             <div className="text-[10px] text-gray-400 mb-0.5">VEÍCULO</div>
-            <div className="text-sm font-semibold">{project.vehicle.brand} {project.vehicle.model}</div>
+            <div className="text-sm font-semibold">{project.vehicle?.brand} {project.vehicle?.model}</div>
           </div>
           <div className="text-right">
             <div className="text-[10px] text-gray-400 mb-0.5">PLACA</div>
-            <div className="text-sm font-mono font-semibold">{project.vehicle.plate}</div>
+            <div className="text-sm font-mono font-semibold">{project.vehicle?.plate}</div>
           </div>
         </div>
 
@@ -76,7 +77,7 @@ export function EliteCardView({ project, clientName, className, showQrCode = tru
           </div>
           <div className="text-center">
             <div className="text-[10px] text-gray-400 mb-0.5">BLINDAGEM</div>
-            <div className="text-sm font-semibold text-[#D4AF37]">{project.vehicle.blindingLevel || 'N3-A'}</div>
+            <div className="text-sm font-semibold text-[#D4AF37]">{project.vehicle?.blindingLevel || 'N3-A'}</div>
           </div>
           {showQrCode ? (
             <div className="w-14 h-14 bg-white rounded-lg p-0.5 flex items-center justify-center">
