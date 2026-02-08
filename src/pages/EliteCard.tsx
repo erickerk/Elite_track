@@ -6,6 +6,7 @@ import { useNotifications } from '../contexts/NotificationContext'
 import { useProjects } from '../contexts/ProjectContext'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import jsPDF from 'jspdf'
+import { EliteCardView } from '../components/shared/EliteCardView'
 
 // Logo Elite da pasta public (caminho absoluto para o navegador)
 const LOGO_ELITE_URL = '/logo-elite.png'
@@ -343,40 +344,11 @@ export function EliteCard() {
 
           {/* Elite Card */}
           <div className="mb-8">
-            <div className="elite-card rounded-3xl p-8 relative overflow-hidden">
-              <div className="elite-card-shine absolute inset-0"></div>
-              <div className="relative z-10">
-                <div className="flex justify-between items-start mb-8">
-                  <div>
-                    <img src="/logo-elite.png" alt="Elite Blindagens" className="h-10 w-auto mb-1" />
-                    <div className="text-sm text-gray-400">MEMBER CARD</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="w-16 h-10 bg-gradient-to-r from-primary/80 to-primary rounded-md flex items-center justify-center">
-                      <i className="ri-shield-star-line text-black text-2xl"></i>
-                    </div>
-                  </div>
-                </div>
-                <div className="mb-6">
-                  <div className="text-2xl font-mono tracking-widest mb-2">{eliteCard?.cardNumber || 'ELITE-XXXX-XXXX'}</div>
-                  <div className="text-lg font-semibold">{user?.name}</div>
-                </div>
-                <div className="flex justify-between items-end">
-                  <div>
-                    <div className="text-xs text-gray-400 mb-1">VÁLIDO ATÉ</div>
-                    <div className="font-semibold">{eliteCard ? new Date(eliteCard.expiryDate).toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' }) : '01/2029'}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xs text-gray-400 mb-1">VEÍCULO</div>
-                    <div className="font-semibold">{project.vehicle.brand} {project.vehicle.model}</div>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <div className="w-8 h-8 bg-red-500 rounded-full"></div>
-                    <div className="w-8 h-8 bg-yellow-500 rounded-full -ml-4"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <EliteCardView
+              project={project}
+              clientName={user?.name || 'Membro Elite'}
+              showQrCode={true}
+            />
           </div>
 
           {/* Card Actions - Download e Compartilhar */}

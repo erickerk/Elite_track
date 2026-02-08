@@ -50,12 +50,15 @@ export function MobileLayout({ children }: MobileLayoutProps) {
     }
   }, [isDrawerOpen])
 
-  const handleLogout = async () => {
-    await logout()
+  const handleLogout = () => {
+    document.body.style.overflow = ''
+    setIsDrawerOpen(false)
+    logout()
     navigate('/login')
   }
 
   const handleNavigate = (path: string) => {
+    document.body.style.overflow = ''
     setIsDrawerOpen(false)
     navigate(path)
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -157,7 +160,10 @@ export function MobileLayout({ children }: MobileLayoutProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/60 z-[60]"
-            onClick={() => setIsDrawerOpen(false)}
+            onClick={() => {
+              document.body.style.overflow = ''
+              setIsDrawerOpen(false)
+            }}
           />
         )}
       </AnimatePresence>
@@ -170,6 +176,11 @@ export function MobileLayout({ children }: MobileLayoutProps) {
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            onAnimationComplete={(definition) => {
+              if (definition === 'exit' || !isDrawerOpen) {
+                document.body.style.overflow = ''
+              }
+            }}
             className={cn(
               'fixed top-0 left-0 bottom-0 w-[280px] z-[70]',
               'flex flex-col',
@@ -187,11 +198,14 @@ export function MobileLayout({ children }: MobileLayoutProps) {
                 className="h-8 w-auto"
               />
               <button
-                onClick={() => setIsDrawerOpen(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors"
+                onClick={() => {
+                  document.body.style.overflow = ''
+                  setIsDrawerOpen(false)
+                }}
+                className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors"
                 aria-label="Fechar menu"
               >
-                <X className="w-5 h-5 text-gray-400" />
+                <X className="w-6 h-6 text-gray-400" />
               </button>
             </div>
 

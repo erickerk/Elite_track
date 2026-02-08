@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { 
@@ -11,6 +11,7 @@ import { useNotifications } from '../contexts/NotificationContext'
 import { useProjects } from '../contexts/ProjectContext'
 import { cn } from '../lib/utils'
 import { COMPANY_INFO, getWhatsAppLink } from '../constants/companyInfo'
+import { supabase } from '../lib/supabase'
 
 interface Achievement {
   id: string
@@ -48,12 +49,52 @@ export function Achievements() {
   const [referralName, setReferralName] = useState('')
   const [referralPhone, setReferralPhone] = useState('')
   const [referralEmail, setReferralEmail] = useState('')
-  const [referrals, setReferrals] = useState<{name: string, phone: string, email: string, status: string, date: string}[]>([
-    { name: 'Carlos Alberto', phone: '11999998888', email: 'carlos@email.com', status: 'pending', date: '2025-12-10' },
-  ])
+  const [referrals, setReferrals] = useState<{id?: string, name: string, phone: string, email: string, status: string, date: string}[]>([])
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Código de indicação único do usuário
-  const referralCode = user ? `ELITE${user.name?.substring(0, 3).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}` : 'ELITE0000'
+  // Código de indicação estável do usuário (baseado no ID, não muda a cada render)
+  const referralCode = useMemo(() => {
+    if (!user) return 'ELITE0000'
+    const prefix = (user.name || '').substring(0, 3).toUpperCase()
+    const suffix = user.id.substring(0, 4).toUpperCase()
+    return `ELITE${prefix}${suffix}`
+  }, [user])
+
+  // Carregar indicações do Supabase
+  const loadReferrals = useCallback(async () => {
+    if (!user?.id || !supabase) return
+    try {
+      const { data, error } = await (supabase as any)
+        .from('leads')
+        .select('id, name, email, phone, status, created_at')
+        .eq('created_by', user.id)
+        .eq('source', 'referral')
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('[Achievements] Erro ao carregar indicações:', error)
+        return
+      }
+
+      if (data) {
+        const mapped = data.map((r: any) => ({
+          id: r.id,
+          name: r.name,
+          phone: r.phone || '',
+          email: r.email || '',
+          status: r.status === 'won' ? 'converted' : r.status === 'contacted' ? 'contacted' : 'pending',
+          date: r.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+        }))
+        setReferrals(mapped)
+      }
+    } catch (err) {
+      console.error('[Achievements] Erro ao carregar indicações:', err)
+    }
+  }, [user?.id])
+
+  useEffect(() => {
+    void loadReferrals()
+  }, [loadReferrals])
 
   const achievements: Achievement[] = [
     // Progress
@@ -115,23 +156,49 @@ export function Achievements() {
     }
   }
 
-  const handleSubmitReferral = () => {
+  const handleSubmitReferral = async () => {
     if (!referralName || !referralPhone) {
       addNotification({ type: 'warning', title: 'Campos obrigatórios', message: 'Preencha nome e telefone do indicado.' })
       return
     }
-    setReferrals([...referrals, { 
-      name: referralName, 
-      phone: referralPhone, 
-      email: referralEmail, 
-      status: 'pending', 
-      date: new Date().toISOString().split('T')[0] 
-    }])
-    addNotification({ type: 'success', title: 'Indicação enviada!', message: `${referralName} foi indicado com sucesso. Você ganhará 500 pontos quando ele fechar!` })
-    setReferralName('')
-    setReferralPhone('')
-    setReferralEmail('')
-    setShowReferralModal(false)
+    if (!user?.id || !supabase) {
+      addNotification({ type: 'error', title: 'Erro', message: 'Usuário não autenticado.' })
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const { error } = await (supabase as any)
+        .from('leads')
+        .insert({
+          name: referralName,
+          phone: referralPhone,
+          email: referralEmail || null,
+          source: 'referral',
+          status: 'new',
+          interest: `Indicação via código ${referralCode}`,
+          notes: `Indicado por ${user.name} (${user.email})`,
+          created_by: user.id,
+        })
+
+      if (error) {
+        console.error('[Achievements] Erro ao salvar indicação:', error)
+        addNotification({ type: 'error', title: 'Erro ao salvar', message: 'Não foi possível enviar a indicação. Tente novamente.' })
+        return
+      }
+
+      addNotification({ type: 'success', title: 'Indicação enviada!', message: `${referralName} foi indicado com sucesso. Você ganhará 500 pontos quando ele fechar!` })
+      setReferralName('')
+      setReferralPhone('')
+      setReferralEmail('')
+      setShowReferralModal(false)
+      await loadReferrals()
+    } catch (err) {
+      console.error('[Achievements] Erro ao salvar indicação:', err)
+      addNotification({ type: 'error', title: 'Erro', message: 'Erro inesperado ao enviar indicação.' })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -459,11 +526,12 @@ export function Achievements() {
               Cancelar
             </button>
             <button
-              onClick={handleSubmitReferral}
-              className="flex-1 bg-primary text-black py-3 rounded-xl font-semibold flex items-center justify-center space-x-2"
+              onClick={() => void handleSubmitReferral()}
+              disabled={isSubmitting}
+              className="flex-1 bg-primary text-black py-3 rounded-xl font-semibold flex items-center justify-center space-x-2 disabled:opacity-50"
             >
               <UserPlus className="w-5 h-5" />
-              <span>Enviar Indicação</span>
+              <span>{isSubmitting ? 'Enviando...' : 'Enviar Indicação'}</span>
             </button>
           </div>
         </div>

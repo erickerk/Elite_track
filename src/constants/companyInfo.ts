@@ -10,11 +10,11 @@ export const getAppBaseUrl = (): string => {
     return window.location.origin
   }
   // Fallback absoluto para SSR ou testes
-  return 'https://app.eliteblindagens.com.br'
+  return 'https://elite-blindagens.vercel.app'
 }
 
 // URL canônica de produção (para QR Codes permanentes)
-export const PRODUCTION_URL = 'https://app.eliteblindagens.com.br'
+export const PRODUCTION_URL = 'https://elite-blindagens.vercel.app'
 
 // Dados de contato da Elite Blindagens
 export const COMPANY_INFO = {

@@ -29,6 +29,7 @@ import { supportTicketStorage } from '../services/storage'
 import { createNotification as createPersistentNotification } from '../services/notificationService'
 import { EliteShieldLaudo } from '../components/laudo/EliteShieldLaudo'
 import { generateEliteShieldPDF } from '../utils/pdfGenerator'
+import { EliteCardView } from '../components/shared/EliteCardView'
 
 
 type TabType = 'dashboard' | 'timeline' | 'photos' | 'laudo' | 'card' | 'chat' | 'schedule' | 'clients' | 'tickets' | 'quotes'
@@ -2056,76 +2057,11 @@ ${loginUrl}
           {/* Card Tab */}
           {activeTab === 'card' && selectedProject && (
             <div className="max-w-lg mx-auto space-y-6">
-              <div className="bg-gradient-to-br from-carbon-800 to-carbon-900 rounded-3xl p-6 border border-primary/30 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
-                <div className="relative z-10">
-                  {/* Header com Logo Elite */}
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                      <img 
-                        src="/logo-elite.png" 
-                        alt="Elite Blindagens" 
-                        className="h-12 w-auto object-contain"
-                      />
-                    </div>
-                    <div className="text-right">
-                      <CreditCard className="w-8 h-8 text-primary" />
-                      <div className="text-[10px] text-primary font-semibold">PREMIUM</div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-xs text-gray-400">Número do Cartão</p>
-                      <p className="text-lg font-mono font-bold">ELITE-{selectedProject.id.slice(-8).toUpperCase()}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-400">Cliente</p>
-                      <p className="font-semibold">{selectedProject.user.name}</p>
-                    </div>
-                    <div className="flex justify-between">
-                      <div>
-                        <p className="text-xs text-gray-400">Veículo</p>
-                        <p className="text-sm">{selectedProject.vehicle.brand} {selectedProject.vehicle.model}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs text-gray-400">Placa</p>
-                        <p className="text-sm font-mono">{selectedProject.vehicle.plate}</p>
-                      </div>
-                    </div>
-                    <div className="flex justify-between pt-2 border-t border-white/10">
-                      <div>
-                        <p className="text-xs text-gray-400">Nível de Blindagem</p>
-                        <p className="text-sm font-semibold text-primary">{selectedProject.vehicle.blindingLevel}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs text-gray-400">Status</p>
-                        <p className={cn(
-                          "text-sm font-semibold",
-                          statusConfig[selectedProject.status]?.textColor
-                        )}>
-                          {statusConfig[selectedProject.status]?.label}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    {/* QR Code do Projeto */}
-                    <div className="flex items-center justify-between pt-4 border-t border-white/10">
-                      <div>
-                        <p className="text-xs text-gray-400 mb-1">Verificar Autenticidade</p>
-                        <p className="text-[10px] text-gray-500">Escaneie o QR Code</p>
-                      </div>
-                      <div className="w-16 h-16 bg-white rounded-lg p-1 flex items-center justify-center">
-                        {projectQrCodeUrl ? (
-                          <img src={projectQrCodeUrl} alt="QR Code" className="w-full h-full" />
-                        ) : (
-                          <QrCode className="w-10 h-10 text-black" />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <EliteCardView
+                project={selectedProject}
+                clientName={selectedProject.user.name}
+                showQrCode={true}
+              />
 
               {/* Ações do Cartão Elite */}
               <div className="grid grid-cols-2 gap-3">

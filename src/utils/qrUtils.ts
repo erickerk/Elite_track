@@ -1,5 +1,7 @@
 import QRCode from 'qrcode'
 import { getAppBaseUrl, PRODUCTION_URL } from '../constants/companyInfo'
+// getAppBaseUrl: para links clicáveis internos
+// PRODUCTION_URL: para QR Codes escaneáveis por câmeras externas
 
 // ============================================================================
 // QR CODE UTILITIES — Centraliza toda geração de URL e imagem QR do sistema
@@ -7,12 +9,20 @@ import { getAppBaseUrl, PRODUCTION_URL } from '../constants/companyInfo'
 
 /**
  * Retorna a URL de verificação pública do projeto.
- * - Em contexto de browser (laudo HTML, página QR): usa domínio dinâmico
- * - Em contexto de PDF/export: usa PRODUCTION_URL fixo
+ * - Links clicáveis no app: usa domínio dinâmico (getAppBaseUrl)
+ * - QR Codes / PDF / export: usa PRODUCTION_URL fixo (escaneáveis externamente)
  */
 export function getVerifyUrl(projectId: string, forPdf = false): string {
   const base = forPdf ? PRODUCTION_URL : getAppBaseUrl()
   return `${base}/verify/${projectId}`
+}
+
+/**
+ * Retorna a URL de verificação SEMPRE usando PRODUCTION_URL.
+ * Usada em QR Codes que serão escaneados por câmeras externas.
+ */
+export function getQrVerifyUrl(projectId: string): string {
+  return `${PRODUCTION_URL}/verify/${projectId}`
 }
 
 /**
@@ -25,11 +35,10 @@ export function getQrImageUrl(
     size?: number
     bgColor?: string
     fgColor?: string
-    forPdf?: boolean
   }
 ): string {
-  const { size = 200, bgColor = '1A1A1A', fgColor = 'D4AF37', forPdf = false } = options || {}
-  const verifyUrl = getVerifyUrl(projectId, forPdf)
+  const { size = 200, bgColor = '1A1A1A', fgColor = 'D4AF37' } = options || {}
+  const verifyUrl = getQrVerifyUrl(projectId)
   return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(verifyUrl)}&bgcolor=${bgColor}&color=${fgColor}`
 }
 
@@ -42,7 +51,7 @@ export async function generateQrDataUrl(
   options?: { width?: number; darkColor?: string; lightColor?: string }
 ): Promise<string> {
   const { width = 200, darkColor = '#D4AF37', lightColor = '#1a1a1a' } = options || {}
-  const verifyUrl = getVerifyUrl(projectId, true)
+  const verifyUrl = getQrVerifyUrl(projectId)
   try {
     return await QRCode.toDataURL(verifyUrl, {
       width,

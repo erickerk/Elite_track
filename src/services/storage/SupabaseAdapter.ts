@@ -24,7 +24,7 @@ import type {
   ITempPasswordStorage,
   StorageType 
 } from './StorageAdapter'
-import type { Project, User, Notification, RegistrationInvite, Vehicle, TimelineStep } from '../../types'
+import type { Project, User, Notification, RegistrationInvite, Vehicle, TimelineStep, EliteCard, BlindingSpecs, DeliveryChecklist, DeliverySchedule, DeliveryMedia, MaintenanceService, VehicleOwner } from '../../types'
 
 // Garantir tipagem correta do cliente
 const supabase = supabaseClient as any
@@ -60,12 +60,159 @@ function dbUserToUser(dbUser: {
   }
 }
 
+// Select query expandido para incluir todas as tabelas relacionadas
+const FULL_PROJECT_SELECT = `
+  *,
+  vehicles (
+    *,
+    vehicle_images (*)
+  ),
+  users!projects_user_id_fkey (*),
+  timeline_steps (
+    *,
+    step_photos (*)
+  ),
+  elite_cards (
+    *,
+    card_benefits (*)
+  ),
+  blinding_specs (
+    *,
+    blinding_materials (*),
+    body_protections (*),
+    additional_features (*)
+  ),
+  delivery_schedules (*),
+  delivery_checklists (*),
+  delivery_media (
+    *,
+    delivery_photos (*)
+  ),
+  maintenance_services (
+    *,
+    replaced_parts (*),
+    maintenance_photos (*)
+  ),
+  vehicle_owners (*)
+`
+
+function mapEliteCard(dbCard: any): EliteCard | undefined {
+  if (!dbCard) return undefined
+  // elite_cards é array (1:1 via UNIQUE), pegar primeiro
+  const card = Array.isArray(dbCard) ? dbCard[0] : dbCard
+  if (!card) return undefined
+  const benefits = (card.card_benefits ?? []).map((b: any) => b.benefit)
+  return {
+    cardNumber: card.card_number,
+    issueDate: card.issue_date,
+    expiryDate: card.expiry_date,
+    memberSince: card.member_since,
+    benefits,
+    rescuePhone: card.rescue_phone ?? '',
+    supportPhone: card.support_phone ?? '',
+  }
+}
+
+function mapBlindingSpecs(dbSpecs: any): BlindingSpecs | undefined {
+  if (!dbSpecs) return undefined
+  const specs = Array.isArray(dbSpecs) ? dbSpecs[0] : dbSpecs
+  if (!specs) return undefined
+  return {
+    level: specs.level,
+    certification: specs.certification,
+    certificationNumber: specs.certification_number ?? '',
+    glassType: specs.glass_type ?? '',
+    glassThickness: specs.glass_thickness ?? '',
+    materials: (specs.blinding_materials ?? []).map((m: any) => ({
+      name: m.name,
+      type: m.type ?? '',
+      thickness: m.thickness ?? '',
+      area: m.area ?? '',
+    })),
+    bodyProtection: (specs.body_protections ?? []).map((bp: any) => bp.protection_type),
+    additionalFeatures: (specs.additional_features ?? []).map((af: any) => af.feature),
+    warranty: specs.warranty ?? '',
+    technicalResponsible: specs.technical_responsible ?? undefined,
+    installationDate: specs.installation_date ?? undefined,
+    totalWeight: specs.total_weight ?? undefined,
+  }
+}
+
+function mapDeliverySchedule(dbSchedule: any): DeliverySchedule | undefined {
+  if (!dbSchedule) return undefined
+  const sched = Array.isArray(dbSchedule) ? dbSchedule[0] : dbSchedule
+  if (!sched) return undefined
+  return {
+    date: sched.date,
+    time: sched.time ?? '',
+    location: sched.location ?? '',
+    contactPerson: sched.contact_person ?? '',
+    contactPhone: sched.contact_phone ?? '',
+    notes: sched.notes ?? '',
+    confirmed: sched.confirmed ?? false,
+  }
+}
+
+function mapDeliveryMedia(dbMedia: any): DeliveryMedia | undefined {
+  if (!dbMedia) return undefined
+  const media = Array.isArray(dbMedia) ? dbMedia[0] : dbMedia
+  if (!media) return undefined
+  return {
+    finalVideo: media.final_video ?? undefined,
+    finalPhotos: (media.delivery_photos ?? []).map((dp: any) => dp.photo_url),
+    certificateUrl: media.certificate_url ?? undefined,
+    manualUrl: media.manual_url ?? undefined,
+  }
+}
+
 function dbProjectToProject(
   dbProject: Record<string, unknown>,
   vehicle: Vehicle,
   user: User,
   timeline: TimelineStep[]
 ): Project {
+  // Mapear tabelas relacionadas
+  const eliteCard = mapEliteCard(dbProject.elite_cards)
+  const blindingSpecs = mapBlindingSpecs(dbProject.blinding_specs)
+  const deliverySchedule = mapDeliverySchedule(dbProject.delivery_schedules)
+  const deliveryMedia = mapDeliveryMedia(dbProject.delivery_media)
+
+  const deliveryChecklists = ((dbProject.delivery_checklists as any[]) ?? []).map((dc: any) => ({
+    id: dc.id,
+    item: dc.item,
+    category: dc.category,
+    checked: dc.checked ?? false,
+  })) as DeliveryChecklist[]
+
+  const maintenanceHistory: MaintenanceService[] = ((dbProject.maintenance_services as any[]) ?? []).map((ms: any) => ({
+    id: ms.id,
+    date: ms.date,
+    type: ms.type,
+    description: ms.description,
+    technician: ms.technician,
+    cost: ms.cost ? Number(ms.cost) : undefined,
+    warrantyService: ms.warranty_service ?? false,
+    notes: ms.notes ?? '',
+    partsReplaced: (ms.replaced_parts ?? []).map((rp: any) => ({
+      name: rp.name,
+      partNumber: rp.part_number ?? '',
+      quantity: rp.quantity ?? 1,
+      reason: rp.reason ?? '',
+    })),
+    photos: (ms.maintenance_photos ?? []).map((mp: any) => mp.photo_url),
+  }))
+
+  const owners: VehicleOwner[] = ((dbProject.vehicle_owners as any[]) ?? []).map((vo: any) => ({
+    id: vo.id,
+    name: vo.name,
+    cpf: vo.cpf ?? undefined,
+    phone: vo.phone ?? undefined,
+    email: vo.email ?? undefined,
+    ownershipStart: vo.ownership_start,
+    ownershipEnd: vo.ownership_end ?? undefined,
+    isCurrent: vo.is_current ?? false,
+  }))
+
   return {
     id: dbProject.id as string,
     vehicle,
@@ -85,9 +232,15 @@ function dbProjectToProject(
     inviteToken: (dbProject.invite_token as string | null) ?? undefined,
     inviteExpiresAt: (dbProject.invite_expires_at as string | null) ?? undefined,
     executorId: (dbProject.executor_id as string | null) ?? undefined,
-    blindingLine: (dbProject.blinding_line as string | null) ?? undefined,
-    protectionLevel: (dbProject.protection_level as string | null) ?? undefined,
-    laudoData: dbProject.laudo_data ? (dbProject.laudo_data as Project['laudoData']) : undefined,
+    blindingLine: blindingSpecs?.level ? `Nível ${blindingSpecs.level}` : undefined,
+    protectionLevel: blindingSpecs?.certification ?? undefined,
+    eliteCard,
+    blindingSpecs,
+    deliveryChecklist: deliveryChecklists.length > 0 ? deliveryChecklists : undefined,
+    deliverySchedule,
+    deliveryMedia,
+    maintenanceHistory: maintenanceHistory.length > 0 ? maintenanceHistory : undefined,
+    owners: owners.length > 0 ? owners : undefined,
   }
 }
 
@@ -111,18 +264,7 @@ export class SupabaseProjectStorage implements IProjectStorage {
 
     const { data: projects, error } = await supabase
       .from('projects')
-      .select(`
-        *,
-        vehicles (
-          *,
-          vehicle_images (*)
-        ),
-        users!projects_user_id_fkey (*),
-        timeline_steps (
-          *,
-          step_photos (*)
-        )
-      `)
+      .select(FULL_PROJECT_SELECT)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -190,18 +332,7 @@ export class SupabaseProjectStorage implements IProjectStorage {
 
     const { data: p, error } = await supabase
       .from('projects')
-      .select(`
-        *,
-        vehicles (
-          *,
-          vehicle_images (*)
-        ),
-        users!projects_user_id_fkey (*),
-        timeline_steps (
-          *,
-          step_photos (*)
-        )
-      `)
+      .select(FULL_PROJECT_SELECT)
       .eq('id', id)
       .single()
 
@@ -260,18 +391,7 @@ export class SupabaseProjectStorage implements IProjectStorage {
 
     const { data: projects, error } = await supabase
       .from('projects')
-      .select(`
-        *,
-        vehicles (
-          *,
-          vehicle_images (*)
-        ),
-        users!projects_user_id_fkey (*),
-        timeline_steps (
-          *,
-          step_photos (*)
-        )
-      `)
+      .select(FULL_PROJECT_SELECT)
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
