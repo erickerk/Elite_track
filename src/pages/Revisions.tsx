@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { 
@@ -81,6 +81,27 @@ const statusConfig = {
   overdue: { label: 'Atrasada', variant: 'error' as const },
 }
 
+// Mapear revision_type do Supabase para tipo local
+const mapRevisionType = (type: string): Revision['type'] => {
+  switch (type) {
+    case 'annual': return 'annual'
+    case 'repair': return 'glass'
+    case 'maintenance': return 'preventive'
+    default: return 'annual'
+  }
+}
+
+// Mapear revision_status do Supabase para status local
+const mapRevisionStatus = (status: string): Revision['status'] => {
+  switch (status) {
+    case 'scheduled': return 'scheduled'
+    case 'completed': return 'completed'
+    case 'overdue': return 'overdue'
+    case 'cancelled': return 'pending'
+    default: return 'pending'
+  }
+}
+
 export function Revisions() {
   const navigate = useNavigate()
   const { theme } = useTheme()
@@ -93,10 +114,68 @@ export function Revisions() {
   const [showScheduleModal, setShowScheduleModal] = useState(false)
   const [scheduleDate, setScheduleDate] = useState('')
   const [scheduleTime, setScheduleTime] = useState('')
+  const [revisions, setRevisions] = useState<Revision[]>(mockRevisions)
+  const [loading, setLoading] = useState(true)
 
-  const pendingRevisions = mockRevisions.filter(r => r.status === 'pending' || r.status === 'scheduled')
-  const completedRevisions = mockRevisions.filter(r => r.status === 'completed')
+  const loadRevisions = useCallback(async () => {
+    if (!isSupabaseConfigured() || !supabase || !project?.id) {
+      setLoading(false)
+      return
+    }
+
+    try {
+      const { data, error } = await (supabase as any)
+        .from('revision_history')
+        .select('*')
+        .eq('project_id', project.id)
+        .order('scheduled_date', { ascending: false })
+
+      if (error) {
+        console.error('[Revisions] Erro ao carregar:', error)
+        setLoading(false)
+        return
+      }
+
+      if (data && data.length > 0) {
+        const mapped: Revision[] = data.map((item: any) => ({
+          id: item.id,
+          type: mapRevisionType(item.type),
+          title: item.description || 'Revisão',
+          description: item.notes || '',
+          status: mapRevisionStatus(item.status),
+          dueDate: item.scheduled_date,
+          completedDate: item.completed_date,
+          notes: item.notes,
+        }))
+        setRevisions(mapped)
+      }
+    } catch (err) {
+      console.error('[Revisions] Erro inesperado:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [project?.id])
+
+  useEffect(() => {
+    loadRevisions()
+  }, [loadRevisions])
+
+  const pendingRevisions = revisions.filter(r => r.status === 'pending' || r.status === 'scheduled')
+  const completedRevisions = revisions.filter(r => r.status === 'completed')
   const nextRevision = pendingRevisions[0]
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gold/20 flex items-center justify-center animate-pulse">
+            <Calendar className="w-6 h-6 text-gold" />
+          </div>
+          <p className="text-gray-400 text-sm">Carregando revisões...</p>
+        </div>
+      </div>
+    )
+  }
 
   const handleConfirmSchedule = async () => {
     if (!scheduleDate || !scheduleTime) {

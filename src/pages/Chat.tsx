@@ -231,10 +231,6 @@ export function Chat() {
                     <p className="text-gray-400">Canal direto de comunicação para seu {project.vehicle.brand} {project.vehicle.model}</p>
                     <div className="flex items-center space-x-4 mt-2 flex-wrap gap-2">
                       <div className="flex items-center space-x-2">
-                        <i className="ri-time-line text-primary text-sm"></i>
-                        <span className="text-primary text-sm">Resposta em até 15 min</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
                         <i className="ri-shield-check-line text-green-400 text-sm"></i>
                         <span className="text-green-400 text-sm">Suporte Especializado</span>
                       </div>
@@ -410,7 +406,7 @@ export function Chat() {
                             )}
                             {msg.attachment === 'images' && (
                               <div className="mt-3 grid grid-cols-2 gap-2">
-                                {project.timeline.filter(s => s.photos.length > 0).slice(0, 2).map((step, idx) => (
+                                {(project?.timeline || []).filter(s => s.photos.length > 0).slice(0, 2).map((step, idx) => (
                                   <div 
                                     key={idx}
                                     onClick={() => setShowImageModal({ src: step.photos[0], caption: step.title })}

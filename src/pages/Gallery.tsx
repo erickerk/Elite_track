@@ -73,7 +73,7 @@ export function Gallery() {
     })
 
     // Add timeline step photos
-    project.timeline.forEach((step) => {
+    ;(project?.timeline || []).forEach((step) => {
       step.photos.forEach((url, index) => {
         images.push({
           id: `${step.id}-${index}`,

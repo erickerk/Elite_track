@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Modal } from '../components/ui'
 import { useAuth } from '../contexts/AuthContext'
@@ -31,7 +31,11 @@ export function Timeline() {
   const { user } = useAuth()
   const { projects: allProjects } = useProjects()
   
-  const userProjects = allProjects.filter(p => p.user.id === user?.id || p.user.email === user?.email)
+  // Memoizar para evitar recálculo a cada render (previne loop infinito)
+  const userProjects = useMemo(() => 
+    allProjects.filter(p => p.user.id === user?.id || p.user.email === user?.email),
+    [allProjects, user?.id, user?.email]
+  )
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
   const project = selectedProjectId 
     ? userProjects.find(p => p.id === selectedProjectId) || userProjects[0] || allProjects[0]
@@ -41,11 +45,13 @@ export function Timeline() {
   const [selectedPhotos, setSelectedPhotos] = useState<string[] | null>(null)
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
 
-  const completedSteps = project.timeline.filter(s => s.status === 'completed').length
-  const totalSteps = project.timeline.length
+  // Null safety: evitar crash quando projeto ainda não carregou
+  const timeline = project?.timeline || []
+  const completedSteps = timeline.filter(s => s.status === 'completed').length
+  const totalSteps = timeline.length
 
-  // Calculate days remaining
-  const estimatedDate = new Date(project.estimatedDelivery)
+  // Calculate days remaining (com null safety)
+  const estimatedDate = project?.estimatedDelivery ? new Date(project.estimatedDelivery) : new Date()
   const today = new Date()
   const daysRemaining = Math.max(0, Math.floor((estimatedDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)))
 
@@ -95,6 +101,21 @@ export function Timeline() {
     if (selectedPhotos) {
       setCurrentPhotoIndex((prev) => (prev - 1 + selectedPhotos.length) % selectedPhotos.length)
     }
+  }
+
+  // Early return: sem projeto carregado
+  if (!project) {
+    return (
+      <div className="bg-black text-white min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/20 flex items-center justify-center">
+            <i className="ri-time-line text-primary text-2xl"></i>
+          </div>
+          <h2 className="text-xl font-bold mb-2">Carregando Timeline...</h2>
+          <p className="text-gray-400">Nenhum projeto encontrado ainda.</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -244,7 +265,7 @@ export function Timeline() {
               <div className="relative">
                 {/* Lista Vertical de Etapas */}
                 <div className="space-y-4 max-w-3xl mx-auto">
-                  {project.timeline.map((step) => (
+                  {timeline.map((step) => (
                     <div 
                       key={step.id}
                       onClick={() => openStepModal(step)}
@@ -318,19 +339,19 @@ export function Timeline() {
                 </div>
 
                 {/* Fotos da Etapa Atual (se houver) */}
-                {project.timeline.find(s => s.status === 'in_progress')?.photos && 
-                 project.timeline.find(s => s.status === 'in_progress')!.photos.length > 0 && (
+                {timeline.find(s => s.status === 'in_progress')?.photos && 
+                 (timeline.find(s => s.status === 'in_progress')?.photos?.length ?? 0) > 0 && (
                   <div className="mt-8 max-w-3xl mx-auto">
                     <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                       <i className="ri-camera-line text-primary"></i>
                       Fotos da Etapa Atual
                     </h3>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                      {project.timeline.find(s => s.status === 'in_progress')!.photos.slice(0, 4).map((photo, idx) => (
+                      {(timeline.find(s => s.status === 'in_progress')?.photos || []).slice(0, 4).map((photo, idx) => (
                         <div 
                           key={idx}
                           className="relative group cursor-pointer rounded-xl overflow-hidden aspect-square"
-                          onClick={() => openPhotoModal(project.timeline.find(s => s.status === 'in_progress')!.photos, idx)}
+                          onClick={() => openPhotoModal(timeline.find(s => s.status === 'in_progress')?.photos || [], idx)}
                         >
                           <img 
                             src={photo} 
@@ -348,32 +369,32 @@ export function Timeline() {
               </div>
 
               {/* Progress Stats - Premium Cards */}
-              <div className="relative z-10 mt-12 grid grid-cols-3 gap-4 md:gap-6">
-                <div className="group text-center bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 hover:border-primary/30 rounded-2xl p-5 md:p-6 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10">
-                  <div className="w-12 h-12 mx-auto mb-3 bg-primary/10 rounded-xl flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                    <i className="ri-checkbox-circle-line text-2xl text-primary"></i>
+              <div className="relative z-10 mt-12 grid grid-cols-3 gap-2 sm:gap-4 md:gap-6">
+                <div className="group text-center bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 hover:border-primary/30 rounded-xl sm:rounded-2xl p-3 sm:p-5 md:p-6 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10">
+                  <div className="w-9 h-9 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 bg-primary/10 rounded-lg sm:rounded-xl flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                    <i className="ri-checkbox-circle-line text-lg sm:text-2xl text-primary"></i>
                   </div>
-                  <div className="text-3xl md:text-4xl font-bold text-white">{completedSteps}<span className="text-gray-500">/{totalSteps}</span></div>
-                  <div className="text-sm text-gray-400 mt-1">Etapas Concluídas</div>
+                  <div className="text-xl sm:text-3xl md:text-4xl font-bold text-white">{completedSteps}<span className="text-gray-500">/{totalSteps}</span></div>
+                  <div className="text-[10px] sm:text-sm text-gray-400 mt-1 truncate">Concluídas</div>
                 </div>
-                <div className="group text-center bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-2xl p-5 md:p-6 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20">
-                  <div className="w-12 h-12 mx-auto mb-3 bg-primary/20 rounded-xl flex items-center justify-center">
-                    <i className="ri-pie-chart-line text-2xl text-primary"></i>
+                <div className="group text-center bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-xl sm:rounded-2xl p-3 sm:p-5 md:p-6 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20">
+                  <div className="w-9 h-9 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 bg-primary/20 rounded-lg sm:rounded-xl flex items-center justify-center">
+                    <i className="ri-pie-chart-line text-lg sm:text-2xl text-primary"></i>
                   </div>
-                  <div className="text-3xl md:text-4xl font-bold text-primary">{project.progress}%</div>
-                  <div className="text-sm text-gray-400 mt-1">Progresso Total</div>
+                  <div className="text-xl sm:text-3xl md:text-4xl font-bold text-primary">{project.progress}%</div>
+                  <div className="text-[10px] sm:text-sm text-gray-400 mt-1 truncate">Progresso</div>
                 </div>
-                <div className="group text-center bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 hover:border-primary/30 rounded-2xl p-5 md:p-6 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10">
-                  <div className="w-12 h-12 mx-auto mb-3 bg-primary/10 rounded-xl flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                    <i className="ri-calendar-check-line text-2xl text-primary"></i>
+                <div className="group text-center bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 hover:border-primary/30 rounded-xl sm:rounded-2xl p-3 sm:p-5 md:p-6 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10">
+                  <div className="w-9 h-9 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 bg-primary/10 rounded-lg sm:rounded-xl flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                    <i className="ri-calendar-check-line text-lg sm:text-2xl text-primary"></i>
                   </div>
-                  <div className="text-3xl md:text-4xl font-bold text-white">
+                  <div className="text-xl sm:text-3xl md:text-4xl font-bold text-white">
                     {project.status === 'completed' || project.status === 'delivered'
                       ? <><i className="ri-checkbox-circle-fill text-green-400"></i></>
                       : <>{daysRemaining} <span className="text-lg text-gray-500">dias</span></>}
                   </div>
-                  <div className="text-sm text-gray-400 mt-1">
-                    {project.status === 'completed' || project.status === 'delivered' ? 'Finalizado' : 'Para Conclusão'}
+                  <div className="text-[10px] sm:text-sm text-gray-400 mt-1 truncate">
+                    {project.status === 'completed' || project.status === 'delivered' ? 'Finalizado' : 'Conclusão'}
                   </div>
                 </div>
               </div>

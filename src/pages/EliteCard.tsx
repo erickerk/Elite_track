@@ -462,7 +462,7 @@ export function EliteCard() {
               </div>
               <h3 className="text-xl font-bold mb-1 group-hover:text-green-400 transition-colors">Suporte</h3>
               <p className="text-gray-400 text-sm">Chat com especialistas</p>
-              <p className="text-green-400 text-xs mt-2 font-semibold">{eliteCard?.supportPhone || '(11) 3456-7890'}</p>
+              <p className="text-green-400 text-xs mt-2 font-semibold">{eliteCard?.supportPhone || '(11) 9.1312-3071'}</p>
             </button>
           </div>
 

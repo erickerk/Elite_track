@@ -93,8 +93,9 @@ export function Dashboard() {
     )
   }
 
-  const totalSteps = selectedProject.timeline?.length || 0
-  const completedSteps = selectedProject.timeline.filter(step => step.status === 'completed').length
+  const projectTimeline = selectedProject?.timeline || []
+  const totalSteps = projectTimeline.length
+  const completedSteps = projectTimeline.filter(step => step.status === 'completed').length
   const timelineProgress = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : selectedProject.progress
   const displayProgress = typeof selectedProject.progress === 'number' ? selectedProject.progress : timelineProgress
 
@@ -373,10 +374,10 @@ export function Dashboard() {
                   </div>
                   
                   <div className="space-y-3">
-                    {selectedProject.timeline.map((step, index) => {
+                    {projectTimeline.map((step, index) => {
                       // Detectar inconsistência de dados legados: etapa completed com predecessora não-completed
                       const hasPendingPredecessor = step.status === 'completed' && index > 0 &&
-                        selectedProject.timeline.slice(0, index).some(prev => prev.status !== 'completed')
+                        projectTimeline.slice(0, index).some(prev => prev.status !== 'completed')
                       
                       return (
                       <div key={step.id} className={cn(

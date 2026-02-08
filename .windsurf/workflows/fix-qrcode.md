@@ -4,7 +4,7 @@ description: Corrigir ou ajustar QR Code em qualquer parte do sistema Elite Trac
 
 # /fix-qrcode
 
-## Antes de qualquer alteração, LEIA estes arquivos (nesta ordem):
+## Antes de qualquer alteração, LEIA estes arquivos (nesta ordem)
 
 1. `src/constants/companyInfo.ts` — `getAppBaseUrl()`, `PRODUCTION_URL`
 2. `src/utils/qrUtils.ts` — Utilitário centralizado de QR (URL + imagem)
@@ -25,6 +25,7 @@ description: Corrigir ou ajustar QR Code em qualquer parte do sistema Elite Trac
 ## Utilitário centralizado: `src/utils/qrUtils.ts`
 
 Todas as funções de QR devem usar este utilitário:
+
 - `getVerifyUrl(projectId)` — retorna URL de verificação
 - `getQrImageUrl(projectId, options?)` — retorna URL da imagem QR (api.qrserver.com)
 - `generateQrDataUrl(projectId)` — retorna base64 DataURL (para PDF)

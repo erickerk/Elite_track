@@ -58,6 +58,12 @@ export function MobileLayout({ children }: MobileLayoutProps) {
   const handleNavigate = (path: string) => {
     setIsDrawerOpen(false)
     navigate(path)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleBottomNav = (path: string) => {
+    navigate(path)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   // Itens do menu principal (bottom nav)
@@ -68,16 +74,8 @@ export function MobileLayout({ children }: MobileLayoutProps) {
     { to: '/chat', icon: MessageCircle, label: 'Chat' },
   ]
 
-  // Itens do drawer (menu lateral)
+  // Itens do drawer (menu lateral) — sem duplicar bottom nav
   const drawerItems: { section: string; items: NavItem[] }[] = [
-    {
-      section: 'Principal',
-      items: [
-        { to: '/dashboard', icon: Home, label: 'Painel' },
-        { to: '/timeline', icon: Clock, label: 'Etapas' },
-        { to: '/gallery', icon: Image, label: 'Galeria' },
-      ]
-    },
     {
       section: 'Meu Veículo',
       items: [
@@ -85,6 +83,7 @@ export function MobileLayout({ children }: MobileLayoutProps) {
         { to: '/elite-card', icon: CreditCard, label: 'Cartão Elite' },
         { to: '/qrcode', icon: QrCode, label: 'QR Code' },
         { to: '/revisoes', icon: Calendar, label: 'Revisões' },
+        { to: '/entrega', icon: Clock, label: 'Entrega' },
       ]
     },
     {
@@ -95,9 +94,8 @@ export function MobileLayout({ children }: MobileLayoutProps) {
       ]
     },
     {
-      section: 'Outros',
+      section: 'Conta',
       items: [
-        { to: '/chat', icon: MessageCircle, label: 'Suporte' },
         { to: '/achievements', icon: Trophy, label: 'Conquistas' },
         { to: '/profile', icon: Settings, label: 'Configurações' },
       ]
@@ -313,7 +311,7 @@ export function MobileLayout({ children }: MobileLayoutProps) {
           return (
             <button
               key={item.to}
-              onClick={() => navigate(item.to)}
+              onClick={() => handleBottomNav(item.to)}
               className={cn(
                 'flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-xl transition-all',
                 isActive 
@@ -328,7 +326,7 @@ export function MobileLayout({ children }: MobileLayoutProps) {
         })}
         {/* Botão de Perfil especial */}
         <button
-          onClick={() => navigate('/profile')}
+          onClick={() => handleBottomNav('/profile')}
           className={cn(
             'flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-xl transition-all',
             location.pathname === '/profile'
