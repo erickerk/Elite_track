@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from 'react'
 import { supabase, isSupabaseConfigured } from '../lib/supabase/client'
 import type { ChatMessage, ChatConversation } from '../types'
 
@@ -9,8 +9,8 @@ interface ChatContextType {
   conversations: ChatConversation[]
   activeConversationId: string | null
   setActiveConversation: (id: string | null) => void
-  sendMessage: (conversationId: string, content: string, sender: { id: string; name: string; role: 'client' | 'executor' | 'admin' }) => void
-  markConversationAsRead: (conversationId: string) => void
+  sendMessage: (conversationId: string, content: string, sender: { id: string; name: string; role: 'client' | 'executor' | 'admin' }) => Promise<void>
+  markConversationAsRead: (conversationId: string) => Promise<void>
   getConversationByProjectId: (projectId: string) => ChatConversation | undefined
   createConversation: (projectId: string, userId: string) => Promise<string | null>
   totalUnreadCount: number
@@ -50,6 +50,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [conversations, setConversations] = useState<ChatConversation[]>(initialConversations)
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
+  const userIdRef = useRef<string | null>(null)
+
+  // Manter ref sincronizado para acesso no realtime handler
+  useEffect(() => {
+    userIdRef.current = userId
+  }, [userId])
 
   // Carregar conversas do Supabase filtradas por usuário
   useEffect(() => {
@@ -101,7 +107,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    loadConversations()
+    void loadConversations()
   }, [userId])
 
   // Real-time subscription para sincronização de mensagens entre perfis
@@ -114,7 +120,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'chat_messages' },
         (payload: any) => {
-          console.log('[Chat] Nova mensagem recebida:', payload.new)
+          // Ignorar mensagens do próprio usuário (já adicionadas localmente por sendMessage)
+          if (payload.new.sender_id === userIdRef.current) return
+          
+          console.log('[Chat] Nova mensagem recebida de outro usuário:', payload.new.sender_name)
           const newMessage = dbMessageToMessage(payload.new)
           
           setConversations(prev =>
@@ -221,7 +230,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const markConversationAsRead = useCallback((conversationId: string) => {
+  const markConversationAsRead = useCallback(async (conversationId: string) => {
     setConversations(prev =>
       prev.map(conv => {
         if (conv.id === conversationId) {
@@ -234,6 +243,24 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         return conv
       })
     )
+
+    // Persistir no Supabase
+    if (isSupabaseConfigured() && db) {
+      try {
+        await db
+          .from('chat_messages')
+          .update({ read: true })
+          .eq('conversation_id', conversationId)
+          .eq('read', false)
+
+        await db
+          .from('chat_conversations')
+          .update({ unread_count: 0 })
+          .eq('id', conversationId)
+      } catch (error) {
+        console.error('[Chat] Erro ao marcar como lido:', error)
+      }
+    }
   }, [])
 
   const getConversationByProjectId = useCallback((projectId: string) => {
